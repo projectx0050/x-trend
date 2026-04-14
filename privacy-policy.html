@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — X-Trend</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #181818;
+      --surface-2: #222222;
+      --border: #2a2a2a;
+      --accent: #7c6df0;
+      --accent-dim: rgba(124, 109, 240, 0.12);
+      --text: #f0f0f0;
+      --text-secondary: #aaaaaa;
+      --text-muted: #666666;
+      --success: #4caf7d;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 0 20px 80px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 0 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .logo-wordmark {
+      font-size: 20px;
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: -0.4px;
+      background: linear-gradient(90deg, #9d8fff, #c084fc, #fff, #c084fc, #7c6df0);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3.5s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 720px;
+      margin: 52px auto 0;
+    }
+
+    .hero-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(124, 109, 240, 0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .hero-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .hero-meta span {
+      margin-right: 20px;
+    }
+
+    /* ── Summary cards ── */
+    .summary-grid {
+      max-width: 720px;
+      margin: 44px auto 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+    }
+
+    .summary-card .card-icon {
+      font-size: 20px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .summary-card .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .summary-card .card-body {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .summary-card.positive {
+      border-color: rgba(76, 175, 125, 0.25);
+      background: rgba(76, 175, 125, 0.05);
+    }
+
+    .summary-card.positive .card-title {
+      color: var(--success);
+    }
+
+    /* ── Content ── */
+    .content {
+      max-width: 720px;
+      margin: 56px auto 0;
+    }
+
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .section h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .section p:last-child {
+      margin-bottom: 0;
+    }
+
+    .section ul {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section ul li {
+      color: var(--text-secondary);
+      padding-left: 20px;
+      position: relative;
+      font-size: 14.5px;
+    }
+
+    .section ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--text-muted);
+    }
+
+    .highlight-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 16px 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .highlight-box strong {
+      color: var(--text);
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 0 48px;
+    }
+
+    /* ── Contact / Footer ── */
+    .contact-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      margin-top: 56px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .contact-block h2 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .contact-block p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+
+    .site-footer {
+      max-width: 720px;
+      margin: 40px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .site-footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .site-footer a:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 600px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 26px; }
+      .site-footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <img class="logo-img" src="icon128.png" alt="X-Trend logo" />
+    <span class="logo-wordmark">X-Trend</span>
+  </header>
+
+  <!-- ── Hero ───────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-label">Legal</div>
+    <h1>Privacy Policy</h1>
+    <div class="hero-meta">
+      <span>Effective: April 14, 2026</span>
+      <span>Last updated: April 14, 2026</span>
+    </div>
+  </section>
+
+  <!-- ── At-a-glance summary cards ──────────────────────────────────────── -->
+  <div class="summary-grid">
+    <div class="summary-card positive">
+      <span class="card-icon">🔒</span>
+      <div class="card-title">No data collected</div>
+      <div class="card-body">We do not collect, store, or transmit any personal information.</div>
+    </div>
+    <div class="summary-card positive">
+      <span class="card-icon">🚫</span>
+      <div class="card-title">No third-party sharing</div>
+      <div class="card-body">Your data is never sold or shared with third parties for any purpose.</div>
+    </div>
+    <div class="summary-card positive">
+      <span class="card-icon">📱</span>
+      <div class="card-title">Local storage only</div>
+      <div class="card-body">Your API key is stored exclusively in Chrome's local storage on your device.</div>
+    </div>
+  </div>
+
+  <!-- ── Body content ────────────────────────────────────────────────────── -->
+  <main class="content">
+
+    <section class="section">
+      <div class="section-number">01</div>
+      <h2>Overview</h2>
+      <p>
+        X-Trend ("the Extension") is a Chrome browser extension that helps social media content
+        creators write and reformat content using artificial intelligence. This Privacy Policy
+        explains how the Extension handles information when you use it.
+      </p>
+      <p>
+        We are committed to protecting your privacy. The short version: we do not collect
+        your data, we do not store your content, and we do not share anything with third parties.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">02</div>
+      <h2>Information We Do Not Collect</h2>
+      <p>The Extension does not collect, store, or transmit any of the following:</p>
+      <ul>
+        <li>Personal identifying information (name, email address, location, etc.)</li>
+        <li>Browsing history or activity on any website</li>
+        <li>The social media content you enter into the Extension</li>
+        <li>Generated captions or rewritten text</li>
+        <li>Usage analytics, telemetry, or crash reports</li>
+        <li>Device identifiers or IP addresses</li>
+      </ul>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">03</div>
+      <h2>Your Anthropic API Key</h2>
+      <p>
+        To use X-Trend, you provide your own Anthropic API key. This key is stored
+        exclusively in Chrome's local storage (<code style="font-family: monospace; font-size: 13px; color: #b5aaff;">chrome.storage.local</code>)
+        on your own device. It is never transmitted to X-Trend servers, never logged, and
+        never shared with any party other than Anthropic's API directly from your browser.
+      </p>
+      <div class="highlight-box">
+        <strong>Important:</strong> Your API key is sent directly from your browser to
+        Anthropic's API (<code style="font-family: monospace; font-size: 12.5px;">api.anthropic.com</code>)
+        when generating content. X-Trend acts as a relay within your browser only — no
+        intermediary server ever sees or stores your key.
+      </div>
+      <p>
+        You can remove your API key at any time by clearing the Extension's storage via
+        Chrome's settings, or by uninstalling the Extension.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">04</div>
+      <h2>How Your Content Is Processed</h2>
+      <p>
+        When you submit text to generate a caption or rewrite content, that text is sent
+        directly from your browser to the Anthropic API. This is necessary to produce
+        AI-generated results.
+      </p>
+      <ul>
+        <li>Content is transmitted over an encrypted HTTPS connection</li>
+        <li>Content is not stored, logged, or retained by X-Trend</li>
+        <li>Content is not used to train any X-Trend models or systems</li>
+        <li>Anthropic's own privacy policy governs how they handle API inputs — see <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none;">anthropic.com/privacy</a></li>
+      </ul>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">05</div>
+      <h2>Third-Party Services</h2>
+      <p>
+        The Extension communicates with one external service: the <strong>Anthropic API</strong>
+        (<code style="font-family: monospace; font-size: 13px; color: #b5aaff;">api.anthropic.com</code>),
+        solely to generate AI content on your request. No other third-party services, analytics
+        platforms, advertising networks, or tracking scripts are used.
+      </p>
+      <p>
+        We do not sell, rent, lease, or otherwise share any user information with any
+        third party for any purpose, commercial or otherwise.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">06</div>
+      <h2>Local Storage &amp; Permissions</h2>
+      <p>The Extension requests the following Chrome permissions:</p>
+      <ul>
+        <li><strong style="color: var(--text);">storage</strong> — to save your API key and theme preference locally on your device</li>
+        <li><strong style="color: var(--text);">host permission for api.anthropic.com</strong> — to allow the background service worker to call the Anthropic API directly</li>
+      </ul>
+      <p>
+        No other permissions are requested. The Extension cannot read the content of any
+        web page you visit, and it does not access your tabs, bookmarks, or any other
+        browser data.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">07</div>
+      <h2>Children's Privacy</h2>
+      <p>
+        X-Trend is not directed at children under the age of 13. We do not knowingly
+        collect any information from children. If you believe a child has provided
+        information through the Extension, please contact us and we will take appropriate action.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">08</div>
+      <h2>Changes to This Policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time. When we do, the "Last updated"
+        date at the top of this page will be revised. We encourage you to review this page
+        periodically. Continued use of the Extension after any changes constitutes acceptance
+        of the updated policy.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- ── Contact ─────────────────────────────────────────────────────────── -->
+  <div class="contact-block">
+    <h2>Questions or concerns?</h2>
+    <p>
+      If you have any questions about this Privacy Policy or how the Extension handles
+      your data, please open an issue on the project's GitHub repository or contact the
+      developer directly. We take privacy seriously and will respond promptly.
+    </p>
+  </div>
+
+  <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <span>© 2026 X-Trend. All rights reserved.</span>
+    <span>X-Trend Chrome Extension</span>
+  </footer>
+
+</body>
+</html>
