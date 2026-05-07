@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>X-Trend</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <img class="logo-icon" src="icon128.png" alt="X-Trend" />
+      <span class="logo-text">X-Trend</span>
+      <span class="logo-badge">AI</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="settings-toggle" title="Settings">&#9881;</button>
+    </div>
+  </header>
+
+  <!-- Settings Panel -->
+  <div id="settings-panel">
+    <div class="settings-title">&#9881; Settings</div>
+
+    <!-- Auth forms: shown when logged out -->
+    <div id="auth-section">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth="login">Log In</button>
+        <button class="auth-tab" data-auth="signup">Sign Up</button>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="auth-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary" id="auth-submit-btn">Log In</button>
+      <div class="save-status" id="auth-status"></div>
+    </div>
+
+    <!-- Account info: shown when logged in -->
+    <div id="account-section">
+      <div class="account-info">
+        <span class="account-email" id="account-email"></span>
+        <span class="account-tier" id="account-tier"></span>
+      </div>
+      <button class="btn btn-secondary" id="logout-btn">Log Out</button>
+    </div>
+
+    <!-- Brand Voice section -->
+    <div class="settings-section">
+      <div class="settings-section-label">&#127908; Brand Voice</div>
+      <div class="field">
+        <label>Tone &amp; Style</label>
+        <textarea
+          id="brand-voice-input"
+          placeholder="e.g. Professional but warm, uses inclusive language, focuses on sustainability and innovation&hellip;"
+          rows="3"
+        ></textarea>
+      </div>
+      <button class="btn btn-secondary" id="save-brand-voice-btn">Save Brand Voice</button>
+      <div class="save-status" id="brand-voice-status"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- Content Area — main screens + upgrade banner + overlay selectors     -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div id="content-area">
+
+  <!-- Main Content — three screens, only one visible at a time -->
+  <div id="main-content">
+
+    <!-- ── Home Screen ──────────────────────────────────────────────────── -->
+    <div id="screen-home" class="screen active">
+      <div class="home-body">
+
+        <p class="home-greeting">What would you like to do today?</p>
+
+        <!-- Social X-Trend card -->
+        <button class="suite-card" id="card-social">
+          <div class="suite-card-top">
+            <div class="suite-card-info">
+              <div class="suite-card-icon">&#128640;</div>
+              <div class="suite-card-title">Social X-Trend</div>
+              <div class="suite-card-sub">For content creators</div>
+            </div>
+            <span class="suite-card-arrow">&#8250;</span>
+          </div>
+          <div class="suite-card-pills">
+            <span class="pill">Caption Generator</span>
+            <span class="pill">Platform Rewriter</span>
+            <span class="pill">Hashtag Suggester</span>
+          </div>
+        </button>
+
+        <!-- Business X-Trend card -->
+        <button class="suite-card" id="card-business">
+          <div class="suite-card-top">
+            <div class="suite-card-info">
+              <div class="suite-card-icon">&#128188;</div>
+              <div class="suite-card-title">Business X-Trend</div>
+              <div class="suite-card-sub">For businesses &amp; professionals</div>
+            </div>
+            <span class="suite-card-arrow">&#8250;</span>
+          </div>
+          <div class="suite-card-pills">
+            <span class="pill">Review Responder</span>
+            <span class="pill">Email Tone Fixer</span>
+            <span class="pill">Proposal Generator</span>
+          </div>
+        </button>
+
+        <!-- Brand Voice locked strip -->
+        <div class="brand-voice-strip" id="home-brand-voice-strip">
+          <span class="bv-lock">&#128274;</span>
+          <div class="bv-text">
+            <div class="bv-title">Brand Voice Memory</div>
+            <div class="bv-sub">Applied across all features &mdash; configure in Settings</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Social X-Trend Screen ─────────────────────────────────────────── -->
+    <div id="screen-social" class="screen">
+
+      <div class="screen-subheader">
+        <button class="back-btn" id="back-from-social">&#8592; Home</button>
+        <div class="screen-title-group">
+          <div class="screen-title">Social X-Trend</div>
+          <div class="screen-subtitle">For content creators</div>
+        </div>
+      </div>
+
+      <nav class="tab-nav" id="social-tab-nav">
+        <button class="tab-btn active" data-tab="caption">&#9998; Caption</button>
+        <button class="tab-btn" data-tab="rewriter">&#x1F504; Rewriter</button>
+        <button class="tab-btn" data-tab="hashtag"># Hashtags</button>
+      </nav>
+
+      <!-- Caption Generator Panel -->
+      <section class="panel active" id="panel-caption">
+
+        <div class="field">
+          <label>Describe your content</label>
+          <textarea
+            id="caption-description"
+            placeholder="e.g. A photo of a sunrise hike, misty mountains in the background, feeling accomplished after reaching the summit&hellip;"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label>Target Platform</label>
+          <select id="caption-platform">
+            <option value="Instagram">&#128248; Instagram</option>
+            <option value="TikTok">&#127925; TikTok</option>
+            <option value="LinkedIn">&#128188; LinkedIn</option>
+            <option value="X/Twitter">&#128038; X / Twitter</option>
+            <option value="Facebook">&#128279; Facebook</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="generate-caption-btn">
+          <span class="btn-icon">&#10024;</span>
+          <span>Generate Caption</span>
+        </button>
+
+        <div class="error-msg" id="caption-error"></div>
+
+        <div class="output-card" id="caption-output-card">
+          <div class="output-card-header">
+            <span class="output-label">Generated Caption</span>
+            <button class="copy-btn" id="caption-copy-btn">Copy</button>
+          </div>
+          <div class="output-text" id="caption-output"></div>
+        </div>
+
+      </section>
+
+      <!-- Platform Rewriter Panel -->
+      <section class="panel" id="panel-rewriter">
+
+        <!-- Pro gate: shown for free users past day 5 -->
+        <div class="pro-gate" id="rewriter-pro-gate">
+          <div class="pro-gate-lock">&#128274;</div>
+          <div class="pro-gate-title">Platform Rewriter is a Pro feature</div>
+          <div class="pro-gate-sub">Upgrade to unlock unlimited platform rewrites.</div>
+          <button class="btn btn-primary" id="rewriter-upgrade-btn">Upgrade to Pro</button>
+        </div>
+
+        <!-- Rewriter form: hidden when gated -->
+        <div id="rewriter-form">
+
+          <div class="field">
+            <label>Your existing content</label>
+            <textarea
+              id="rewriter-content"
+              placeholder="Paste your caption, tweet, post, or any social media content here&hellip;"
+              rows="4"
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <label>Rewrite for Platform</label>
+            <select id="rewriter-platform">
+              <option value="Instagram">&#128248; Instagram</option>
+              <option value="TikTok">&#127925; TikTok</option>
+              <option value="LinkedIn">&#128188; LinkedIn</option>
+              <option value="X/Twitter">&#128038; X / Twitter</option>
+              <option value="Facebook">&#128279; Facebook</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary" id="rewrite-btn">
+            <span class="btn-icon">&#x1F504;</span>
+            <span>Rewrite for Platform</span>
+          </button>
+
+          <div class="error-msg" id="rewriter-error"></div>
+
+          <div class="output-card" id="rewriter-output-card">
+            <div class="output-card-header">
+              <span class="output-label">Rewritten Content</span>
+              <button class="copy-btn" id="rewriter-copy-btn">Copy</button>
+            </div>
+            <div class="output-text" id="rewriter-output"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- Hashtag Suggester Panel -->
+      <section class="panel" id="panel-hashtag">
+
+        <div class="field">
+          <label>Describe your content or paste a caption</label>
+          <textarea
+            id="hashtag-description"
+            placeholder="e.g. Morning workout routine, home gym setup, fitness motivation for beginners&hellip;"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label>Platform</label>
+          <select id="hashtag-platform">
+            <option value="Instagram">&#128248; Instagram</option>
+            <option value="TikTok">&#127925; TikTok</option>
+            <option value="LinkedIn">&#128188; LinkedIn</option>
+            <option value="X/Twitter">&#128038; X / Twitter</option>
+            <option value="Facebook">&#128279; Facebook</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="suggest-hashtags-btn">
+          <span class="btn-icon">#</span>
+          <span>Suggest Hashtags</span>
+        </button>
+
+        <div class="error-msg" id="hashtag-error"></div>
+
+        <div class="output-card" id="hashtag-output-card">
+          <div class="output-card-header">
+            <span class="output-label">Suggested Hashtags</span>
+            <button class="copy-btn" id="hashtag-copy-btn">Copy</button>
+          </div>
+          <div class="output-text" id="hashtag-output"></div>
+        </div>
+
+      </section>
+
+    </div><!-- /screen-social -->
+
+    <!-- ── Business X-Trend Screen ───────────────────────────────────────── -->
+    <div id="screen-business" class="screen">
+
+      <div class="screen-subheader">
+        <button class="back-btn" id="back-from-business">&#8592; Home</button>
+        <div class="screen-title-group">
+          <div class="screen-title">Business X-Trend</div>
+          <div class="screen-subtitle">For businesses &amp; professionals</div>
+        </div>
+      </div>
+
+      <nav class="tab-nav" id="business-tab-nav">
+        <button class="tab-btn active" data-tab="review">&#11088; Reviews</button>
+        <button class="tab-btn" data-tab="email">&#9993; Email</button>
+        <button class="tab-btn" data-tab="proposal">&#128203; Proposal</button>
+      </nav>
+
+      <!-- Review Responder Panel -->
+      <section class="panel active" id="panel-review">
+
+        <div class="field">
+          <label>Customer Review</label>
+          <textarea
+            id="review-content"
+            placeholder="Paste the Google or Yelp review here&hellip;"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label>Response Tone</label>
+          <select id="review-tone">
+            <option value="Professional">&#128084; Professional</option>
+            <option value="Friendly">&#128522; Friendly</option>
+            <option value="Apologetic">&#128591; Apologetic</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="generate-review-btn">
+          <span class="btn-icon">&#11088;</span>
+          <span>Generate Response</span>
+        </button>
+
+        <div class="error-msg" id="review-error"></div>
+
+        <div class="output-card" id="review-output-card">
+          <div class="output-card-header">
+            <span class="output-label">Review Response</span>
+            <button class="copy-btn" id="review-copy-btn">Copy</button>
+          </div>
+          <div class="output-text" id="review-output"></div>
+        </div>
+
+      </section>
+
+      <!-- Email Tone Fixer Panel -->
+      <section class="panel" id="panel-email">
+
+        <div class="field">
+          <label>Your Email</label>
+          <textarea
+            id="email-content"
+            placeholder="Paste your email here&hellip;"
+            rows="5"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label>Make it</label>
+          <select id="email-tone">
+            <option value="More Professional">&#128084; More Professional</option>
+            <option value="More Friendly">&#128522; More Friendly</option>
+            <option value="More Concise">&#9889; More Concise</option>
+            <option value="More Assertive">&#128170; More Assertive</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="fix-email-btn">
+          <span class="btn-icon">&#9993;</span>
+          <span>Fix Tone</span>
+        </button>
+
+        <div class="error-msg" id="email-error"></div>
+
+        <div class="output-card" id="email-output-card">
+          <div class="output-card-header">
+            <span class="output-label">Rewritten Email</span>
+            <button class="copy-btn" id="email-copy-btn">Copy</button>
+          </div>
+          <div class="output-text" id="email-output"></div>
+        </div>
+
+      </section>
+
+      <!-- Proposal Generator Panel -->
+      <section class="panel" id="panel-proposal">
+
+        <div class="field">
+          <label>Job Description</label>
+          <textarea
+            id="proposal-job"
+            placeholder="Paste the job description here&hellip;"
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label>Your Relevant Skills &amp; Experience</label>
+          <input
+            type="text"
+            id="proposal-skills"
+            placeholder="e.g. 5 years React, Node.js, built SaaS products, e-commerce experience"
+          />
+        </div>
+
+        <button class="btn btn-primary" id="generate-proposal-btn">
+          <span class="btn-icon">&#128203;</span>
+          <span>Generate Proposal</span>
+        </button>
+
+        <div class="error-msg" id="proposal-error"></div>
+
+        <div class="output-card" id="proposal-output-card">
+          <div class="output-card-header">
+            <span class="output-label">Freelance Proposal</span>
+            <button class="copy-btn" id="proposal-copy-btn">Copy</button>
+          </div>
+          <div class="output-text" id="proposal-output"></div>
+        </div>
+
+      </section>
+
+    </div><!-- /screen-business -->
+
+  </div><!-- /main-content -->
+
+  <!-- Upgrade Banner -->
+  <div class="upgrade-banner" id="upgrade-banner">
+    <div class="upgrade-banner-main">
+      <div class="upgrade-banner-body">
+        <div class="upgrade-banner-title">Daily limit reached</div>
+        <div class="upgrade-banner-sub">Upgrade to keep creating today, or see you tomorrow!</div>
+      </div>
+      <div class="upgrade-banner-actions">
+        <button class="upgrade-btn upgrade-btn-credits" id="upgrade-credits-btn">Buy Credits</button>
+        <button class="upgrade-btn upgrade-btn-pro" id="upgrade-pro-btn">Go Pro</button>
+      </div>
+    </div>
+    <div class="upgrade-error" id="upgrade-error"></div>
+  </div>
+
+  <!-- Plan Selector Overlay -->
+  <div class="selector-overlay" id="plan-selector">
+    <div class="selector-overlay-header">
+      <div class="selector-overlay-title">Choose a Plan</div>
+      <button class="selector-overlay-close" id="plan-selector-close">&#10005;</button>
+    </div>
+    <div class="selector-overlay-desc">Unlock the tools you need, cancel anytime.</div>
+    <div class="selector-overlay-body">
+
+      <!-- Social Pro -->
+      <div class="plan-card">
+        <div class="plan-card-top">
+          <div class="plan-card-name">Social Pro</div>
+          <div class="plan-card-price">$9.99<span class="plan-card-period">/mo</span></div>
+        </div>
+        <ul class="plan-card-features">
+          <li>Caption Generator</li>
+          <li>Platform Rewriter (unlimited)</li>
+          <li>Hashtag Suggester</li>
+        </ul>
+        <button class="plan-card-btn" data-product-type="subscription" data-product-id="social_pro">Choose Social Pro</button>
+      </div>
+
+      <!-- Business Pro -->
+      <div class="plan-card">
+        <div class="plan-card-top">
+          <div class="plan-card-name">Business Pro</div>
+          <div class="plan-card-price">$19.99<span class="plan-card-period">/mo</span></div>
+        </div>
+        <ul class="plan-card-features">
+          <li>Review Responder</li>
+          <li>Email Tone Fixer</li>
+          <li>Proposal Generator</li>
+        </ul>
+        <button class="plan-card-btn" data-product-type="subscription" data-product-id="business_pro">Choose Business Pro</button>
+      </div>
+
+      <!-- Bundle -->
+      <div class="plan-card plan-card-featured">
+        <div class="plan-card-badge">Best Value</div>
+        <div class="plan-card-top">
+          <div class="plan-card-name">Bundle</div>
+          <div class="plan-card-price">$29.99<span class="plan-card-period">/mo</span></div>
+        </div>
+        <ul class="plan-card-features">
+          <li>Everything in Social &amp; Business</li>
+          <li>Brand Voice Memory</li>
+          <li>Team seats included</li>
+        </ul>
+        <button class="plan-card-btn plan-card-btn-accent" data-product-type="subscription" data-product-id="bundle">Choose Bundle</button>
+      </div>
+
+    </div>
+    <div class="selector-overlay-error" id="plan-selector-error"></div>
+  </div>
+
+  <!-- Credits Selector Overlay -->
+  <div class="selector-overlay" id="credits-selector">
+    <div class="selector-overlay-header">
+      <div class="selector-overlay-title">Buy Credits</div>
+      <button class="selector-overlay-close" id="credits-selector-close">&#10005;</button>
+    </div>
+    <div class="selector-overlay-desc">Credits never expire and bypass your daily limit.</div>
+    <div class="selector-overlay-body">
+
+      <!-- Starter -->
+      <div class="credit-pack">
+        <div class="credit-pack-info">
+          <div class="credit-pack-name">Starter</div>
+          <div class="credit-pack-amount">25 credits</div>
+        </div>
+        <div class="credit-pack-price">$2.99</div>
+        <button class="credit-pack-btn" data-product-type="credits" data-product-id="credits_starter">Buy</button>
+      </div>
+
+      <!-- Popular -->
+      <div class="credit-pack credit-pack-popular">
+        <div class="credit-pack-info">
+          <div class="credit-pack-name">Popular <span class="credit-popular-badge">&#9733; Most Popular</span></div>
+          <div class="credit-pack-amount">50 credits</div>
+        </div>
+        <div class="credit-pack-price">$4.99</div>
+        <button class="credit-pack-btn credit-pack-btn-accent" data-product-type="credits" data-product-id="credits_popular">Buy</button>
+      </div>
+
+      <!-- Power -->
+      <div class="credit-pack">
+        <div class="credit-pack-info">
+          <div class="credit-pack-name">Power</div>
+          <div class="credit-pack-amount">100 credits</div>
+        </div>
+        <div class="credit-pack-price">$9.99</div>
+        <button class="credit-pack-btn" data-product-type="credits" data-product-id="credits_power">Buy</button>
+      </div>
+
+    </div>
+    <div class="selector-overlay-error" id="credits-selector-error"></div>
+  </div>
+
+  </div><!-- /content-area -->
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="model-badge">
+      <div class="model-dot"></div>
+      claude-sonnet-4-6
+    </div>
+    <div class="footer-right">
+      <div class="footer-usage" id="footer-usage">
+        <div class="usage-line-1" id="usage-line-1">Not signed in</div>
+        <div class="usage-line-2" id="usage-line-2"></div>
+      </div>
+      <button class="icon-btn theme-toggle" id="theme-toggle" title="Toggle light/dark mode">&#127769;</button>
+    </div>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
