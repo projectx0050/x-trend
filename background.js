@@ -15,6 +15,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'authLogin':
       postAuth('/auth/login', request.payload)
         .then(data => sendResponse({ success: true, data }))
+        .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
+      return true;
+
+    case 'resendVerification':
+      postAuth('/auth/resend-verification', request.payload)
+        .then(data => sendResponse({ success: true, data }))
         .catch(err => sendResponse({ success: false, error: err.message }));
       return true;
 
@@ -73,7 +79,12 @@ async function postAuth(path, body, token) {
   });
 
   const data = await resp.json();
-  if (!resp.ok) throw new Error(data.error || `Request failed (${resp.status})`);
+  if (!resp.ok) {
+    const err = new Error(data.error || `Request failed (${resp.status})`);
+    err.status = resp.status;
+    err.code   = data.code;
+    throw err;
+  }
   return data;
 }
 

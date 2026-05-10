@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service — X-Trend</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #181818;
+      --surface-2: #222222;
+      --border: #2a2a2a;
+      --accent: #7c6df0;
+      --accent-dim: rgba(124, 109, 240, 0.12);
+      --text: #f0f0f0;
+      --text-secondary: #aaaaaa;
+      --text-muted: #666666;
+      --success: #4caf7d;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 0 20px 80px;
+    }
+
+    .site-header {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 0 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .logo-wordmark {
+      font-size: 20px;
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: -0.4px;
+      background: linear-gradient(90deg, #9d8fff, #c084fc, #fff, #c084fc, #7c6df0);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3.5s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+
+    .hero {
+      max-width: 720px;
+      margin: 52px auto 0;
+    }
+
+    .hero-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(124, 109, 240, 0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .hero-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .hero-meta span {
+      margin-right: 20px;
+    }
+
+    .content {
+      max-width: 720px;
+      margin: 56px auto 0;
+    }
+
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-number {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .section h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .section p:last-child {
+      margin-bottom: 0;
+    }
+
+    .section ul {
+      list-style: none;
+      padding: 0;
+      margin: 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section ul li {
+      color: var(--text-secondary);
+      padding-left: 20px;
+      position: relative;
+      font-size: 14.5px;
+    }
+
+    .section ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--text-muted);
+    }
+
+    .highlight-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 16px 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .highlight-box strong {
+      color: var(--text);
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 0 48px;
+    }
+
+    .contact-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      margin-top: 56px;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .contact-block h2 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .contact-block p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+    }
+
+    .site-footer {
+      max-width: 720px;
+      margin: 40px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .site-footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .site-footer a:hover {
+      color: var(--accent);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 26px; }
+      .site-footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <img class="logo-img" src="icon128.png" alt="X-Trend logo" />
+    <span class="logo-wordmark">X-Trend</span>
+  </header>
+
+  <section class="hero">
+    <div class="hero-label">Legal</div>
+    <h1>Terms of Service</h1>
+    <div class="hero-meta">
+      <span>Effective: May 11, 2026</span>
+      <span>Last updated: May 11, 2026</span>
+    </div>
+  </section>
+
+  <main class="content">
+
+    <section class="section">
+      <div class="section-number">01</div>
+      <h2>Acceptance of Terms</h2>
+      <p>
+        By creating an X-Trend account or using the X-Trend Chrome extension ("the Service"),
+        you agree to be bound by these Terms of Service. If you do not agree, do not use the Service.
+      </p>
+      <p>
+        We may update these Terms from time to time. Continued use of the Service after changes
+        are posted constitutes acceptance of the updated Terms.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">02</div>
+      <h2>Description of Service</h2>
+      <p>
+        X-Trend is a Chrome browser extension that uses artificial intelligence to help users
+        generate and reformat social media content, respond to reviews, fix email tone, and
+        create freelance proposals.
+      </p>
+      <p>
+        The Service requires an account. Free accounts are subject to daily usage limits.
+        Paid subscriptions and credit packs are available for additional access.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">03</div>
+      <h2>Accounts &amp; Eligibility</h2>
+      <ul>
+        <li>You must be at least 13 years old to create an account</li>
+        <li>You are responsible for maintaining the security of your account credentials</li>
+        <li>You may not share your account or use another person's account</li>
+        <li>You must provide a valid email address and verify it to activate your account</li>
+        <li>One account per person; duplicate accounts may be removed</li>
+      </ul>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">04</div>
+      <h2>Acceptable Use</h2>
+      <p>You agree not to use the Service to:</p>
+      <ul>
+        <li>Generate content that is unlawful, harmful, harassing, or fraudulent</li>
+        <li>Infringe on the intellectual property rights of others</li>
+        <li>Attempt to reverse-engineer, scrape, or abuse the Service's API</li>
+        <li>Circumvent usage limits through automated means or multiple accounts</li>
+        <li>Resell or redistribute generated content as part of an AI generation service</li>
+      </ul>
+      <p>
+        We reserve the right to suspend or terminate accounts that violate these terms.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">05</div>
+      <h2>Payments &amp; Refunds</h2>
+      <p>
+        Paid subscriptions are billed monthly and renew automatically until cancelled.
+        Credit packs are non-expiring and non-refundable once purchased.
+      </p>
+      <p>
+        You may cancel your subscription at any time through the Stripe customer portal.
+        Cancellation takes effect at the end of the current billing period — you will not
+        be charged again and your access continues until the period ends.
+      </p>
+      <div class="highlight-box">
+        <strong>Refunds:</strong> We offer refunds on subscriptions within 7 days of the
+        initial purchase if you have not used the Service. Credit packs are non-refundable.
+        To request a refund, contact us at helloprojectx00@gmail.com.
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">06</div>
+      <h2>Intellectual Property</h2>
+      <p>
+        The X-Trend extension, its code, design, and brand are owned by X-Trend and protected
+        by applicable intellectual property laws. You may not copy, modify, or distribute the
+        extension without permission.
+      </p>
+      <p>
+        Content you generate using the Service belongs to you. X-Trend does not claim ownership
+        of your inputs or outputs.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">07</div>
+      <h2>Disclaimer of Warranties</h2>
+      <p>
+        The Service is provided "as is" without warranties of any kind. We do not guarantee
+        that generated content will be accurate, appropriate, or free from errors. AI-generated
+        content should be reviewed before use.
+      </p>
+      <p>
+        We do not warrant that the Service will be uninterrupted, error-free, or available at
+        all times. Scheduled and unscheduled downtime may occur.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">08</div>
+      <h2>Limitation of Liability</h2>
+      <p>
+        To the maximum extent permitted by law, X-Trend shall not be liable for any indirect,
+        incidental, consequential, or punitive damages arising from your use of the Service,
+        including but not limited to lost profits, data loss, or business interruption.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">09</div>
+      <h2>Termination</h2>
+      <p>
+        We reserve the right to suspend or terminate your account at any time for violations
+        of these Terms or for any other reason at our discretion. You may delete your account
+        at any time by contacting us.
+      </p>
+      <p>
+        Upon termination, your right to use the Service ceases immediately. Unused credits
+        and remaining subscription time are forfeited and non-refundable except where required
+        by law.
+      </p>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="section">
+      <div class="section-number">10</div>
+      <h2>Governing Law</h2>
+      <p>
+        These Terms are governed by and construed in accordance with applicable law.
+        Any disputes shall be resolved through binding arbitration or in a court of competent
+        jurisdiction.
+      </p>
+    </section>
+
+  </main>
+
+  <div class="contact-block">
+    <h2>Questions about these Terms?</h2>
+    <p>
+      Contact us at <a href="mailto:helloprojectx00@gmail.com">helloprojectx00@gmail.com</a>.
+      We also have a <a href="privacy-policy.html">Privacy Policy</a> that explains how we handle your data.
+    </p>
+  </div>
+
+  <footer class="site-footer">
+    <span>© 2026 X-Trend. All rights reserved.</span>
+    <a href="privacy-policy.html">Privacy Policy</a>
+  </footer>
+
+</body>
+</html>

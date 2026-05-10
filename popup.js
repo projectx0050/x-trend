@@ -14,13 +14,17 @@ let currentScreen = 'home'; // 'home' | 'social' | 'business'
 // ── DOM refs — settings / auth ────────────────────────────────────────────────
 const settingsToggle    = document.getElementById('settings-toggle');
 const settingsPanel     = document.getElementById('settings-panel');
-const authSection       = document.getElementById('auth-section');
-const authTabs          = document.querySelectorAll('.auth-tab');
-const authEmailInput    = document.getElementById('auth-email');
-const authPasswordInput = document.getElementById('auth-password');
-const authSubmitBtn     = document.getElementById('auth-submit-btn');
-const authStatus        = document.getElementById('auth-status');
-const accountSection    = document.getElementById('account-section');
+const authSection              = document.getElementById('auth-section');
+const authTabs                 = document.querySelectorAll('.auth-tab');
+const authEmailInput           = document.getElementById('auth-email');
+const authPasswordInput        = document.getElementById('auth-password');
+const authSubmitBtn            = document.getElementById('auth-submit-btn');
+const authStatus               = document.getElementById('auth-status');
+const termsField               = document.getElementById('terms-field');
+const termsCheckbox            = document.getElementById('terms-checkbox');
+const resendVerificationField  = document.getElementById('resend-verification-field');
+const resendVerificationBtn    = document.getElementById('resend-verification-btn');
+const accountSection           = document.getElementById('account-section');
 const accountEmailEl    = document.getElementById('account-email');
 const accountTierEl     = document.getElementById('account-tier');
 const logoutBtn         = document.getElementById('logout-btn');
@@ -270,6 +274,8 @@ authTabs.forEach(tab => {
     tab.classList.add('active');
     authSubmitBtn.textContent      = authMode === 'login' ? 'Log In' : 'Create Account';
     authPasswordInput.autocomplete = authMode === 'login' ? 'current-password' : 'new-password';
+    termsField.style.display       = authMode === 'signup' ? 'block' : 'none';
+    termsCheckbox.checked          = false;
     clearAuthStatus();
   });
 });
@@ -284,15 +290,44 @@ authSubmitBtn.addEventListener('click', () => {
     return;
   }
 
+  if (authMode === 'signup' && !termsCheckbox.checked) {
+    showAuthStatus('Please agree to the Terms of Service and Privacy Policy.', false);
+    return;
+  }
+
   authSubmitBtn.disabled    = true;
   authSubmitBtn.textContent = authMode === 'login' ? 'Logging in\u2026' : 'Creating account\u2026';
   clearAuthStatus();
 
-  const action = authMode === 'login' ? 'authLogin' : 'authSignup';
+  if (authMode === 'signup') {
+    chrome.runtime.sendMessage(
+      { action: 'authSignup', payload: { email, password, termsAccepted: true } },
+      (response) => {
+        authSubmitBtn.disabled    = false;
+        authSubmitBtn.textContent = 'Create Account';
 
-  chrome.runtime.sendMessage({ action, payload: { email, password } }, (response) => {
+        if (chrome.runtime.lastError) {
+          showAuthStatus(chrome.runtime.lastError.message, false);
+          return;
+        }
+
+        if (response && response.success) {
+          showAuthStatus(
+            response.data.message || 'Account created! Check your email to verify.',
+            true,
+          );
+        } else {
+          showAuthStatus(response?.error || 'Signup failed.', false);
+        }
+      },
+    );
+    return;
+  }
+
+  // Login flow
+  chrome.runtime.sendMessage({ action: 'authLogin', payload: { email, password } }, (response) => {
     authSubmitBtn.disabled    = false;
-    authSubmitBtn.textContent = authMode === 'login' ? 'Log In' : 'Create Account';
+    authSubmitBtn.textContent = 'Log In';
 
     if (chrome.runtime.lastError) {
       showAuthStatus(chrome.runtime.lastError.message, false);
@@ -312,6 +347,9 @@ authSubmitBtn.addEventListener('click', () => {
       });
     } else {
       showAuthStatus(response?.error || 'Authentication failed.', false);
+      if (response?.code === 'email_not_verified') {
+        resendVerificationField.style.display = 'block';
+      }
     }
   });
 });
@@ -324,7 +362,37 @@ function showAuthStatus(msg, success) {
 function clearAuthStatus() {
   authStatus.textContent = '';
   authStatus.className   = 'save-status';
+  resendVerificationField.style.display = 'none';
 }
+
+// ── Resend verification email ─────────────────────────────────────────────────
+resendVerificationBtn.addEventListener('click', () => {
+  const email = authEmailInput.value.trim();
+  if (!email) {
+    showAuthStatus('Enter your email address above first.', false);
+    return;
+  }
+
+  resendVerificationBtn.disabled   = true;
+  resendVerificationBtn.textContent = 'Sending…';
+
+  chrome.runtime.sendMessage({ action: 'resendVerification', payload: { email } }, (response) => {
+    resendVerificationBtn.disabled    = false;
+    resendVerificationBtn.textContent = 'Resend verification email';
+
+    if (chrome.runtime.lastError) {
+      showAuthStatus(chrome.runtime.lastError.message, false);
+      return;
+    }
+
+    if (response && response.success) {
+      showAuthStatus('Verification email sent! Check your inbox.', true);
+      resendVerificationField.style.display = 'none';
+    } else {
+      showAuthStatus(response?.error || 'Could not resend email. Please try again.', false);
+    }
+  });
+});
 
 // ── Logout ────────────────────────────────────────────────────────────────────
 logoutBtn.addEventListener('click', () => {

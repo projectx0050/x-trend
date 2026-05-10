@@ -38,8 +38,17 @@
         <label>Password</label>
         <input type="password" id="auth-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" />
       </div>
+      <div class="terms-field" id="terms-field" style="display:none">
+        <label class="terms-label">
+          <input type="checkbox" id="terms-checkbox" />
+          <span>I agree to the <a href="https://projectx0050.github.io/x-trend/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://projectx0050.github.io/x-trend/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+        </label>
+      </div>
       <button class="btn btn-primary" id="auth-submit-btn">Log In</button>
       <div class="save-status" id="auth-status"></div>
+      <div id="resend-verification-field" style="display:none">
+        <button class="btn-text" id="resend-verification-btn">Resend verification email</button>
+      </div>
     </div>
 
     <!-- Account info: shown when logged in -->
