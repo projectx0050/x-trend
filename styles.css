@@ -1606,7 +1606,7 @@ input::placeholder {
 }
 
 .reading-panel-scroll::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 
 .reading-panel-scroll::-webkit-scrollbar-track {
@@ -1614,12 +1614,20 @@ input::placeholder {
 }
 
 .reading-panel-scroll::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: rgba(160, 160, 160, 0.55);
   border-radius: 4px;
 }
 
 .reading-panel-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: rgba(200, 200, 200, 0.8);
+}
+
+body.light-mode .reading-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.35);
+}
+
+body.light-mode .reading-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(80, 80, 80, 0.6);
 }
 
 .reading-panel-text {
