@@ -10,6 +10,8 @@ let isDarkMode   = false;
 let authMode     = 'login'; // 'login' | 'signup'
 let brandVoice   = '';
 let currentScreen = 'home'; // 'home' | 'social' | 'business'
+let expandedViewEnabled  = true;
+let readingPanelCloseTimer = null;
 
 // ── DOM refs — settings / auth ────────────────────────────────────────────────
 const settingsToggle    = document.getElementById('settings-toggle');
@@ -112,10 +114,22 @@ const proposalOutputCard  = document.getElementById('proposal-output-card');
 const proposalOutput      = document.getElementById('proposal-output');
 const proposalCopyBtn     = document.getElementById('proposal-copy-btn');
 
+// ── DOM refs — Settings back / Reading Panel ──────────────────────────────────
+const settingsBackBtn      = document.getElementById('settings-back-btn');
+const expandedViewToggle   = document.getElementById('expanded-view-toggle');
+const readingPanel         = document.getElementById('reading-panel');
+const readingPanelText     = document.getElementById('reading-panel-text');
+const readingPanelLabel    = document.getElementById('reading-panel-label');
+const readingPanelCopyBtn  = document.getElementById('reading-panel-copy');
+const readingPanelCloseBtn = document.getElementById('reading-panel-close');
+
 // ── Init ──────────────────────────────────────────────────────────────────────
-chrome.storage.local.get(['jwtToken', 'userEmail', 'userTier', 'themeMode', 'brandVoice'], (result) => {
+chrome.storage.local.get(['jwtToken', 'userEmail', 'userTier', 'themeMode', 'brandVoice', 'expandedViewEnabled'], (result) => {
   isDarkMode = result.themeMode !== 'light';
   applyTheme();
+
+  expandedViewEnabled = result.expandedViewEnabled !== false;
+  expandedViewToggle.checked = expandedViewEnabled;
 
   if (result.brandVoice) {
     brandVoice = result.brandVoice;
@@ -253,6 +267,8 @@ settingsToggle.addEventListener('click', () => {
   if (settingsOpen) closeSettings();
   else openSettings();
 });
+
+settingsBackBtn.addEventListener('click', closeSettings);
 
 // ── Auth section rendering ────────────────────────────────────────────────────
 function renderAuthSection() {
@@ -431,6 +447,13 @@ saveBrandVoiceBtn.addEventListener('click', () => {
       brandVoiceStatus.className   = 'save-status';
     }, 2500);
   });
+});
+
+// ── Expanded View toggle ──────────────────────────────────────────────────────
+expandedViewToggle.addEventListener('change', () => {
+  expandedViewEnabled = expandedViewToggle.checked;
+  chrome.storage.local.set({ expandedViewEnabled });
+  if (!expandedViewEnabled) closeReadingPanel();
 });
 
 // ── User status & usage display ───────────────────────────────────────────────
@@ -867,3 +890,56 @@ setupCopyBtn(hashtagCopyBtn,  hashtagOutput);
 setupCopyBtn(reviewCopyBtn,   reviewOutput);
 setupCopyBtn(emailCopyBtn,    emailOutput);
 setupCopyBtn(proposalCopyBtn, proposalOutput);
+
+// ── Reading Panel ─────────────────────────────────────────────────────────────
+function openReadingPanel(text, label) {
+  if (!expandedViewEnabled || !text.trim()) return;
+  clearTimeout(readingPanelCloseTimer);
+  readingPanelText.textContent = text;
+  readingPanelLabel.textContent = label;
+  readingPanel.classList.add('open');
+}
+
+function closeReadingPanel() {
+  readingPanel.classList.remove('open');
+}
+
+function scheduleCloseReadingPanel() {
+  readingPanelCloseTimer = setTimeout(closeReadingPanel, 150);
+}
+
+const OUTPUT_CARDS = [
+  { card: captionOutputCard,  textEl: captionOutput,   label: 'Caption' },
+  { card: rewriterOutputCard, textEl: rewriterOutput,  label: 'Rewritten Content' },
+  { card: hashtagOutputCard,  textEl: hashtagOutput,   label: 'Hashtags' },
+  { card: reviewOutputCard,   textEl: reviewOutput,    label: 'Review Response' },
+  { card: emailOutputCard,    textEl: emailOutput,     label: 'Rewritten Email' },
+  { card: proposalOutputCard, textEl: proposalOutput,  label: 'Proposal' },
+];
+
+OUTPUT_CARDS.forEach(({ card, textEl, label }) => {
+  card.addEventListener('mouseenter', () => openReadingPanel(textEl.textContent, label));
+  card.addEventListener('mouseleave', scheduleCloseReadingPanel);
+});
+
+readingPanel.addEventListener('mouseenter', () => clearTimeout(readingPanelCloseTimer));
+readingPanel.addEventListener('mouseleave', scheduleCloseReadingPanel);
+
+readingPanelCloseBtn.addEventListener('click', closeReadingPanel);
+
+readingPanelCopyBtn.addEventListener('click', () => {
+  const text = readingPanelText.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    readingPanelCopyBtn.textContent = '✓ Copied!';
+    readingPanelCopyBtn.classList.add('copied');
+    setTimeout(() => {
+      readingPanelCopyBtn.textContent = 'Copy';
+      readingPanelCopyBtn.classList.remove('copied');
+    }, 2000);
+  });
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && readingPanel.classList.contains('open')) closeReadingPanel();
+});

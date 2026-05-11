@@ -8,6 +8,8 @@
 </head>
 <body>
 
+<div id="popup-root">
+
   <!-- Header -->
   <header class="header">
     <div class="logo">
@@ -22,7 +24,10 @@
 
   <!-- Settings Panel -->
   <div id="settings-panel">
-    <div class="settings-title">&#9881; Settings</div>
+    <div class="settings-header">
+      <button class="settings-back-btn" id="settings-back-btn" title="Back">&#8592;</button>
+      <div class="settings-title">&#9881; Settings</div>
+    </div>
 
     <!-- Auth forms: shown when logged out -->
     <div id="auth-section">
@@ -74,6 +79,18 @@
       </div>
       <button class="btn btn-secondary" id="save-brand-voice-btn">Save Brand Voice</button>
       <div class="save-status" id="brand-voice-status"></div>
+    </div>
+
+    <!-- Expanded View section -->
+    <div class="settings-section">
+      <div class="settings-section-label">&#128269; Expanded View</div>
+      <div class="settings-row">
+        <span class="settings-row-text">Show reading panel on hover</span>
+        <label class="toggle-label">
+          <input type="checkbox" id="expanded-view-toggle" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
     </div>
   </div>
 
@@ -555,6 +572,22 @@
       <button class="icon-btn theme-toggle" id="theme-toggle" title="Toggle light/dark mode">&#127769;</button>
     </div>
   </footer>
+
+</div><!-- /popup-root -->
+
+<!-- Reading Panel — appears to the right of the popup on output hover -->
+<div id="reading-panel">
+  <div class="reading-panel-header">
+    <span id="reading-panel-label" class="reading-panel-label">Generated Content</span>
+    <div class="reading-panel-actions">
+      <button id="reading-panel-copy" class="reading-panel-copy-btn">Copy</button>
+      <button id="reading-panel-close" class="reading-panel-close-btn">&#10005;</button>
+    </div>
+  </div>
+  <div class="reading-panel-scroll">
+    <div id="reading-panel-text" class="reading-panel-text"></div>
+  </div>
+</div>
 
   <script src="popup.js"></script>
 </body>
