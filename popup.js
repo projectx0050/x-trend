@@ -24,6 +24,7 @@ const termsField               = document.getElementById('terms-field');
 const termsCheckbox            = document.getElementById('terms-checkbox');
 const resendVerificationField  = document.getElementById('resend-verification-field');
 const resendVerificationBtn    = document.getElementById('resend-verification-btn');
+const authSpamNote             = document.getElementById('auth-spam-note');
 const accountSection           = document.getElementById('account-section');
 const accountEmailEl    = document.getElementById('account-email');
 const accountTierEl     = document.getElementById('account-tier');
@@ -316,6 +317,7 @@ authSubmitBtn.addEventListener('click', () => {
             response.data.message || 'Account created! Check your email to verify.',
             true,
           );
+          authSpamNote.style.display = 'block';
         } else {
           showAuthStatus(response?.error || 'Signup failed.', false);
         }
@@ -362,6 +364,7 @@ function showAuthStatus(msg, success) {
 function clearAuthStatus() {
   authStatus.textContent = '';
   authStatus.className   = 'save-status';
+  authSpamNote.style.display            = 'none';
   resendVerificationField.style.display = 'none';
 }
 
