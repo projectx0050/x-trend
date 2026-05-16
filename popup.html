@@ -69,16 +69,25 @@
     <!-- Brand Voice section -->
     <div class="settings-section">
       <div class="settings-section-label">&#127908; Brand Voice</div>
-      <div class="field">
-        <label>Tone &amp; Style</label>
-        <textarea
-          id="brand-voice-input"
-          placeholder="e.g. Professional but warm, uses inclusive language, focuses on sustainability and innovation&hellip;"
-          rows="3"
-        ></textarea>
+      <!-- Lock gate — shown for non-Bundle users -->
+      <div class="pro-gate" id="bv-bundle-gate" style="display:none">
+        <div class="pro-gate-lock">&#128274;</div>
+        <div class="pro-gate-title">Bundle Plan Required</div>
+        <div class="pro-gate-sub">Upgrade to the Bundle plan to unlock Brand Voice Memory</div>
       </div>
-      <button class="btn btn-secondary" id="save-brand-voice-btn">Save Brand Voice</button>
-      <div class="save-status" id="brand-voice-status"></div>
+      <!-- Form — shown for Bundle users only -->
+      <div id="bv-form">
+        <div class="field">
+          <label>Tone &amp; Style</label>
+          <textarea
+            id="brand-voice-input"
+            placeholder="e.g. Professional but warm, uses inclusive language, focuses on sustainability and innovation&hellip;"
+            rows="3"
+          ></textarea>
+        </div>
+        <button class="btn btn-secondary" id="save-brand-voice-btn">Save Brand Voice</button>
+        <div class="save-status" id="brand-voice-status"></div>
+      </div>
     </div>
 
     <!-- Expanded View section -->

@@ -33,10 +33,12 @@ const accountTierEl     = document.getElementById('account-tier');
 const logoutBtn         = document.getElementById('logout-btn');
 
 // ── DOM refs — brand voice ─────────────────────────────────────────────────────
-const brandVoiceInput    = document.getElementById('brand-voice-input');
-const saveBrandVoiceBtn  = document.getElementById('save-brand-voice-btn');
-const brandVoiceStatus   = document.getElementById('brand-voice-status');
+const brandVoiceInput     = document.getElementById('brand-voice-input');
+const saveBrandVoiceBtn   = document.getElementById('save-brand-voice-btn');
+const brandVoiceStatus    = document.getElementById('brand-voice-status');
 const homeBrandVoiceStrip = document.getElementById('home-brand-voice-strip');
+const bvBundleGate        = document.getElementById('bv-bundle-gate');
+const bvForm              = document.getElementById('bv-form');
 
 // ── DOM refs — footer / theme ─────────────────────────────────────────────────
 const usageLine1  = document.getElementById('usage-line-1');
@@ -281,6 +283,7 @@ function renderAccountSection() {
   accountSection.style.display = 'flex';
   accountEmailEl.textContent   = userEmail;
   accountTierEl.textContent    = formatTierLabel(userTier) + ' plan';
+  setBrandVoiceGated(userTier !== 'bundle');
 }
 
 // ── Auth tab toggle ───────────────────────────────────────────────────────────
@@ -433,10 +436,21 @@ function clearStoredAuth() {
   updateUsageDisplay(null);
   hideUpgradeBanner();
   setRewriterGated(false);
+  setBrandVoiceGated(true);
 }
 
 // ── Brand Voice ───────────────────────────────────────────────────────────────
+function setBrandVoiceGated(gated) {
+  bvBundleGate.style.display = gated ? 'flex' : 'none';
+  bvForm.style.display       = gated ? 'none' : 'block';
+}
+
 saveBrandVoiceBtn.addEventListener('click', () => {
+  if (userTier !== 'bundle') {
+    brandVoiceStatus.textContent = 'Bundle plan required to save Brand Voice.';
+    brandVoiceStatus.className   = 'save-status error';
+    return;
+  }
   const value = brandVoiceInput.value.trim();
   brandVoice  = value;
   chrome.storage.local.set({ brandVoice: value }, () => {
@@ -629,7 +643,7 @@ generateBtn.addEventListener('click', async () => {
     type:       'caption',
     description,
     platform:   captionPlatform.value,
-    brandVoice: brandVoice || undefined,
+    brandVoice: (userTier === 'bundle' && brandVoice) ? brandVoice : undefined,
   });
 
   setLoading(generateBtn, false, '\u2728', 'Generate Caption');
@@ -664,7 +678,7 @@ rewriteBtn.addEventListener('click', async () => {
     type:       'rewrite',
     content,
     platform:   rewriterPlatform.value,
-    brandVoice: brandVoice || undefined,
+    brandVoice: (userTier === 'bundle' && brandVoice) ? brandVoice : undefined,
   });
 
   setLoading(rewriteBtn, false, '\uD83D\uDD04', 'Rewrite for Platform');
