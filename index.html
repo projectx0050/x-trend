@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X-Trend | Write less. Trend more.</title>
+  <meta name="description" content="The AI writing co-pilot that lives in your browser. Captions, rewrites, reviews, proposals — without leaving the page.">
+  <meta property="og:title" content="X-Trend | Write less. Trend more.">
+  <meta property="og:description" content="The AI writing co-pilot that lives in your browser.">
+  <meta property="og:image" content="Images/Social Xtrend.png">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#050508">
+  <link rel="canonical" href="https://projectx0050.github.io/x-trend/">
+  <link rel="icon" type="image/png" href="Images/Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ═══ CUSTOM PROPERTIES ═══════════════════════════════════════════════ */
+@property --ba { syntax:'<angle>'; inherits:false; initial-value:0deg; }
+
+:root {
+  --bg:   #050508;
+  --p:    #7C3AED;
+  --p2:   #9F5FFC;
+  --p3:   #C084FC;
+  --t:    #0D9488;
+  --t2:   #14B8A6;
+  --t3:   #5EEAD4;
+  --text: #EEEAFF;
+  --text2:#7A6E9E;
+  --text3:#413A5C;
+  --card: rgba(255,255,255,0.024);
+  --card-b:rgba(255,255,255,0.07);
+  --fd:   'Bricolage Grotesque', sans-serif;
+  --fb:   'Plus Jakarta Sans', sans-serif;
+  --ease: cubic-bezier(0.16,1,0.3,1);
+  --ann-h: 44px;
+  --nav-h: 64px;
+  --r: 16px;
+}
+
+/* ═══ RESET ════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--fb);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  overflow-x:hidden;
+  padding-top:calc(var(--ann-h) + var(--nav-h));
+  transition:padding-top .35s var(--ease);
+}
+body.no-ann{padding-top:var(--nav-h);}
+a{text-decoration:none;color:inherit;}
+ul{list-style:none;}
+img{display:block;max-width:100%;}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit;}
+
+/* ═══ CANVAS + OVERLAY ════════════════════════════════════════════════ */
+#beams{
+  position:fixed;inset:0;width:100%;height:100%;
+  z-index:0;pointer-events:none;
+}
+.glow-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 50% 40%, rgba(124,58,237,0.08) 0%, transparent 70%);
+  animation:overlayPulse 8s ease-in-out infinite;
+}
+@keyframes overlayPulse{0%,100%{opacity:.5;}50%{opacity:1;}}
+
+/* ═══ ANNOUNCEMENT BAR ════════════════════════════════════════════════ */
+#ann-bar{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--ann-h);z-index:300;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:0 48px 0 16px;
+  background:linear-gradient(135deg,#7C3AED,#9F5FFC);
+  font-size:13px;font-weight:500;color:#fff;
+  overflow:hidden;
+  transition:height .35s var(--ease),opacity .35s var(--ease);
+}
+#ann-bar.gone{height:0;opacity:0;pointer-events:none;}
+#ann-dismiss{
+  position:absolute;right:14px;
+  font-size:18px;line-height:1;padding:6px 8px;
+  color:rgba(255,255,255,.7);border-radius:6px;
+  transition:color .2s,background .2s;
+}
+#ann-dismiss:hover{color:#fff;background:rgba(255,255,255,.12);}
+
+/* ═══ NAVIGATION ══════════════════════════════════════════════════════ */
+#nav{
+  position:fixed;top:var(--ann-h);left:0;right:0;
+  height:var(--nav-h);z-index:200;
+  transition:top .35s var(--ease),background .4s ease,backdrop-filter .4s ease,border-color .4s ease;
+  border-bottom:1px solid transparent;
+}
+body.no-ann #nav{top:0;}
+#nav.scrolled{
+  background:rgba(5,5,8,.85);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom-color:rgba(124,58,237,.1);
+}
+.nav-inner{
+  max-width:1240px;margin:0 auto;height:100%;
+  padding:0 24px;display:flex;align-items:center;
+}
+.nav-brand{
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;overflow:visible;
+}
+.nav-brand img{width:36px;height:36px;object-fit:contain;border-radius:10px;}
+.nav-brand span{
+  font-family:'Bricolage Grotesque',var(--fd);font-weight:800;font-size:20px;letter-spacing:-.03em;
+  font-style:italic;white-space:nowrap;padding-right:8px;
+  background:linear-gradient(135deg,#C084FC,#9F5FFC);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.nav-links{
+  display:flex;gap:32px;margin:0 auto;
+}
+.nav-links a{
+  font-size:14px;font-weight:500;color:var(--text2);
+  transition:color .2s;
+}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:10px 20px;border-radius:9px;
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;font-size:14px;font-weight:600;
+  transition:opacity .2s,transform .15s,box-shadow .2s;
+  white-space:nowrap;flex-shrink:0;
+}
+.nav-cta:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,58,237,.4);}
+
+/* hamburger */
+.hamburger{
+  display:none;flex-direction:column;gap:5px;
+  padding:6px;margin-left:auto;position:relative;z-index:201;
+}
+.hamburger span{
+  display:block;width:22px;height:2px;
+  background:var(--text);border-radius:2px;
+  transition:transform .3s,opacity .3s;
+}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+/* ═══ MOBILE FULL-SCREEN MENU ═════════════════════════════════════════ */
+#mob-menu{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,5,8,.97);z-index:190;
+  flex-direction:column;align-items:center;justify-content:center;gap:36px;
+}
+#mob-menu.open{display:flex;}
+#mob-menu a{
+  font-family:var(--fd);font-size:30px;font-weight:700;
+  color:var(--text);transition:color .2s;
+}
+#mob-menu a:hover{color:var(--p3);}
+#mob-menu .mob-cta{
+  margin-top:8px;
+  padding:14px 32px;font-size:17px;border-radius:12px;
+  background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;
+}
+
+/* ═══ CONTAINER ═══════════════════════════════════════════════════════ */
+.container{max-width:1200px;margin:0 auto;padding:0 24px;}
+section{position:relative;z-index:2;}
+.section-pad{padding:120px 0;}
+
+/* ═══ HERO ════════════════════════════════════════════════════════════ */
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding-top:calc(var(--ann-h) + var(--nav-h) + 32px);
+  padding-bottom:0;z-index:2;position:relative;
+}
+.hero-content{
+  display:flex;flex-direction:column;align-items:center;
+  width:100%;flex:1;padding-bottom:40px;
+}
+
+/* ═══ TAGLINE ═════════════════════════════════════════════════════════ */
+.tagline-block{
+  text-align:center;padding:0 24px;
+  margin-bottom:48px;
+}
+@keyframes twIn{to{opacity:1;transform:translateY(0);}}
+.tw{
+  display:inline-block;
+  font-family:var(--fd);
+  font-size:clamp(52px,8vw,96px);
+  font-weight:800;letter-spacing:-.04em;line-height:.95;
+  opacity:0;transform:translateY(40px);
+  animation:twIn .7s var(--ease) forwards;
+}
+.tw1{animation-delay:.10s;}
+.tw2{animation-delay:.25s;}
+.tw3{animation-delay:.40s;}
+.tw4{animation-delay:.55s;}
+.tw-line{display:flex;gap:.2em;justify-content:center;flex-wrap:wrap;}
+.tw-line+.tw-line{margin-top:.04em;}
+.grad-purple{
+  background:linear-gradient(135deg,#C084FC,#e879f9);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.grad-teal{
+  background:linear-gradient(135deg,#14B8A6,#5EEAD4);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  font-size:clamp(16px,2vw,20px);color:var(--text2);
+  margin-top:22px;
+  opacity:0;transform:translateY(24px);
+  animation:twIn .6s var(--ease) .70s forwards;
+}
+.hero-chips{
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  margin-top:18px;
+  opacity:0;transform:translateY(16px);
+  animation:twIn .5s var(--ease) .85s forwards;
+}
+.hero-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 16px;border-radius:100px;
+  border:1px solid rgba(255,255,255,.12);
+  font-size:13px;font-weight:600;color:rgba(238,234,255,.7);
+}
+.hero-cta{
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-top:28px;padding:14px 32px;border-radius:12px;
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;font-size:16px;font-weight:700;
+  box-shadow:0 0 40px rgba(124,58,237,.5),0 0 80px rgba(124,58,237,.2);
+  opacity:0;transform:translateY(16px);
+  animation:twIn .5s var(--ease) 1s forwards;
+  transition:transform .15s,box-shadow .2s,opacity .2s;
+}
+.hero-cta:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 60px rgba(124,58,237,.65),0 0 100px rgba(124,58,237,.28);
+}
+
+/* ═══ CAROUSEL ════════════════════════════════════════════════════════ */
+.carousel-wrap{
+  width:96%;max-width:1400px;
+  height:580px;
+  margin:0 auto;
+  border-radius:20px;overflow:hidden;position:relative;
+  box-shadow:0 0 80px rgba(124,58,237,.25),0 40px 80px rgba(0,0,0,.5);
+  border-left:1px solid rgba(255,255,255,.1);
+  border-right:1px solid rgba(255,255,255,.1);
+}
+.slide{
+  position:absolute;inset:0;
+  opacity:0;transition:opacity .6s ease;
+}
+.slide.active{opacity:1;}
+.slide img{
+  width:100%;height:100%;object-fit:cover;object-position:top;display:block;
+}
+.slide::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(5,5,8,.12) 0%,rgba(5,5,8,.38) 100%);
+  pointer-events:none;
+}
+
+/* dots */
+.dots{
+  display:flex;gap:8px;margin-top:20px;
+  align-items:center;
+}
+.dot{
+  width:10px;height:10px;border-radius:100px;
+  background:rgba(255,255,255,.22);
+  transition:background .3s,width .3s;
+  cursor:pointer;
+  border:none;
+}
+.dot.active{
+  background:linear-gradient(90deg,var(--p),var(--p2));
+  width:32px;
+}
+
+/* ═══ PLATFORM MARQUEE ════════════════════════════════════════════════ */
+.platform-bar{
+  width:100%;padding:36px 0 48px;
+  border-top:1px solid rgba(255,255,255,.05);
+  margin-top:32px;
+}
+.platform-label{
+  text-align:center;
+  font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:22px;
+}
+.mq-fade{position:relative;overflow:hidden;}
+.mq-fade::before,.mq-fade::after{
+  content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none;
+}
+.mq-fade::before{left:0;background:linear-gradient(to right,var(--bg),transparent);}
+.mq-fade::after{right:0;background:linear-gradient(to left,var(--bg),transparent);}
+.mq-track{
+  display:flex;gap:12px;width:max-content;
+  animation:marqueeScroll 22s linear infinite;
+  padding:4px 0;
+}
+.plat{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 20px;border-radius:100px;
+  border:1px solid var(--card-b);
+  font-size:14px;font-weight:500;white-space:nowrap;
+  color:var(--text2);
+}
+.plat::before{
+  content:'';width:8px;height:8px;border-radius:50%;
+  background:var(--plat-color);flex-shrink:0;
+}
+@keyframes marqueeScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* ═══ SECTION LABELS + HEADINGS ═══════════════════════════════════════ */
+.sec-label{
+  display:inline-block;
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:5px 14px;border-radius:100px;margin-bottom:18px;
+}
+.sec-label--p{color:var(--p3);background:rgba(124,58,237,.14);border:1px solid rgba(124,58,237,.24);}
+.sec-label--t{color:var(--t3);background:rgba(13,148,136,.14);border:1px solid rgba(13,148,136,.24);}
+.h-xl{font-family:var(--fd);font-size:clamp(36px,5vw,56px);font-weight:800;line-height:1.08;letter-spacing:-.04em;}
+.h-lg{font-family:var(--fd);font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1.12;letter-spacing:-.03em;}
+.h-md{font-family:var(--fd);font-size:clamp(17px,2.2vw,22px);font-weight:700;line-height:1.3;letter-spacing:-.02em;}
+.tc{text-align:center;}
+
+/* ═══ FEATURE SECTION GRID ════════════════════════════════════════════ */
+.feat-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:80px;align-items:start;
+}
+.feat-grid.rev{direction:rtl;}
+.feat-grid.rev>*{direction:ltr;}
+
+/* device mockup */
+.device-wrap{display:flex;justify-content:center;align-items:flex-start;}
+.device{
+  max-width:300px;width:100%;
+  border-radius:16px;
+  animation:floatDevice 5s ease-in-out infinite;
+}
+.device--p{
+  box-shadow:0 0 0 1px rgba(255,255,255,.06),
+             0 0 60px rgba(124,58,237,.4),
+             0 0 120px rgba(124,58,237,.18),
+             0 28px 60px rgba(0,0,0,.55);
+  transform:rotate(-2deg);
+}
+.device--t{
+  box-shadow:0 0 0 1px rgba(255,255,255,.06),
+             0 0 60px rgba(13,148,136,.4),
+             0 0 120px rgba(13,148,136,.18),
+             0 28px 60px rgba(0,0,0,.55);
+  transform:rotate(2deg);
+}
+@keyframes floatDevice{
+  0%,100%{transform:translateY(0) rotate(var(--dr,-2deg));}
+  50%{transform:translateY(-12px) rotate(var(--dr,-2deg));}
+}
+.device--p{--dr:-2deg;}
+.device--t{--dr:2deg;}
+
+/* feature cards */
+.feat-cards{display:flex;flex-direction:column;gap:14px;margin-top:32px;}
+.fc{
+  display:flex;gap:16px;align-items:flex-start;
+  padding:18px 20px;border-radius:14px;
+  background:var(--card);border:1px solid var(--card-b);
+  transition:border-color .2s,background .2s;
+}
+.fc:hover{background:rgba(124,58,237,.06);border-color:rgba(124,58,237,.28);}
+.fc--t:hover{background:rgba(13,148,136,.06);border-color:rgba(13,148,136,.28);}
+.fc-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-size:18px;
+}
+.fc-icon--p{background:rgba(124,58,237,.18);color:var(--p3);}
+.fc-icon--t{background:rgba(13,148,136,.18);color:var(--t3);}
+.fc h3{font-family:var(--fd);font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em;}
+.fc p{font-size:13.5px;color:var(--text2);line-height:1.55;}
+
+/* section showcase image */
+.feat-showcase{margin-top:56px;}
+.feat-showcase img{
+  width:100%;border-radius:16px;
+  border:1px solid rgba(124,58,237,.2);
+}
+.feat-showcase--t img{border-color:rgba(13,148,136,.2);}
+.feat-showcase-cap{
+  text-align:center;margin-top:14px;
+  font-size:13px;color:var(--text2);
+}
+
+/* ═══ SOCIAL FEATURES BG ══════════════════════════════════════════════ */
+#social-features{
+  background:radial-gradient(ellipse 60% 50% at 20% 0%, rgba(124,58,237,.12) 0%, transparent 65%);
+  overflow:hidden;
+}
+#social-features::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background:url('Images/Features 2.png') center/cover no-repeat;
+  opacity:.12;filter:blur(4px);pointer-events:none;
+}
+#social-features>.container{position:relative;z-index:1;}
+#biz-features{
+  background:radial-gradient(ellipse 60% 50% at 80% 0%, rgba(13,148,136,.12) 0%, transparent 65%);
+  overflow:hidden;
+}
+#biz-features::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background:url('Images/Features 4.png') center/cover no-repeat;
+  opacity:.12;filter:blur(4px);pointer-events:none;
+}
+#biz-features>.container{position:relative;z-index:1;}
+
+
+/* ═══ EXTENSION SHOWCASE ══════════════════════════════════════════════ */
+#showcase{background:rgba(8,8,18,.55);padding:100px 0;}
+.showcase-center{
+  display:flex;flex-direction:column;align-items:center;gap:32px;
+}
+.showcase-img{
+  max-width:380px;width:100%;border-radius:20px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06),
+             0 0 60px rgba(124,58,237,.4),
+             0 0 120px rgba(124,58,237,.18),
+             0 36px 80px rgba(0,0,0,.55);
+  animation:floatMain 4s ease-in-out infinite;
+}
+@keyframes floatMain{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+.stat-chips{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+}
+.stat-chip{
+  padding:8px 20px;border-radius:100px;
+  background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);
+  font-size:14px;font-weight:600;color:var(--p3);
+}
+
+/* ═══ WHY NOT CHATGPT ═════════════════════════════════════════════════ */
+#why{background:rgba(8,8,18,.55);padding:100px 0;}
+.compare-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-radius:20px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);
+  max-width:920px;margin:0 auto;
+}
+.compare-col{padding:36px 40px;}
+.compare-col--neg{
+  background:rgba(20,6,6,.6);
+  border-right:1px solid rgba(255,255,255,.06);
+}
+.compare-col--pos{background:rgba(8,6,22,.6);}
+.compare-head{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--fd);font-size:14px;font-weight:700;
+  margin-bottom:28px;letter-spacing:-.01em;
+}
+.compare-head--neg{color:rgba(252,165,165,.85);}
+.compare-head--pos{color:var(--p3);}
+.compare-row{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);
+}
+.compare-row:last-child{border-bottom:none;}
+.compare-row p{font-size:14px;line-height:1.55;color:rgba(238,234,255,.75);}
+
+/* ═══ USE CASES ═══════════════════════════════════════════════════════ */
+#cases{padding:100px 0;}
+.cases-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:20px;
+}
+.case-card{
+  background:var(--card);border:1px solid var(--card-b);
+  border-radius:var(--r);padding:28px;
+  display:flex;flex-direction:column;gap:16px;
+}
+.case-role-wrap{display:flex;gap:8px;align-items:center;}
+.case-badge{
+  display:inline-block;padding:3px 10px;border-radius:100px;
+  font-size:11px;font-weight:700;letter-spacing:.05em;
+  background:rgba(124,58,237,.14);color:var(--p3);
+  border:1px solid rgba(124,58,237,.22);
+}
+.case-role{font-size:12px;color:var(--text2);}
+.case-stars{color:#FBBF24;letter-spacing:2px;font-size:14px;}
+.case-quote{
+  font-size:14.5px;font-style:italic;
+  color:rgba(238,234,255,.82);line-height:1.65;
+  flex:1;
+}
+.case-attr{font-size:12px;color:var(--text3);}
+
+/* ═══ HOW IT WORKS ════════════════════════════════════════════════════ */
+#hiw{background:rgba(8,8,18,.55);padding:100px 0;}
+.steps-wrap{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;position:relative;
+}
+.steps-wrap::before{
+  content:'';position:absolute;
+  top:33px;
+  left:calc(100% / 6);right:calc(100% / 6);
+  height:2px;
+  background:linear-gradient(90deg,var(--p),var(--t));
+  z-index:0;
+}
+.step{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;gap:20px;position:relative;z-index:1;
+  padding:0 20px;
+}
+.step-num{
+  width:68px;height:68px;border-radius:50%;
+  background:var(--p);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fd);font-size:24px;font-weight:800;
+  box-shadow:0 0 32px rgba(124,58,237,.5);
+  flex-shrink:0;
+}
+.step:last-child .step-num{
+  background:linear-gradient(135deg,var(--p),var(--t));
+  box-shadow:0 0 32px rgba(20,184,166,.4);
+}
+.step h3{font-family:var(--fd);font-size:18px;font-weight:700;letter-spacing:-.02em;}
+.step p{font-size:14px;color:var(--text2);line-height:1.6;}
+
+/* ═══ PRICING ═════════════════════════════════════════════════════════ */
+#pricing{padding:100px 0;}
+.pricing-note{
+  display:inline-block;font-size:13px;color:var(--text2);
+  padding:10px 18px;border-radius:10px;
+  border:1px solid var(--card-b);background:var(--card);
+  margin-bottom:48px;
+}
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:16px;align-items:start;
+}
+.pc{
+  background:var(--card);border:1px solid var(--card-b);
+  border-radius:var(--r);padding:28px 24px;
+  display:flex;flex-direction:column;gap:20px;
+  transition:border-color .25s,box-shadow .25s;
+}
+.pc:hover{
+  border-color:rgba(124,58,237,.35);
+  box-shadow:0 0 40px rgba(124,58,237,.1);
+}
+/* bundle card */
+.pc--bundle{
+  border:2px solid transparent;
+  background:linear-gradient(#08061a,#08061a) padding-box,
+             conic-gradient(from var(--ba),var(--p) 0%,var(--p3) 25%,#e879f9 50%,var(--t2) 75%,var(--p) 100%) border-box;
+  animation:spinBa 4s linear infinite;
+}
+@keyframes spinBa{to{--ba:360deg;}}
+.popular-badge{
+  display:inline-block;padding:4px 12px;border-radius:100px;
+  background:linear-gradient(90deg,var(--p),var(--p2));
+  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;
+}
+.pc-name{font-family:var(--fd);font-size:19px;font-weight:700;letter-spacing:-.02em;}
+.pc-price{display:flex;align-items:baseline;gap:4px;margin-top:4px;}
+.pc-amount{font-family:var(--fd);font-size:38px;font-weight:800;letter-spacing:-.04em;}
+.pc-period{font-size:13px;color:var(--text2);}
+.pc-free{font-family:var(--fd);font-size:38px;font-weight:800;color:var(--p3);}
+.pc-note{font-size:12px;color:var(--text2);}
+.pc-features{list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;}
+.pc-features li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:rgba(238,234,255,.8);}
+.pc-features li svg{flex-shrink:0;margin-top:3px;color:var(--p3);}
+.pc-cta{
+  display:block;text-align:center;padding:12px 16px;
+  border-radius:10px;font-size:14px;font-weight:700;
+  transition:transform .15s,box-shadow .2s,background .2s;
+}
+.pc-cta--outline{border:1px solid var(--card-b);color:var(--text);}
+.pc-cta--outline:hover{border-color:var(--p);background:rgba(124,58,237,.1);transform:translateY(-1px);}
+.pc-cta--fill{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;}
+.pc-cta--fill:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,58,237,.4);}
+.stripe-wrap{
+  margin-top:56px;display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.stripe-img{
+  max-width:700px;width:100%;border-radius:16px;
+  border:1px solid var(--card-b);opacity:.85;
+}
+.stripe-cap{font-size:13px;color:var(--text2);}
+
+/* ═══ CREDIT PACKS ════════════════════════════════════════════════════ */
+#credits{padding:80px 0;}
+.credits-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;max-width:800px;margin:0 auto;
+}
+.crd{
+  background:var(--card);border:1px solid var(--card-b);
+  border-radius:var(--r);padding:30px 24px;
+  text-align:center;display:flex;flex-direction:column;gap:6px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.crd:hover{border-color:rgba(124,58,237,.3);box-shadow:0 0 28px rgba(124,58,237,.1);}
+.crd--pop{border-color:rgba(124,58,237,.35);}
+.crd-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);}
+.crd-num{font-family:var(--fd);font-size:44px;font-weight:800;letter-spacing:-.04em;color:var(--p3);}
+.crd-unit{font-size:13px;color:var(--text2);margin-bottom:4px;}
+.crd-price{font-family:var(--fd);font-size:24px;font-weight:700;}
+.crd-note{font-size:11px;color:var(--text3);margin:2px 0 14px;}
+.crd-btn{
+  display:block;padding:10px;border-radius:9px;
+  border:1px solid var(--card-b);font-size:13px;font-weight:600;
+  transition:border-color .2s,background .2s;
+}
+.crd-btn:hover{border-color:var(--p);background:rgba(124,58,237,.1);}
+
+/* ═══ FAQ ══════════════════════════════════════════════════════════════ */
+#faq{padding:100px 0;}
+.faq-list{max-width:700px;margin:0 auto;}
+.faq-item{border-bottom:1px solid rgba(255,255,255,.07);}
+.faq-q{
+  width:100%;display:flex;align-items:center;
+  justify-content:space-between;gap:16px;
+  padding:22px 0;text-align:left;
+  font-size:15px;font-weight:600;color:var(--text);
+  transition:color .2s;
+}
+.faq-q:hover{color:var(--p3);}
+.faq-chevron{
+  flex-shrink:0;width:20px;height:20px;color:var(--text2);
+  transition:transform .3s var(--ease),color .2s;
+}
+.faq-item.open .faq-chevron{transform:rotate(180deg);color:var(--p3);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .38s var(--ease),padding .38s var(--ease);}
+.faq-item.open .faq-a{max-height:220px;padding-bottom:22px;}
+.faq-a p{font-size:14.5px;line-height:1.7;color:var(--text2);}
+
+/* ═══ FINAL CTA ════════════════════════════════════════════════════════ */
+#fcta{
+  padding:160px 0;text-align:center;
+  background:radial-gradient(ellipse 60% 70% at 50% 50%,rgba(124,58,237,.16) 0%,transparent 70%);
+}
+.fcta-inner{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.btn-xl{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:16px 40px;border-radius:14px;
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;font-size:18px;font-weight:700;
+  box-shadow:0 0 48px rgba(124,58,237,.55),0 0 96px rgba(124,58,237,.22);
+  transition:transform .15s,box-shadow .2s;
+}
+.btn-xl:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 64px rgba(124,58,237,.7),0 0 120px rgba(124,58,237,.3);
+}
+
+/* ═══ FOOTER ════════════════════════════════════════════════════════════ */
+footer{
+  position:relative;z-index:2;
+  border-top:1px solid rgba(255,255,255,.07);
+  padding:48px 0;
+}
+.footer-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:24px;
+}
+.footer-brand{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--fd);font-weight:700;font-size:17px;
+}
+.footer-brand img{width:28px;height:28px;object-fit:contain;border-radius:7px;}
+.footer-links{display:flex;gap:22px;flex-wrap:wrap;}
+.footer-links a{font-size:13.5px;color:var(--text2);transition:color .2s;}
+.footer-links a:hover{color:var(--text);}
+.footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.claude-badge{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);}
+.claude-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--p3);
+  animation:dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.45;transform:scale(.65);}}
+.footer-copy{font-size:12px;color:var(--text3);}
+
+/* ═══ SCROLL REVEAL ════════════════════════════════════════════════════ */
+.rev{
+  opacity:0;transform:translateY(32px);
+  transition:opacity .65s ease,transform .65s ease;
+}
+.rev.vis{opacity:1;transform:none;}
+.rev.d1{transition-delay:.1s;}.rev.d2{transition-delay:.2s;}
+.rev.d3{transition-delay:.3s;}.rev.d4{transition-delay:.4s;}
+
+/* ═══ REDUCED MOTION ════════════════════════════════════════════════════ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+  .tw,.hero-sub,.hero-chips,.hero-cta{opacity:1;transform:none;}
+  #beams{display:none;}
+}
+
+/* ═══ RESPONSIVE ════════════════════════════════════════════════════════ */
+@media(max-width:1100px){
+  .pricing-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:900px){
+  .feat-grid{grid-template-columns:1fr;gap:40px;}
+  .feat-grid.rev{direction:ltr;}
+  .device-wrap{order:-1;}
+  .cases-grid{grid-template-columns:1fr;gap:16px;}
+  .steps-wrap{grid-template-columns:1fr;gap:28px;}
+  .steps-wrap::before{display:none;}
+  .compare-grid{grid-template-columns:1fr;}
+  .compare-col--neg{border-right:none;border-bottom:1px solid rgba(255,255,255,.06);}
+  .credits-grid{grid-template-columns:1fr;max-width:360px;}
+}
+@media(max-width:768px){
+  .nav-links,.nav-cta{display:none;}
+  .hamburger{display:flex;}
+  .pricing-grid{grid-template-columns:1fr;max-width:360px;margin:0 auto;}
+  .footer-inner{flex-direction:column;align-items:flex-start;}
+  .footer-right{align-items:flex-start;}
+  .section-pad{padding:72px 0;}
+}
+@media(max-width:480px){
+  .tw-line{flex-direction:column;align-items:center;gap:0;}
+  .hero-chips{flex-direction:column;align-items:center;}
+  .feat-grid{gap:32px;}
+  .cases-grid{gap:14px;}
+}
+  </style>
+</head>
+<body>
+
+<!-- Canvas beam background -->
+<canvas id="beams" aria-hidden="true"></canvas>
+<div class="glow-overlay" aria-hidden="true"></div>
+
+<!-- Announcement Bar -->
+<div id="ann-bar" role="banner">
+  <span>Just launched on Chrome Web Store. Try it free &mdash; no credit card needed.</span>
+  <button id="ann-dismiss" aria-label="Dismiss announcement">&#x2715;</button>
+</div>
+
+<!-- Navigation -->
+<nav id="nav" aria-label="Main navigation">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand" aria-label="X-Trend home">
+      <img src="Images/Logo.png" alt="" aria-hidden="true">
+      <span>X-Trend</span>
+    </a>
+    <ul class="nav-links" role="list">
+      <li><a href="#social-features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+       class="nav-cta" target="_blank" rel="noopener noreferrer">Add to Chrome. Free.</a>
+    <button class="hamburger" id="hamburger"
+            aria-label="Open navigation menu" aria-expanded="false" aria-controls="mob-menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile full-screen menu -->
+<div id="mob-menu" role="dialog" aria-label="Mobile navigation" aria-modal="true">
+  <a href="#social-features">Features</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#faq">FAQ</a>
+  <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+     class="mob-cta" target="_blank" rel="noopener noreferrer">Add to Chrome. Free.</a>
+</div>
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
+<section id="hero" aria-label="Hero">
+  <div class="hero-content">
+
+    <!-- Tagline block -->
+    <div class="tagline-block">
+      <div class="tw-line">
+        <span class="tw tw1" aria-hidden="true">Extend</span>
+        <span class="tw tw2 grad-purple" aria-hidden="true">Yourself.</span>
+      </div>
+      <div class="tw-line">
+        <span class="tw tw3" aria-hidden="true">Trend</span>
+        <span class="tw tw4 grad-teal" aria-hidden="true">Yourself.</span>
+      </div>
+      <h1 class="sr-only">Extend Yourself. Trend Yourself.</h1>
+      <p class="hero-sub">The AI writing co-pilot that lives in your browser.</p>
+      <div class="hero-chips" role="list">
+        <span class="hero-chip" role="listitem">&#10003;&nbsp; No credit card needed</span>
+        <span class="hero-chip" role="listitem">&#10003;&nbsp; 5 days free access</span>
+      </div>
+      <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+         class="hero-cta" target="_blank" rel="noopener noreferrer">Add to Chrome. Free.</a>
+    </div>
+
+    <!-- Carousel -->
+    <div class="carousel-wrap" role="region" aria-label="Feature showcase" aria-roledescription="carousel">
+      <div class="slide active" role="group" aria-roledescription="slide" aria-label="Slide 1 of 5">
+        <img src="Images/Banner 1.png" alt="X-Trend — write less, trend more">
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 2 of 5">
+        <img src="Images/Banner 2.png" alt="X-Trend features overview">
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 3 of 5">
+        <img src="Images/Banner 3.png" alt="X-Trend social features">
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 4 of 5">
+        <img src="Images/Banner 4.png" alt="X-Trend business features">
+      </div>
+      <div class="slide" role="group" aria-roledescription="slide" aria-label="Slide 5 of 5">
+        <img src="Images/Banner 5.png" alt="X-Trend in action">
+      </div>
+    </div>
+
+    <!-- Dots -->
+    <div class="dots" role="tablist" aria-label="Carousel navigation">
+      <button class="dot active" data-go="0" role="tab" aria-selected="true" aria-label="Slide 1"></button>
+      <button class="dot" data-go="1" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+      <button class="dot" data-go="2" role="tab" aria-selected="false" aria-label="Slide 3"></button>
+      <button class="dot" data-go="3" role="tab" aria-selected="false" aria-label="Slide 4"></button>
+      <button class="dot" data-go="4" role="tab" aria-selected="false" aria-label="Slide 5"></button>
+    </div>
+
+  </div><!-- /hero-content -->
+
+  <!-- Platform scrolling bar -->
+  <div class="platform-bar" aria-label="Supported platforms">
+    <p class="platform-label">Works everywhere you create</p>
+    <div class="mq-fade">
+      <div class="mq-track" aria-hidden="true">
+        <!-- set 1 -->
+        <span class="plat" style="--plat-color:#E1306C">Instagram</span>
+        <span class="plat" style="--plat-color:#69C9D0">TikTok</span>
+        <span class="plat" style="--plat-color:#0A66C2">LinkedIn</span>
+        <span class="plat" style="--plat-color:#1DA1F2">X (Twitter)</span>
+        <span class="plat" style="--plat-color:#1877F2">Facebook</span>
+        <!-- set 2 duplicate for seamless loop -->
+        <span class="plat" style="--plat-color:#E1306C">Instagram</span>
+        <span class="plat" style="--plat-color:#69C9D0">TikTok</span>
+        <span class="plat" style="--plat-color:#0A66C2">LinkedIn</span>
+        <span class="plat" style="--plat-color:#1DA1F2">X (Twitter)</span>
+        <span class="plat" style="--plat-color:#1877F2">Facebook</span>
+        <!-- set 3 for wider screens -->
+        <span class="plat" style="--plat-color:#E1306C">Instagram</span>
+        <span class="plat" style="--plat-color:#69C9D0">TikTok</span>
+        <span class="plat" style="--plat-color:#0A66C2">LinkedIn</span>
+        <span class="plat" style="--plat-color:#1DA1F2">X (Twitter)</span>
+        <span class="plat" style="--plat-color:#1877F2">Facebook</span>
+        <!-- set 4 duplicate -->
+        <span class="plat" style="--plat-color:#E1306C">Instagram</span>
+        <span class="plat" style="--plat-color:#69C9D0">TikTok</span>
+        <span class="plat" style="--plat-color:#0A66C2">LinkedIn</span>
+        <span class="plat" style="--plat-color:#1DA1F2">X (Twitter)</span>
+        <span class="plat" style="--plat-color:#1877F2">Facebook</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SOCIAL FEATURES ════════════════════════════════════════════════ -->
+<section id="social-features" class="section-pad" aria-labelledby="social-h">
+  <div class="container">
+    <div class="feat-grid">
+      <div class="device-wrap rev">
+        <img src="Images/Actual Extension 2.png"
+             alt="X-Trend Caption Generator — extension screenshot"
+             class="device device--p">
+      </div>
+      <div>
+        <span class="sec-label sec-label--p rev">Social X-Trend</span>
+        <h2 class="h-lg rev d1" id="social-h">For Content Creators</h2>
+        <p class="rev d2" style="margin-top:14px;color:var(--text2);font-size:15px;max-width:440px;">
+          Generate captions, rewrite for every platform, and find the right hashtags — without leaving the page you're already on.
+        </p>
+        <div class="feat-cards">
+          <div class="fc rev d1">
+            <div class="fc-icon fc-icon--p">&#128172;</div>
+            <div>
+              <h3>Caption Generator</h3>
+              <p>Describe your content, choose a platform, get a polished caption in seconds.</p>
+            </div>
+          </div>
+          <div class="fc rev d2">
+            <div class="fc-icon fc-icon--p">&#8635;</div>
+            <div>
+              <h3>Platform Rewriter</h3>
+              <p>Paste any text and instantly rewrite it for Instagram, TikTok, LinkedIn, or X.</p>
+            </div>
+          </div>
+          <div class="fc rev d3">
+            <div class="fc-icon fc-icon--p">#</div>
+            <div>
+              <h3>Hashtag Suggester</h3>
+              <p>Get trending hashtags tailored to your content — not a generic keyword dump.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<div style="background:#080812;height:80px;position:relative;z-index:2;" aria-hidden="true"></div>
+
+<!-- ═══ BUSINESS FEATURES ══════════════════════════════════════════════ -->
+<section id="biz-features" class="section-pad" aria-labelledby="biz-h">
+  <div class="container">
+    <div class="feat-grid rev">
+      <div class="device-wrap">
+        <img src="Images/Actual Extension 3.png"
+             alt="X-Trend Review Responder — extension screenshot"
+             class="device device--t">
+      </div>
+      <div>
+        <span class="sec-label sec-label--t rev">Business X-Trend</span>
+        <h2 class="h-lg rev d1" id="biz-h">For Businesses and Professionals</h2>
+        <p class="rev d2" style="margin-top:14px;color:var(--text2);font-size:15px;max-width:440px;">
+          Respond to reviews, fix email tone, and write winning proposals — all from one click in your toolbar.
+        </p>
+        <div class="feat-cards">
+          <div class="fc fc--t rev d1">
+            <div class="fc-icon fc-icon--t">&#11088;</div>
+            <div>
+              <h3>Review Responder</h3>
+              <p>Turn every review — positive or negative — into a professional, trust-building reply in seconds.</p>
+            </div>
+          </div>
+          <div class="fc fc--t rev d2">
+            <div class="fc-icon fc-icon--t">&#9993;</div>
+            <div>
+              <h3>Email Tone Fixer</h3>
+              <p>Paste a draft, pick your tone — professional, warm, firm — and get a polished version instantly.</p>
+            </div>
+          </div>
+          <div class="fc fc--t rev d3">
+            <div class="fc-icon fc-icon--t">&#128196;</div>
+            <div>
+              <h3>Proposal Generator</h3>
+              <p>Paste a job post and get a tailored, winning proposal you'd actually be proud to send.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- extended view showcase -->
+    <div class="rev" style="max-width:580px;margin:80px auto 0;text-align:center;">
+      <h3 class="h-md" style="margin-bottom:12px;">See results right alongside your work</h3>
+      <p style="color:var(--text2);font-size:15px;line-height:1.65;margin-bottom:28px;">
+        The extended panel shows AI output right next to where you are — no switching tabs, no interruptions.
+      </p>
+      <img src="Images/Extended_view_feature.png"
+           alt="X-Trend extended panel — AI output alongside your work"
+           style="width:100%;border-radius:14px;
+                  box-shadow:0 0 40px rgba(124,58,237,.25),0 20px 48px rgba(0,0,0,.45);">
+    </div>
+  </div>
+</section>
+
+<!-- ═══ EXTENSION SHOWCASE ══════════════════════════════════════════════ -->
+<section id="showcase" aria-labelledby="showcase-h">
+  <div class="container">
+    <div class="showcase-center">
+      <div class="tc rev">
+        <h2 class="h-lg" id="showcase-h">One extension. Everything you need.</h2>
+        <p style="margin-top:14px;font-size:16px;color:var(--text2);">
+          Right inside your browser — always one click away.
+        </p>
+      </div>
+      <img src="Images/Actual Extension 1.png"
+           alt="X-Trend extension home screen"
+           class="showcase-img rev d1">
+      <div class="stat-chips rev d2">
+        <span class="stat-chip">6 AI Features</span>
+        <span class="stat-chip">50+ Languages</span>
+        <span class="stat-chip">5 Platforms</span>
+        <span class="stat-chip">Free to Start</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WHY NOT CHATGPT ═════════════════════════════════════════════════ -->
+<section id="why" aria-labelledby="why-h">
+  <div class="container">
+    <div class="tc rev" style="margin-bottom:48px;">
+      <h2 class="h-lg" id="why-h">Why not just use ChatGPT and other AI?</h2>
+      <p style="margin-top:14px;font-size:16px;color:var(--text2);">Great question. Here is the honest answer.</p>
+    </div>
+    <div class="compare-grid rev d1">
+      <div class="compare-col compare-col--neg">
+        <div class="compare-head compare-head--neg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          ChatGPT / Generic AI
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <p>Constant copy-pasting between tabs</p>
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <p>You need to know how to prompt</p>
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <p>No platform awareness at all</p>
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <p>No memory of your brand voice</p>
+        </div>
+      </div>
+      <div class="compare-col compare-col--pos">
+        <div class="compare-head compare-head--pos">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+          X-Trend
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><polyline points="20 6 9 17 4 12"/></svg>
+          <p>Stays inside your browser, zero tab switching</p>
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><polyline points="20 6 9 17 4 12"/></svg>
+          <p>Purpose-built features, no prompting needed</p>
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><polyline points="20 6 9 17 4 12"/></svg>
+          <p>Platform-specific output every time</p>
+        </div>
+        <div class="compare-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:3px"><polyline points="20 6 9 17 4 12"/></svg>
+          <p>Brand Voice Memory across all features</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ USE CASES ═══════════════════════════════════════════════════════ -->
+<section id="cases" class="section-pad" aria-labelledby="cases-h">
+  <div class="container">
+    <div class="tc rev" style="margin-bottom:48px;">
+      <h2 class="h-lg" id="cases-h">Early creators are already trending.</h2>
+      <p style="margin-top:14px;font-size:16px;color:var(--text2);">Here's what they said after their first week.</p>
+    </div>
+    <div class="cases-grid">
+      <div class="case-card rev d1">
+        <div class="case-role-wrap">
+          <span class="case-badge">Content Creator</span>
+          <span class="case-role">Social Media</span>
+        </div>
+        <p class="case-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+        <p class="case-quote">"Writing captions used to eat 20 minutes of my morning. Now it's done before my coffee brews. The platform awareness is what gets me — it actually knows the difference between a TikTok and a LinkedIn post."</p>
+        <p class="case-attr">Early access user</p>
+      </div>
+      <div class="case-card rev d2">
+        <div class="case-role-wrap">
+          <span class="case-badge" style="background:rgba(13,148,136,.14);color:var(--t3);border-color:rgba(13,148,136,.22);">Restaurant Owner</span>
+          <span class="case-role">Small Business</span>
+        </div>
+        <p class="case-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+        <p class="case-quote">"I was leaving negative reviews unanswered because I never knew what to say. Now I reply to every single one within minutes. Our average rating went up in three weeks."</p>
+        <p class="case-attr">Early access user</p>
+      </div>
+      <div class="case-card rev d3">
+        <div class="case-role-wrap">
+          <span class="case-badge">Freelance Designer</span>
+          <span class="case-role">Freelancer</span>
+        </div>
+        <p class="case-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+        <p class="case-quote">"I had 30 minutes to put together a proposal for a project I really wanted. X-Trend nailed it — professional, specific, on-brand. Got the client."</p>
+        <p class="case-attr">Early access user</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ════════════════════════════════════════════════════ -->
+<section id="hiw" aria-labelledby="hiw-h">
+  <div class="container">
+    <div class="tc rev" style="margin-bottom:72px;">
+      <h2 class="h-lg" id="hiw-h">Up and running in 60 seconds.</h2>
+      <p style="margin-top:14px;font-size:16px;color:var(--text2);">No setup. No learning curve. Just open and write.</p>
+    </div>
+    <div class="steps-wrap">
+      <div class="step rev d1">
+        <div class="step-num">1</div>
+        <div>
+          <h3>Install</h3>
+          <p>Add X-Trend to Chrome in one click. Free. No setup needed to get started.</p>
+        </div>
+      </div>
+      <div class="step rev d2">
+        <div class="step-num">2</div>
+        <div>
+          <h3>Create</h3>
+          <p>Go to any social platform. Click the X-Trend icon in your toolbar. Pick your feature.</p>
+        </div>
+      </div>
+      <div class="step rev d3">
+        <div class="step-num">3</div>
+        <div>
+          <h3>Trend</h3>
+          <p>Get AI content instantly. Copy, paste, post. Done — in less time than writing one sentence.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═════════════════════════════════════════════════════════ -->
+<section id="pricing" aria-labelledby="pricing-h">
+  <div class="container">
+    <div class="tc rev" style="margin-bottom:16px;">
+      <h2 class="h-lg" id="pricing-h">Start free. Upgrade when you're ready.</h2>
+      <p style="margin-top:14px;font-size:16px;color:var(--text2);">No contracts. No surprises. Cancel any time from inside the extension.</p>
+    </div>
+    <div class="tc rev" style="margin-bottom:48px;">
+      <span class="pricing-note">&#128274;&nbsp; All plans and payments are managed securely inside the extension after you install.</span>
+    </div>
+
+    <div class="pricing-grid rev">
+      <!-- Free -->
+      <div class="pc">
+        <div>
+          <p class="pc-name">Free</p>
+          <div class="pc-price"><span class="pc-free">Free</span></div>
+          <p class="pc-note" style="margin-top:6px">Forever, after 5-day full trial</p>
+        </div>
+        <ul class="pc-features">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> 5-day full access trial</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> 1 generation per day, forever</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Access to all features</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> No credit card required</li>
+        </ul>
+        <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+           class="pc-cta pc-cta--outline" target="_blank" rel="noopener noreferrer">Add to Chrome Free</a>
+      </div>
+      <!-- Social Pro -->
+      <div class="pc">
+        <div>
+          <p class="pc-name">Social Pro</p>
+          <div class="pc-price"><span class="pc-amount">$9.99</span><span class="pc-period">/ month</span></div>
+        </div>
+        <ul class="pc-features">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Unlimited generations</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Caption Generator</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Platform Rewriter</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Hashtag Suggester</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> 5 platforms supported</li>
+        </ul>
+        <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+           class="pc-cta pc-cta--fill" target="_blank" rel="noopener noreferrer">Start Writing</a>
+      </div>
+      <!-- Business Pro -->
+      <div class="pc">
+        <div>
+          <p class="pc-name">Business Pro</p>
+          <div class="pc-price"><span class="pc-amount">$19.99</span><span class="pc-period">/ month</span></div>
+        </div>
+        <ul class="pc-features">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Unlimited generations</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Review Responder</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Email Tone Fixer</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Proposal Generator</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> 5 platforms supported</li>
+        </ul>
+        <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+           class="pc-cta pc-cta--fill" target="_blank" rel="noopener noreferrer">Grow My Business</a>
+      </div>
+      <!-- Bundle -->
+      <div class="pc pc--bundle">
+        <div>
+          <span class="popular-badge">&#9733; Most Popular</span>
+          <p class="pc-name" style="margin-top:10px">Bundle</p>
+          <div class="pc-price"><span class="pc-amount">$29.99</span><span class="pc-period">/ month</span></div>
+        </div>
+        <ul class="pc-features">
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Everything in Social Pro</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Everything in Business Pro</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span style="color:var(--p3);font-weight:600">Brand Voice Memory</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span style="color:var(--p3);font-weight:600">Priority support</span></li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Best value overall</li>
+        </ul>
+        <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+           class="pc-cta pc-cta--fill" target="_blank" rel="noopener noreferrer"
+           style="background:linear-gradient(135deg,var(--p),var(--p2));">Get Everything</a>
+      </div>
+    </div><!-- /pricing-grid -->
+
+    <!-- Stripe -->
+    <div class="stripe-wrap rev d2">
+      <img src="Images/Stripe Payment Sample.png"
+           alt="Secure checkout powered by Stripe"
+           class="stripe-img">
+      <p class="stripe-cap">&#128274;&nbsp; Secure payments powered by Stripe — managed inside the extension</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CREDIT PACKS ════════════════════════════════════════════════════ -->
+<section id="credits" class="section-pad" style="padding:80px 0;" aria-labelledby="credits-h">
+  <div class="container tc">
+    <div class="rev" style="margin-bottom:40px;">
+      <h2 class="h-lg" id="credits-h">One-time credit packs. Never expire.</h2>
+      <p style="margin-top:14px;font-size:15px;color:var(--text2);max-width:520px;margin-left:auto;margin-right:auto;">
+        Top up whenever you need. No subscription required. Purchase securely inside the extension.
+      </p>
+    </div>
+    <div class="credits-grid">
+      <div class="crd rev d1">
+        <p class="crd-label">Starter</p>
+        <p class="crd-num">15</p>
+        <p class="crd-unit">credits</p>
+        <p class="crd-price">$2.99</p>
+        <p class="crd-note">one-time &middot; never expires</p>
+        <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+           class="crd-btn" target="_blank" rel="noopener noreferrer">Add to Chrome</a>
+      </div>
+      <div class="crd crd--pop rev d2">
+        <span class="popular-badge" style="margin-bottom:8px">Popular</span>
+        <p class="crd-label">Popular</p>
+        <p class="crd-num">30</p>
+        <p class="crd-unit">credits</p>
+        <p class="crd-price">$4.99</p>
+        <p class="crd-note">one-time &middot; never expires</p>
+        <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+           class="crd-btn" target="_blank" rel="noopener noreferrer">Add to Chrome</a>
+      </div>
+      <div class="crd rev d3">
+        <p class="crd-label">Power</p>
+        <p class="crd-num">50</p>
+        <p class="crd-unit">credits</p>
+        <p class="crd-price">$9.99</p>
+        <p class="crd-note">one-time &middot; never expires</p>
+        <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+           class="crd-btn" target="_blank" rel="noopener noreferrer">Add to Chrome</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═════════════════════════════════════════════════════════════ -->
+<section id="faq" style="padding:100px 0;" aria-labelledby="faq-h">
+  <div class="container">
+    <div class="tc rev" style="margin-bottom:48px;">
+      <h2 class="h-lg" id="faq-h">Questions? We've got answers.</h2>
+    </div>
+    <div class="faq-list rev">
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Is X-Trend really free to start?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a"><p>Yes. You get 5 days of full access with no credit card required. After your trial, you automatically move to our free tier — 1 AI generation per day, forever. Upgrade inside the extension whenever you're ready.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Which platforms does X-Trend support?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a"><p>Instagram, TikTok, LinkedIn, X (Twitter), and Facebook. X-Trend works on any site you visit — not just social platforms — so you can use it on review sites, job boards, email, and more.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Does X-Trend store my content?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a"><p>No. Your content is processed to generate a response only and is never stored or used for any other purpose. We don't log, sell, or retain your writing.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Does it work in my language?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a"><p>Yes. 50+ languages are supported automatically. Write in your language, and X-Trend responds in the same language — no configuration needed.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          What is Brand Voice Memory?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a"><p>A premium Bundle feature. Define your tone, style, and personality once — and every X-Trend output automatically reflects it. No re-explaining yourself every session. Your voice, applied everywhere.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          Can I cancel anytime?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-a"><p>Yes. No contracts, no lock-in. Cancel anytime from inside the extension. You keep access until the end of your billing period.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FINAL CTA ════════════════════════════════════════════════════════ -->
+<section id="fcta" aria-labelledby="fcta-h">
+  <div class="container">
+    <div class="fcta-inner rev">
+      <h2 class="h-xl" id="fcta-h">Start <span class="grad-purple">trending</span> today.</h2>
+      <p style="font-size:17px;color:var(--text2);max-width:480px;text-align:center;">
+        Be among the first creators writing better content in less time.
+      </p>
+      <a href="https://chromewebstore.google.com/detail/x-trend/nondajdgckjicjokoffoheacihaimnnc"
+         class="btn-xl" target="_blank" rel="noopener noreferrer">Add to Chrome. It's Free.</a>
+      <p style="font-size:13px;color:var(--text3);">No credit card. No commitment. 5 days full access.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <a href="#" class="footer-brand" aria-label="X-Trend home">
+        <img src="Images/Logo.png" alt="" aria-hidden="true">
+        <span>X-Trend</span>
+      </a>
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="https://projectx0050.github.io/x-trend/privacy-policy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+        <a href="https://projectx0050.github.io/x-trend/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+        <a href="#social-features">Features</a>
+        <a href="#pricing">Pricing</a>
+      </nav>
+      <div class="footer-right">
+        <div class="claude-badge">
+          <span class="claude-dot" aria-hidden="true"></span>
+          Powered by Claude AI
+        </div>
+        <p class="footer-copy">&copy; 2026 X-Trend. All rights reserved.</p>
+        <a href="mailto:helloprojectx00@gmail.com" class="footer-copy" style="transition:color .2s;" onmouseover="this.style.color='var(--p3)'" onmouseout="this.style.color=''">helloprojectx00@gmail.com</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══ SR-ONLY UTILITY ══════════════════════════════════════════════════ -->
+<style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0;}</style>
+
+<!-- ═══ SCRIPTS ══════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+var PRM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ── BEAM CANVAS ───────────────────────────────────────────────────────── */
+var canvas = document.getElementById('beams');
+var ctx = canvas.getContext('2d');
+var ANG = -35 * Math.PI / 180;
+var W, H;
+
+function resizeCanvas(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas, {passive:true});
+
+function makeBeam(){
+  return {
+    x: Math.random() * window.innerWidth,
+    y: window.innerHeight + 50 + Math.random() * 300,
+    w: 30 + Math.random() * 60,
+    len: 280 + Math.random() * 280,
+    spd: 0.4 + Math.random() * 1.0,
+    bOp: 0.10 + Math.random() * 0.15,
+    hue: 255 + Math.random() * 30,
+    ph: Math.random() * Math.PI * 2,
+    phSpd: 0.007 + Math.random() * 0.009
+  };
+}
+
+var beams = [];
+for(var i=0;i<30;i++) beams.push(makeBeam());
+
+function drawBeam(b){
+  var op = b.bOp * (0.62 + 0.38 * Math.sin(b.ph));
+  var ex = b.x + Math.cos(ANG) * b.len;
+  var ey = b.y + Math.sin(ANG) * b.len;
+  var g = ctx.createLinearGradient(b.x, b.y, ex, ey);
+  g.addColorStop(0,   'hsla('+b.hue+',85%,62%,0)');
+  g.addColorStop(0.28,'hsla('+b.hue+',85%,62%,'+op+')');
+  g.addColorStop(0.72,'hsla('+b.hue+',85%,62%,'+op+')');
+  g.addColorStop(1,   'hsla('+b.hue+',85%,62%,0)');
+  ctx.save();
+  ctx.filter = 'blur(35px)';
+  ctx.strokeStyle = g;
+  ctx.lineWidth = b.w;
+  ctx.lineCap = 'butt';
+  ctx.beginPath();
+  ctx.moveTo(b.x, b.y);
+  ctx.lineTo(ex, ey);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function tickBeam(b){
+  b.ph += b.phSpd;
+  b.y  -= b.spd;
+  if(b.y < -b.len){
+    b.x = Math.random() * (W + 200) - 100;
+    b.y = H + 60 + Math.random() * 200;
+  }
+}
+
+function animBeams(){
+  ctx.clearRect(0,0,W,H);
+  beams.forEach(function(b){ tickBeam(b); drawBeam(b); });
+  requestAnimationFrame(animBeams);
+}
+if(!PRM) animBeams();
+
+/* ── ANN BAR DISMISS ───────────────────────────────────────────────────── */
+var annBar = document.getElementById('ann-bar');
+var annDismiss = document.getElementById('ann-dismiss');
+var nav = document.getElementById('nav');
+
+function dismissAnn(){
+  annBar.classList.add('gone');
+  document.body.classList.add('no-ann');
+  try{ sessionStorage.setItem('xt_ann','1'); }catch(e){}
+}
+annDismiss.addEventListener('click', dismissAnn);
+if(sessionStorage.getItem('xt_ann')) dismissAnn();
+
+/* ── NAV SCROLL GLASS ──────────────────────────────────────────────────── */
+function syncNav(){
+  nav.classList.toggle('scrolled', window.scrollY > 16);
+}
+window.addEventListener('scroll', syncNav, {passive:true});
+syncNav();
+
+/* ── HAMBURGER / MOBILE MENU ────────────────────────────────────────────── */
+var burger = document.getElementById('hamburger');
+var mobMenu = document.getElementById('mob-menu');
+
+function openMob(){
+  mobMenu.classList.add('open');
+  burger.classList.add('open');
+  burger.setAttribute('aria-expanded','true');
+  document.body.style.overflow='hidden';
+}
+function closeMob(){
+  mobMenu.classList.remove('open');
+  burger.classList.remove('open');
+  burger.setAttribute('aria-expanded','false');
+  document.body.style.overflow='';
+}
+burger.addEventListener('click', function(){
+  mobMenu.classList.contains('open') ? closeMob() : openMob();
+});
+mobMenu.querySelectorAll('a').forEach(function(a){
+  a.addEventListener('click', closeMob);
+});
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') closeMob();
+});
+
+/* ── CAROUSEL ───────────────────────────────────────────────────────────── */
+var slides = document.querySelectorAll('.slide');
+var dots   = document.querySelectorAll('.dot');
+var cur = 0, timer = null;
+
+function goTo(n){
+  slides[cur].classList.remove('active');
+  dots[cur].classList.remove('active');
+  dots[cur].setAttribute('aria-selected','false');
+  cur = ((n % slides.length) + slides.length) % slides.length;
+  slides[cur].classList.add('active');
+  dots[cur].classList.add('active');
+  dots[cur].setAttribute('aria-selected','true');
+}
+
+function startTimer(){
+  clearInterval(timer);
+  timer = setInterval(function(){ goTo(cur+1); }, 4500);
+}
+
+dots.forEach(function(d){
+  d.addEventListener('click', function(){
+    goTo(parseInt(d.dataset.go,10));
+    startTimer();
+  });
+});
+
+startTimer();
+
+/* ── SCROLL REVEAL ──────────────────────────────────────────────────────── */
+var revEls = document.querySelectorAll('.rev');
+if('IntersectionObserver' in window){
+  var revObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('vis');
+        revObs.unobserve(e.target);
+      }
+    });
+  },{threshold:0.1});
+  revEls.forEach(function(el){ revObs.observe(el); });
+}else{
+  revEls.forEach(function(el){ el.classList.add('vis'); });
+}
+
+/* ── FAQ ACCORDION ──────────────────────────────────────────────────────── */
+document.querySelectorAll('.faq-item').forEach(function(item){
+  item.querySelector('.faq-q').addEventListener('click', function(){
+    var isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(function(i){
+      i.classList.remove('open');
+      i.querySelector('.faq-q').setAttribute('aria-expanded','false');
+    });
+    if(!isOpen){
+      item.classList.add('open');
+      item.querySelector('.faq-q').setAttribute('aria-expanded','true');
+    }
+  });
+});
+
+/* ── SMOOTH SCROLL ──────────────────────────────────────────────────────── */
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click', function(e){
+    var h = a.getAttribute('href');
+    if(h==='#') return;
+    var t = document.querySelector(h);
+    if(t){
+      e.preventDefault();
+      var offset = parseInt(getComputedStyle(document.body).paddingTop,10)||0;
+      window.scrollTo({top: Math.max(0, t.getBoundingClientRect().top + window.scrollY - offset - 12), behavior:'smooth'});
+    }
+  });
+});
+
+})();
+</script>
+</body>
+</html>
