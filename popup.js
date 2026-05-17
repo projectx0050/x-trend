@@ -1,5 +1,8 @@
 'use strict';
 
+// REPLACE WITH STRIPE CUSTOMER PORTAL URL
+const STRIPE_PORTAL_URL = 'https://billing.stripe.com/p/login/test_00w3cv9s14VYfjC6RMdfG00';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let jwtToken     = '';
 let userEmail    = '';
@@ -115,6 +118,13 @@ const proposalError       = document.getElementById('proposal-error');
 const proposalOutputCard  = document.getElementById('proposal-output-card');
 const proposalOutput      = document.getElementById('proposal-output');
 const proposalCopyBtn     = document.getElementById('proposal-copy-btn');
+
+// ── DOM refs — Plan gating / upgrade / manage ─────────────────────────────────
+const manageSubscriptionBtn  = document.getElementById('manage-subscription-btn');
+const upgradeToBundleEl      = document.getElementById('upgrade-to-bundle');
+const homeUpgradeBundleBtn   = document.getElementById('home-upgrade-bundle-btn');
+const homeBuyCreditsBtn      = document.getElementById('home-buy-credits-btn');
+const bvStripSub             = document.getElementById('bv-strip-sub');
 
 // ── DOM refs — Settings back / Reading Panel ──────────────────────────────────
 const settingsBackBtn      = document.getElementById('settings-back-btn');
@@ -284,6 +294,43 @@ function renderAccountSection() {
   accountEmailEl.textContent   = userEmail;
   accountTierEl.textContent    = formatTierLabel(userTier) + ' plan';
   setBrandVoiceGated(userTier !== 'bundle');
+  const isPaid = ['social_pro', 'business_pro', 'bundle'].includes(userTier);
+  manageSubscriptionBtn.style.display = isPaid ? '' : 'none';
+  updateCardVisibility(userTier);
+  updateUpgradeToBundle(userTier);
+  updateHomeBrandVoiceStrip(userTier);
+}
+
+// ── Plan-based UI gating helpers ──────────────────────────────────────────────
+function updateCardVisibility(tier) {
+  const cardSocial   = document.getElementById('card-social');
+  const cardBusiness = document.getElementById('card-business');
+  if (tier === 'social_pro') {
+    cardSocial.style.display   = '';
+    cardBusiness.style.display = 'none';
+  } else if (tier === 'business_pro') {
+    cardSocial.style.display   = 'none';
+    cardBusiness.style.display = '';
+  } else {
+    cardSocial.style.display   = '';
+    cardBusiness.style.display = '';
+  }
+}
+
+function updateUpgradeToBundle(tier) {
+  upgradeToBundleEl.style.display =
+    (tier === 'social_pro' || tier === 'business_pro') ? '' : 'none';
+}
+
+function updateHomeBrandVoiceStrip(tier) {
+  const lockEl = homeBrandVoiceStrip.querySelector('.bv-lock');
+  if (tier === 'bundle') {
+    if (lockEl)    lockEl.textContent    = '🔓'; // 🔓
+    if (bvStripSub) bvStripSub.textContent = 'Active — configure in Settings';
+  } else {
+    if (lockEl)    lockEl.textContent    = '🔒'; // 🔒
+    if (bvStripSub) bvStripSub.textContent = 'Bundle plan only — upgrade to unlock';
+  }
 }
 
 // ── Auth tab toggle ───────────────────────────────────────────────────────────
@@ -437,6 +484,10 @@ function clearStoredAuth() {
   hideUpgradeBanner();
   setRewriterGated(false);
   setBrandVoiceGated(true);
+  manageSubscriptionBtn.style.display = 'none';
+  updateCardVisibility('free');
+  updateUpgradeToBundle('free');
+  updateHomeBrandVoiceStrip('free');
 }
 
 // ── Brand Voice ───────────────────────────────────────────────────────────────
@@ -475,8 +526,16 @@ function fetchAndUpdateStatus() {
   chrome.runtime.sendMessage({ action: 'getUserStatus', token: jwtToken }, (response) => {
     if (chrome.runtime.lastError || !response || !response.success) return;
     userStatus = response.data;
+    if (userStatus.tier && userStatus.tier !== userTier) {
+      userTier = userStatus.tier;
+      chrome.storage.local.set({ userTier });
+      renderAccountSection();
+    }
     updateUsageDisplay(userStatus);
     checkRewriterGate();
+    updateCardVisibility(userTier);
+    updateUpgradeToBundle(userTier);
+    updateHomeBrandVoiceStrip(userTier);
     if (isLimitReached()) showUpgradeBanner();
   });
 }
@@ -522,7 +581,7 @@ function updateUsageDisplay(status) {
 
   if (paid) {
     usageLine1.textContent = formatTierLabel(tier);
-    usageLine2.textContent = remaining > 0 ? `${remaining} left today` : 'Limit reached';
+    usageLine2.textContent = 'Unlimited';
     usageLine1.className   = 'usage-line-1 paid';
     return;
   }
@@ -622,6 +681,22 @@ function setRewriterGated(gated) {
 }
 
 rewriterUpgradeBtn.addEventListener('click', () => openCheckout('subscription', 'social_pro', rewriterError));
+
+// ── Issue 3: Manage Subscription ─────────────────────────────────────────────
+manageSubscriptionBtn.addEventListener('click', () => {
+  if (STRIPE_PORTAL_URL) chrome.tabs.create({ url: STRIPE_PORTAL_URL });
+});
+
+// ── Issue 4: Upgrade to Bundle from home screen ───────────────────────────────
+homeUpgradeBundleBtn.addEventListener('click', () => {
+  openCheckout('subscription', 'bundle', null);
+});
+
+homeBuyCreditsBtn.addEventListener('click', () => {
+  const isOpen = creditsSelector.classList.contains('visible');
+  closeAllSelectors();
+  if (!isOpen) creditsSelector.classList.add('visible');
+});
 
 // ── Caption Generator ─────────────────────────────────────────────────────────
 generateBtn.addEventListener('click', async () => {
