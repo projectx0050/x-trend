@@ -64,6 +64,7 @@
         <span class="account-tier" id="account-tier"></span>
       </div>
       <button class="btn btn-secondary" id="logout-btn">Log Out</button>
+      <button class="btn btn-secondary" id="manage-subscription-btn" style="display:none">Manage Subscription</button>
     </div>
 
     <!-- Brand Voice section -->
@@ -100,6 +101,11 @@
           <span class="toggle-track"></span>
         </label>
       </div>
+    </div>
+
+    <!-- Website link -->
+    <div class="settings-section">
+      <a href="https://www.x-trendyourself.com" id="website-link" target="_blank" rel="noopener noreferrer" class="website-link">&#127760; Visit our website</a>
     </div>
   </div>
 
@@ -156,7 +162,19 @@
           <span class="bv-lock">&#128274;</span>
           <div class="bv-text">
             <div class="bv-title">Brand Voice Memory</div>
-            <div class="bv-sub">Applied across all features &mdash; configure in Settings</div>
+            <div class="bv-sub" id="bv-strip-sub">Bundle plan only &mdash; upgrade to unlock</div>
+          </div>
+        </div>
+
+        <!-- Upgrade to Bundle (shown for social_pro and business_pro only) -->
+        <div class="home-upgrade-bundle" id="upgrade-to-bundle" style="display:none">
+          <div class="hub-text">
+            <span class="hub-title">&#128640; Upgrade to Bundle</span>
+            <span class="hub-sub">Unlock all 6 features + Brand Voice Memory</span>
+          </div>
+          <div class="hub-actions">
+            <button class="btn btn-secondary" id="home-buy-credits-btn">Buy Credits</button>
+            <button class="btn btn-primary" id="home-upgrade-bundle-btn">Upgrade to Bundle</button>
           </div>
         </div>
 
@@ -598,6 +616,16 @@
   </div>
 </div>
 
+  <style>
+    .home-upgrade-bundle{border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px;background:rgba(124,58,237,.08);display:flex;flex-direction:column;gap:10px;margin-top:2px}
+    .hub-text{display:flex;flex-direction:column;gap:3px}
+    .hub-title{font-size:13px;font-weight:700;color:#a78bfa}
+    .hub-sub{font-size:11px;color:#8b90a8}
+    .hub-actions{display:flex;gap:8px}
+    .hub-actions .btn{flex:1;font-size:12px;padding:7px 10px}
+    .website-link{font-size:12px;color:#7c3aed;text-align:center;padding:6px 0;text-decoration:none;display:block}
+    .website-link:hover{text-decoration:underline}
+  </style>
   <script src="popup.js"></script>
 </body>
 </html>
