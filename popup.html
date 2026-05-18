@@ -64,7 +64,12 @@
         <span class="account-tier" id="account-tier"></span>
       </div>
       <button class="btn btn-secondary" id="logout-btn">Log Out</button>
-      <button class="btn btn-secondary" id="manage-subscription-btn" style="display:none">Manage Subscription</button>
+    </div>
+
+    <!-- Plan Section — shown when logged in -->
+    <div class="settings-section" id="plan-section" style="display:none">
+      <div class="settings-section-label">&#128179; Your Plan</div>
+      <div id="plan-section-content"></div>
     </div>
 
     <!-- Brand Voice section -->
@@ -166,18 +171,6 @@
           </div>
         </div>
 
-        <!-- Upgrade to Bundle (shown for social_pro and business_pro only) -->
-        <div class="home-upgrade-bundle" id="upgrade-to-bundle" style="display:none">
-          <div class="hub-text">
-            <span class="hub-title">&#128640; Upgrade to Bundle</span>
-            <span class="hub-sub">Unlock all 6 features + Brand Voice Memory</span>
-          </div>
-          <div class="hub-actions">
-            <button class="btn btn-secondary" id="home-buy-credits-btn">Buy Credits</button>
-            <button class="btn btn-primary" id="home-upgrade-bundle-btn">Upgrade to Bundle</button>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -236,57 +229,60 @@
           <div class="output-text" id="caption-output"></div>
         </div>
 
+        <div class="feature-gate" id="gate-caption">
+          <div class="feature-gate-msg"><span class="feature-gate-lock">&#128274;</span><span>Social Pro or Bundle plan required</span></div>
+          <div class="feature-gate-actions">
+            <button class="btn btn-secondary feature-gate-upgrade-btn" data-feature="caption">Upgrade Plan</button>
+            <button class="btn btn-primary feature-gate-token-btn" data-feature="caption">Use a Token</button>
+          </div>
+        </div>
+
       </section>
 
       <!-- Platform Rewriter Panel -->
       <section class="panel" id="panel-rewriter">
 
-        <!-- Pro gate: shown for free users past day 5 -->
-        <div class="pro-gate" id="rewriter-pro-gate">
-          <div class="pro-gate-lock">&#128274;</div>
-          <div class="pro-gate-title">Platform Rewriter is a Pro feature</div>
-          <div class="pro-gate-sub">Upgrade to unlock unlimited platform rewrites.</div>
-          <button class="btn btn-primary" id="rewriter-upgrade-btn">Upgrade to Pro</button>
+        <div class="field">
+          <label>Your existing content</label>
+          <textarea
+            id="rewriter-content"
+            placeholder="Paste your caption, tweet, post, or any social media content here&hellip;"
+            rows="4"
+          ></textarea>
         </div>
 
-        <!-- Rewriter form: hidden when gated -->
-        <div id="rewriter-form">
+        <div class="field">
+          <label>Rewrite for Platform</label>
+          <select id="rewriter-platform">
+            <option value="Instagram">&#128248; Instagram</option>
+            <option value="TikTok">&#127925; TikTok</option>
+            <option value="LinkedIn">&#128188; LinkedIn</option>
+            <option value="X/Twitter">&#128038; X / Twitter</option>
+            <option value="Facebook">&#128279; Facebook</option>
+          </select>
+        </div>
 
-          <div class="field">
-            <label>Your existing content</label>
-            <textarea
-              id="rewriter-content"
-              placeholder="Paste your caption, tweet, post, or any social media content here&hellip;"
-              rows="4"
-            ></textarea>
+        <button class="btn btn-primary" id="rewrite-btn">
+          <span class="btn-icon">&#x1F504;</span>
+          <span>Rewrite for Platform</span>
+        </button>
+
+        <div class="error-msg" id="rewriter-error"></div>
+
+        <div class="output-card" id="rewriter-output-card">
+          <div class="output-card-header">
+            <span class="output-label">Rewritten Content</span>
+            <button class="copy-btn" id="rewriter-copy-btn">Copy</button>
           </div>
+          <div class="output-text" id="rewriter-output"></div>
+        </div>
 
-          <div class="field">
-            <label>Rewrite for Platform</label>
-            <select id="rewriter-platform">
-              <option value="Instagram">&#128248; Instagram</option>
-              <option value="TikTok">&#127925; TikTok</option>
-              <option value="LinkedIn">&#128188; LinkedIn</option>
-              <option value="X/Twitter">&#128038; X / Twitter</option>
-              <option value="Facebook">&#128279; Facebook</option>
-            </select>
+        <div class="feature-gate" id="gate-rewrite">
+          <div class="feature-gate-msg"><span class="feature-gate-lock">&#128274;</span><span>Social Pro or Bundle plan required</span></div>
+          <div class="feature-gate-actions">
+            <button class="btn btn-secondary feature-gate-upgrade-btn" data-feature="rewrite">Upgrade Plan</button>
+            <button class="btn btn-primary feature-gate-token-btn" data-feature="rewrite">Use a Token</button>
           </div>
-
-          <button class="btn btn-primary" id="rewrite-btn">
-            <span class="btn-icon">&#x1F504;</span>
-            <span>Rewrite for Platform</span>
-          </button>
-
-          <div class="error-msg" id="rewriter-error"></div>
-
-          <div class="output-card" id="rewriter-output-card">
-            <div class="output-card-header">
-              <span class="output-label">Rewritten Content</span>
-              <button class="copy-btn" id="rewriter-copy-btn">Copy</button>
-            </div>
-            <div class="output-text" id="rewriter-output"></div>
-          </div>
-
         </div>
 
       </section>
@@ -327,6 +323,14 @@
             <button class="copy-btn" id="hashtag-copy-btn">Copy</button>
           </div>
           <div class="output-text" id="hashtag-output"></div>
+        </div>
+
+        <div class="feature-gate" id="gate-hashtag">
+          <div class="feature-gate-msg"><span class="feature-gate-lock">&#128274;</span><span>Social Pro or Bundle plan required</span></div>
+          <div class="feature-gate-actions">
+            <button class="btn btn-secondary feature-gate-upgrade-btn" data-feature="hashtag">Upgrade Plan</button>
+            <button class="btn btn-primary feature-gate-token-btn" data-feature="hashtag">Use a Token</button>
+          </div>
         </div>
 
       </section>
@@ -386,6 +390,14 @@
           <div class="output-text" id="review-output"></div>
         </div>
 
+        <div class="feature-gate" id="gate-review">
+          <div class="feature-gate-msg"><span class="feature-gate-lock">&#128274;</span><span>Business Pro or Bundle plan required</span></div>
+          <div class="feature-gate-actions">
+            <button class="btn btn-secondary feature-gate-upgrade-btn" data-feature="review_response">Upgrade Plan</button>
+            <button class="btn btn-primary feature-gate-token-btn" data-feature="review_response">Use a Token</button>
+          </div>
+        </div>
+
       </section>
 
       <!-- Email Tone Fixer Panel -->
@@ -425,6 +437,14 @@
           <div class="output-text" id="email-output"></div>
         </div>
 
+        <div class="feature-gate" id="gate-email">
+          <div class="feature-gate-msg"><span class="feature-gate-lock">&#128274;</span><span>Business Pro or Bundle plan required</span></div>
+          <div class="feature-gate-actions">
+            <button class="btn btn-secondary feature-gate-upgrade-btn" data-feature="email_tone">Upgrade Plan</button>
+            <button class="btn btn-primary feature-gate-token-btn" data-feature="email_tone">Use a Token</button>
+          </div>
+        </div>
+
       </section>
 
       <!-- Proposal Generator Panel -->
@@ -461,6 +481,14 @@
             <button class="copy-btn" id="proposal-copy-btn">Copy</button>
           </div>
           <div class="output-text" id="proposal-output"></div>
+        </div>
+
+        <div class="feature-gate" id="gate-proposal">
+          <div class="feature-gate-msg"><span class="feature-gate-lock">&#128274;</span><span>Business Pro or Bundle plan required</span></div>
+          <div class="feature-gate-actions">
+            <button class="btn btn-secondary feature-gate-upgrade-btn" data-feature="proposal">Upgrade Plan</button>
+            <button class="btn btn-primary feature-gate-token-btn" data-feature="proposal">Use a Token</button>
+          </div>
         </div>
 
       </section>
@@ -617,12 +645,24 @@
 </div>
 
   <style>
-    .home-upgrade-bundle{border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:12px;background:rgba(124,58,237,.08);display:flex;flex-direction:column;gap:10px;margin-top:2px}
-    .hub-text{display:flex;flex-direction:column;gap:3px}
-    .hub-title{font-size:13px;font-weight:700;color:#a78bfa}
-    .hub-sub{font-size:11px;color:#8b90a8}
-    .hub-actions{display:flex;gap:8px}
-    .hub-actions .btn{flex:1;font-size:12px;padding:7px 10px}
+    /* Plan Section in Settings */
+    .plan-current{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px}
+    .plan-current-label{font-size:11px;color:var(--text-muted)}
+    .plan-current-badge{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-dim);padding:3px 10px;border-radius:20px;border:1px solid rgba(124,109,240,.3)}
+    .plan-full-access{font-size:12px;color:var(--success);padding:6px 0;text-align:center}
+    .plan-upgrade-option{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px}
+    .plan-upgrade-info{display:flex;flex-direction:column;gap:2px}
+    .plan-upgrade-name{font-size:12px;font-weight:700;color:var(--text)}
+    .plan-upgrade-price{font-size:11px;color:var(--accent);font-weight:600}
+    .plan-upgrade-desc{font-size:10.5px;color:var(--text-muted)}
+    /* Feature Gate overlay at bottom of panels */
+    .feature-gate{display:none;flex-direction:column;gap:10px;padding:14px;background:rgba(124,109,240,.06);border:1px solid rgba(124,109,240,.2);border-radius:8px;margin-top:4px}
+    .feature-gate-msg{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary)}
+    .feature-gate-lock{font-size:14px;flex-shrink:0}
+    .feature-gate-actions{display:flex;gap:8px}
+    .feature-gate-actions .btn{flex:1;font-size:12px;padding:8px 10px}
+    textarea:disabled,select:disabled,input:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+    /* Website link */
     .website-link{font-size:12px;color:#7c3aed;text-align:center;padding:6px 0;text-decoration:none;display:block}
     .website-link:hover{text-decoration:underline}
   </style>

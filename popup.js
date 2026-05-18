@@ -79,9 +79,6 @@ const rewriterError      = document.getElementById('rewriter-error');
 const rewriterOutputCard = document.getElementById('rewriter-output-card');
 const rewriterOutput     = document.getElementById('rewriter-output');
 const rewriterCopyBtn    = document.getElementById('rewriter-copy-btn');
-const rewriterProGate    = document.getElementById('rewriter-pro-gate');
-const rewriterForm       = document.getElementById('rewriter-form');
-const rewriterUpgradeBtn = document.getElementById('rewriter-upgrade-btn');
 
 // ── DOM refs — Hashtag Suggester ──────────────────────────────────────────────
 const hashtagDesc       = document.getElementById('hashtag-description');
@@ -119,12 +116,8 @@ const proposalOutputCard  = document.getElementById('proposal-output-card');
 const proposalOutput      = document.getElementById('proposal-output');
 const proposalCopyBtn     = document.getElementById('proposal-copy-btn');
 
-// ── DOM refs — Plan gating / upgrade / manage ─────────────────────────────────
-const manageSubscriptionBtn  = document.getElementById('manage-subscription-btn');
-const upgradeToBundleEl      = document.getElementById('upgrade-to-bundle');
-const homeUpgradeBundleBtn   = document.getElementById('home-upgrade-bundle-btn');
-const homeBuyCreditsBtn      = document.getElementById('home-buy-credits-btn');
-const bvStripSub             = document.getElementById('bv-strip-sub');
+// ── DOM refs — Brand Voice strip sub ─────────────────────────────────────────
+const bvStripSub = document.getElementById('bv-strip-sub');
 
 // ── DOM refs — Settings back / Reading Panel ──────────────────────────────────
 const settingsBackBtn      = document.getElementById('settings-back-btn');
@@ -223,7 +216,6 @@ socialTabBtns.forEach((btn) => {
     socialPanelIds.forEach(id => document.getElementById(id).classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`panel-${target}`).classList.add('active');
-    if (target === 'rewriter') checkRewriterGate();
   });
 });
 
@@ -294,32 +286,131 @@ function renderAccountSection() {
   accountEmailEl.textContent   = userEmail;
   accountTierEl.textContent    = formatTierLabel(userTier) + ' plan';
   setBrandVoiceGated(userTier !== 'bundle');
-  const isPaid = ['social_pro', 'business_pro', 'bundle'].includes(userTier);
-  manageSubscriptionBtn.style.display = isPaid ? '' : 'none';
-  updateCardVisibility(userTier);
-  updateUpgradeToBundle(userTier);
   updateHomeBrandVoiceStrip(userTier);
+  const credits = userStatus ? (userStatus.credits || 0) : 0;
+  renderPlanSection(userTier, credits);
 }
 
-// ── Plan-based UI gating helpers ──────────────────────────────────────────────
-function updateCardVisibility(tier) {
-  const cardSocial   = document.getElementById('card-social');
-  const cardBusiness = document.getElementById('card-business');
-  if (tier === 'social_pro') {
-    cardSocial.style.display   = '';
-    cardBusiness.style.display = 'none';
-  } else if (tier === 'business_pro') {
-    cardSocial.style.display   = 'none';
-    cardBusiness.style.display = '';
+// ── Feature gating constants ──────────────────────────────────────────────────
+const SOCIAL_FEATURE_TYPES   = new Set(['caption', 'rewrite', 'hashtag']);
+const BUSINESS_FEATURE_TYPES = new Set(['review_response', 'email_tone', 'proposal']);
+
+const FEATURE_DEFS = [
+  { type: 'caption',         gateId: 'gate-caption',  btnId: 'generate-caption-btn',   inputs: ['caption-description', 'caption-platform'] },
+  { type: 'rewrite',         gateId: 'gate-rewrite',  btnId: 'rewrite-btn',            inputs: ['rewriter-content', 'rewriter-platform'] },
+  { type: 'hashtag',         gateId: 'gate-hashtag',  btnId: 'suggest-hashtags-btn',   inputs: ['hashtag-description', 'hashtag-platform'] },
+  { type: 'review_response', gateId: 'gate-review',   btnId: 'generate-review-btn',    inputs: ['review-content', 'review-tone'] },
+  { type: 'email_tone',      gateId: 'gate-email',    btnId: 'fix-email-btn',          inputs: ['email-content', 'email-tone'] },
+  { type: 'proposal',        gateId: 'gate-proposal', btnId: 'generate-proposal-btn',  inputs: ['proposal-job', 'proposal-skills'] },
+];
+
+function isPlanGated(type, tier) {
+  if (tier === 'social_pro')   return BUSINESS_FEATURE_TYPES.has(type);
+  if (tier === 'business_pro') return SOCIAL_FEATURE_TYPES.has(type);
+  return false;
+}
+
+function applyFeatureGating(tier, credits) {
+  FEATURE_DEFS.forEach(f => {
+    const gated   = isPlanGated(f.type, tier);
+    const gateEl  = document.getElementById(f.gateId);
+    const genBtn  = document.getElementById(f.btnId);
+    f.inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = gated;
+    });
+    if (genBtn) genBtn.disabled = gated;
+    if (gateEl) {
+      gateEl.style.display = gated ? 'flex' : 'none';
+      const tokenBtn = gateEl.querySelector('.feature-gate-token-btn');
+      if (tokenBtn) {
+        tokenBtn.textContent = credits > 0 ? `Use a Token (${credits} left)` : 'Buy Credits';
+      }
+    }
+  });
+}
+
+function unlockFeatureForToken(type) {
+  const def = FEATURE_DEFS.find(f => f.type === type);
+  if (!def) return;
+  def.inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = false;
+  });
+  const genBtn = document.getElementById(def.btnId);
+  if (genBtn) genBtn.disabled = false;
+  const gateEl = document.getElementById(def.gateId);
+  if (gateEl) gateEl.style.display = 'none';
+}
+
+// ── Plan section rendering ─────────────────────────────────────────────────────
+function renderPlanSection(tier, credits) {
+  const planSection = document.getElementById('plan-section');
+  const content     = document.getElementById('plan-section-content');
+  if (!planSection || !content) return;
+
+  planSection.style.display = 'flex';
+
+  const PLAN_OPTIONS = [
+    { id: 'social_pro',   name: 'Social Pro',   price: '$9.99/mo',  desc: 'Caption Generator, Rewriter, Hashtags' },
+    { id: 'business_pro', name: 'Business Pro', price: '$19.99/mo', desc: 'Review Responder, Email Fixer, Proposals' },
+    { id: 'bundle',       name: 'Bundle',       price: '$29.99/mo', desc: 'All 6 features + Brand Voice Memory' },
+  ];
+
+  let upgradeOptions = [];
+  if (tier === 'free')         upgradeOptions = PLAN_OPTIONS;
+  else if (tier === 'social_pro')   upgradeOptions = PLAN_OPTIONS.filter(p => p.id !== 'social_pro');
+  else if (tier === 'business_pro') upgradeOptions = PLAN_OPTIONS.filter(p => p.id !== 'business_pro');
+
+  const isPaid = ['social_pro', 'business_pro', 'bundle'].includes(tier);
+
+  let html = `<div class="plan-current">
+    <span class="plan-current-label">Current Plan</span>
+    <span class="plan-current-badge">${formatTierLabel(tier)}</span>
+  </div>`;
+
+  if (tier === 'bundle') {
+    html += `<div class="plan-full-access">&#10003; You have full access to all features</div>`;
   } else {
-    cardSocial.style.display   = '';
-    cardBusiness.style.display = '';
+    upgradeOptions.forEach(opt => {
+      html += `<div class="plan-upgrade-option">
+        <div class="plan-upgrade-info">
+          <span class="plan-upgrade-name">${opt.name}</span>
+          <span class="plan-upgrade-price">${opt.price}</span>
+          <span class="plan-upgrade-desc">${opt.desc}</span>
+        </div>
+        <button class="btn btn-secondary plan-upgrade-btn" data-product-id="${opt.id}">Upgrade to ${opt.name}</button>
+      </div>`;
+    });
+    html += `<button class="btn btn-secondary" id="plan-buy-credits-btn">Buy Credits</button>`;
   }
-}
 
-function updateUpgradeToBundle(tier) {
-  upgradeToBundleEl.style.display =
-    (tier === 'social_pro' || tier === 'business_pro') ? '' : 'none';
+  if (isPaid) {
+    html += `<button class="btn btn-secondary" id="plan-manage-sub-btn">Manage Subscription</button>`;
+  }
+
+  content.innerHTML = html;
+
+  content.querySelectorAll('.plan-upgrade-btn').forEach(btn => {
+    btn.addEventListener('click', () => openCheckout('subscription', btn.dataset.productId, null));
+  });
+
+  const buyCreditsBtn = document.getElementById('plan-buy-credits-btn');
+  if (buyCreditsBtn) {
+    buyCreditsBtn.addEventListener('click', () => {
+      closeSettings();
+      const isOpen = creditsSelector.classList.contains('visible');
+      closeAllSelectors();
+      if (!isOpen) creditsSelector.classList.add('visible');
+    });
+  }
+
+  const manageSubBtn = document.getElementById('plan-manage-sub-btn');
+  if (manageSubBtn) {
+    manageSubBtn.addEventListener('click', () => {
+      if (STRIPE_PORTAL_URL) chrome.tabs.create({ url: STRIPE_PORTAL_URL });
+    });
+  }
 }
 
 function updateHomeBrandVoiceStrip(tier) {
@@ -482,12 +573,11 @@ function clearStoredAuth() {
   renderAuthSection();
   updateUsageDisplay(null);
   hideUpgradeBanner();
-  setRewriterGated(false);
   setBrandVoiceGated(true);
-  manageSubscriptionBtn.style.display = 'none';
-  updateCardVisibility('free');
-  updateUpgradeToBundle('free');
   updateHomeBrandVoiceStrip('free');
+  applyFeatureGating('free', 0);
+  const planSection = document.getElementById('plan-section');
+  if (planSection) planSection.style.display = 'none';
 }
 
 // ── Brand Voice ───────────────────────────────────────────────────────────────
@@ -532,10 +622,9 @@ function fetchAndUpdateStatus() {
       renderAccountSection();
     }
     updateUsageDisplay(userStatus);
-    checkRewriterGate();
-    updateCardVisibility(userTier);
-    updateUpgradeToBundle(userTier);
     updateHomeBrandVoiceStrip(userTier);
+    applyFeatureGating(userTier, userStatus.credits || 0);
+    renderPlanSection(userTier, userStatus.credits || 0);
     if (isLimitReached()) showUpgradeBanner();
   });
 }
@@ -548,13 +637,6 @@ function isLimitReached() {
   return used >= limit;
 }
 
-function isRewriterGated() {
-  if (!userStatus) return false;
-  const tier = userStatus.tier || 'free';
-  const days = userStatus.days_since_signup ?? userStatus.daysSinceSignup ?? 1;
-  const paid = ['social_pro', 'business_pro', 'bundle'].includes(tier);
-  return !paid && days > 5;
-}
 
 function updateUsageDisplay(status) {
   if (!status) {
@@ -670,32 +752,22 @@ function openCheckout(product_type, product_id, errorEl) {
   );
 }
 
-// ── Rewriter pro gate ─────────────────────────────────────────────────────────
-function checkRewriterGate() {
-  setRewriterGated(isRewriterGated());
-}
+// ── Feature gate button delegation ────────────────────────────────────────────
+document.addEventListener('click', (e) => {
+  const upgradeBtn = e.target.closest('.feature-gate-upgrade-btn');
+  if (upgradeBtn) { openSettings(); return; }
 
-function setRewriterGated(gated) {
-  rewriterProGate.style.display = gated ? 'flex' : 'none';
-  rewriterForm.style.display    = gated ? 'none' : 'flex';
-}
-
-rewriterUpgradeBtn.addEventListener('click', () => openCheckout('subscription', 'social_pro', rewriterError));
-
-// ── Issue 3: Manage Subscription ─────────────────────────────────────────────
-manageSubscriptionBtn.addEventListener('click', () => {
-  if (STRIPE_PORTAL_URL) chrome.tabs.create({ url: STRIPE_PORTAL_URL });
-});
-
-// ── Issue 4: Upgrade to Bundle from home screen ───────────────────────────────
-homeUpgradeBundleBtn.addEventListener('click', () => {
-  openCheckout('subscription', 'bundle', null);
-});
-
-homeBuyCreditsBtn.addEventListener('click', () => {
-  const isOpen = creditsSelector.classList.contains('visible');
-  closeAllSelectors();
-  if (!isOpen) creditsSelector.classList.add('visible');
+  const tokenBtn = e.target.closest('.feature-gate-token-btn');
+  if (tokenBtn) {
+    const credits = userStatus ? (userStatus.credits || 0) : 0;
+    if (credits > 0) {
+      unlockFeatureForToken(tokenBtn.dataset.feature);
+    } else {
+      const isOpen = creditsSelector.classList.contains('visible');
+      closeAllSelectors();
+      if (!isOpen) creditsSelector.classList.add('visible');
+    }
+  }
 });
 
 // ── Caption Generator ─────────────────────────────────────────────────────────
@@ -764,7 +836,6 @@ rewriteBtn.addEventListener('click', async () => {
   } else {
     if (result.unauthorized) { clearStoredAuth(); openSettings(); }
     if (result.limitReached) showUpgradeBanner();
-    if (result.featureGated) setRewriterGated(true);
     showError(rewriterError, result.error);
   }
 });
