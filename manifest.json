@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "X-Trend",
   "version": "1.1.0",
-  "description": "AI-powered writing assistant for social media content creators",
+  "description": "AI writing co-pilot for content creators and businesses. Captions, rewrites, hashtags, reviews and more — instantly.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "X-Trend",
