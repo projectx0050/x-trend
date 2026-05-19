@@ -53,6 +53,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .catch(err => sendResponse({ success: false, error: err.message }));
       return true;
 
+    case 'forgotPassword':
+      postAuth('/auth/forgot-password', request.payload)
+        .then(data => sendResponse({ success: true, data }))
+        .catch(err => sendResponse({ success: false, error: err.message }));
+      return true;
+
+    case 'resetPassword':
+      postAuth('/auth/reset-password', request.payload)
+        .then(data => sendResponse({ success: true, data }))
+        .catch(err => sendResponse({ success: false, error: err.message }));
+      return true;
+
     case 'createCheckoutSession':
       createCheckoutSession(request.payload, request.token)
         .then(data => sendResponse({ success: true, data }))

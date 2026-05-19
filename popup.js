@@ -10,7 +10,7 @@ let userTier     = 'free';
 let userStatus   = null; // full status from /api/user-status
 let settingsOpen = false;
 let isDarkMode   = false;
-let authMode     = 'login'; // 'login' | 'signup'
+let authMode     = 'login'; // 'login' | 'signup' | 'forgot'
 let brandVoice   = '';
 let currentScreen = 'home'; // 'home' | 'social' | 'business'
 let expandedViewEnabled  = true;
@@ -30,6 +30,13 @@ const termsCheckbox            = document.getElementById('terms-checkbox');
 const resendVerificationField  = document.getElementById('resend-verification-field');
 const resendVerificationBtn    = document.getElementById('resend-verification-btn');
 const authSpamNote             = document.getElementById('auth-spam-note');
+const forgotPasswordSection    = document.getElementById('forgot-password-section');
+const forgotPasswordBtn        = document.getElementById('forgot-password-btn');
+const forgotBackBtn            = document.getElementById('forgot-back-btn');
+const forgotEmailInput         = document.getElementById('forgot-email');
+const forgotSubmitBtn          = document.getElementById('forgot-submit-btn');
+const forgotStatus             = document.getElementById('forgot-status');
+const forgotLinkWrap           = document.getElementById('forgot-password-link-wrap');
 const accountSection           = document.getElementById('account-section');
 const accountEmailEl    = document.getElementById('account-email');
 const accountTierEl     = document.getElementById('account-tier');
@@ -551,6 +558,65 @@ resendVerificationBtn.addEventListener('click', () => {
     } else {
       showAuthStatus(response?.error || 'Could not resend email. Please try again.', false);
     }
+  });
+});
+
+// ── Forgot password ───────────────────────────────────────────────────────────
+function showForgotPasswordView() {
+  authSection.style.display           = 'none';
+  forgotPasswordSection.style.display = 'flex';
+  forgotEmailInput.value              = authEmailInput.value.trim();
+  forgotStatus.textContent            = '';
+  forgotStatus.className              = 'save-status';
+}
+
+function hideForgotPasswordView() {
+  forgotPasswordSection.style.display = 'none';
+  authSection.style.display           = 'flex';
+}
+
+forgotPasswordBtn.addEventListener('click', showForgotPasswordView);
+forgotBackBtn.addEventListener('click', hideForgotPasswordView);
+
+forgotSubmitBtn.addEventListener('click', () => {
+  const email = forgotEmailInput.value.trim();
+  if (!email) {
+    forgotStatus.textContent = 'Please enter your email address.';
+    forgotStatus.className   = 'save-status error';
+    return;
+  }
+
+  forgotSubmitBtn.disabled    = true;
+  forgotSubmitBtn.textContent = 'Sending…';
+  forgotStatus.textContent    = '';
+  forgotStatus.className      = 'save-status';
+
+  chrome.runtime.sendMessage({ action: 'forgotPassword', payload: { email } }, (response) => {
+    forgotSubmitBtn.disabled    = false;
+    forgotSubmitBtn.textContent = 'Send Reset Link';
+
+    if (chrome.runtime.lastError) {
+      forgotStatus.textContent = chrome.runtime.lastError.message;
+      forgotStatus.className   = 'save-status error';
+      return;
+    }
+
+    if (response && response.success) {
+      forgotStatus.textContent = response.data?.message || 'Check your email for a reset link.';
+      forgotStatus.className   = 'save-status success';
+      forgotSubmitBtn.disabled = true;
+    } else {
+      forgotStatus.textContent = response?.error || 'Something went wrong. Please try again.';
+      forgotStatus.className   = 'save-status error';
+    }
+  });
+});
+
+// Hide forgot link when signup tab active
+authTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    hideForgotPasswordView();
+    forgotLinkWrap.style.display = tab.dataset.auth === 'login' ? '' : 'none';
   });
 });
 

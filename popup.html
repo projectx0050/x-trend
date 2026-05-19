@@ -49,12 +49,30 @@
           <span>I agree to the <a href="https://projectx0050.github.io/x-trend/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://projectx0050.github.io/x-trend/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
         </label>
       </div>
+      <div id="forgot-password-link-wrap" style="text-align:right;margin-bottom:2px;">
+        <button class="btn-text" id="forgot-password-btn" style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;">Forgot password?</button>
+      </div>
       <button class="btn btn-primary" id="auth-submit-btn">Log In</button>
       <div class="save-status" id="auth-status"></div>
       <div id="auth-spam-note" style="display:none">Don't see it? Check your spam folder.</div>
       <div id="resend-verification-field" style="display:none">
         <button class="btn-text" id="resend-verification-btn">Resend verification email</button>
       </div>
+    </div>
+
+    <!-- Forgot password view -->
+    <div id="forgot-password-section" style="display:none;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="settings-back-btn" id="forgot-back-btn" title="Back to login">&#8592;</button>
+        <div style="font-size:14px;font-weight:600;color:var(--text);">Forgot your password?</div>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin:0;">Enter your email and we'll send you a reset link.</p>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
+      </div>
+      <button class="btn btn-primary" id="forgot-submit-btn">Send Reset Link</button>
+      <div class="save-status" id="forgot-status"></div>
     </div>
 
     <!-- Account info: shown when logged in -->
