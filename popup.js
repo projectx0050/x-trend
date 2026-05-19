@@ -49,6 +49,7 @@ const brandVoiceStatus    = document.getElementById('brand-voice-status');
 const homeBrandVoiceStrip = document.getElementById('home-brand-voice-strip');
 const bvBundleGate        = document.getElementById('bv-bundle-gate');
 const bvForm              = document.getElementById('bv-form');
+const bvSection           = document.getElementById('bv-section');
 
 // ── DOM refs — footer / theme ─────────────────────────────────────────────────
 const usageLine1  = document.getElementById('usage-line-1');
@@ -285,11 +286,13 @@ settingsBackBtn.addEventListener('click', closeSettings);
 function renderAuthSection() {
   authSection.style.display    = 'flex';
   accountSection.style.display = 'none';
+  bvSection.style.display      = 'none';
 }
 
 function renderAccountSection() {
   authSection.style.display    = 'none';
   accountSection.style.display = 'flex';
+  bvSection.style.display      = '';
   accountEmailEl.textContent   = userEmail;
   accountTierEl.textContent    = formatTierLabel(userTier) + ' plan';
   setBrandVoiceGated(userTier !== 'bundle');
@@ -639,6 +642,9 @@ function clearStoredAuth() {
   renderAuthSection();
   updateUsageDisplay(null);
   hideUpgradeBanner();
+  bvSection.style.display  = 'none';
+  brandVoice               = '';
+  brandVoiceInput.value    = '';
   setBrandVoiceGated(true);
   updateHomeBrandVoiceStrip('free');
   applyFeatureGating('free', 0);
