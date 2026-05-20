@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>X-Trend QA Agent</title>
-<script src="/qa-docx.js"></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -92,8 +92,6 @@ h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#3b8
 </style>
 </head>
 <body>
-
-<div style="background:#92400e;color:#fef3c7;padding:10px 20px;font-size:12px;font-weight:600;text-align:center;border-bottom:2px solid #b45309;">&#9888; Report generation requires running via: <code style="font-family:monospace;background:rgba(0,0,0,.2);padding:2px 6px;border-radius:3px">npm run qa</code> &mdash; opening this file directly in Chrome will skip docx export.</div>
 
 <header>
   <h1>&#x25C6; X-Trend QA Agent</h1>
@@ -1898,10 +1896,6 @@ function stopRun() {
 // DOCX REPORT GENERATION
 // ═══════════════════════════════════════
 async function generateReport() {
-  if (!window.docx) {
-    alert('docx.js not loaded. Make sure you are running via: npm run qa');
-    return;
-  }
   if (S.results.length === 0) {
     alert('No test results to report.');
     return;
