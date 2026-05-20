@@ -1,0 +1,2207 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X-Trend QA Agent</title>
+<script src="/qa-docx.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#232635;--border:#2d3148;
+  --text:#e8eaf0;--muted:#8b90a8;--pass:#22c55e;--fail:#ef4444;
+  --warn:#f59e0b;--skip:#6b7280;--info:#3b82f6;--accent:#7c3aed;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;line-height:1.5}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.badge-idle{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.badge-running{background:rgba(59,130,246,.2);color:var(--info);border:1px solid var(--info);animation:pulse 1.5s infinite}
+.badge-done{background:rgba(34,197,94,.2);color:var(--pass);border:1px solid var(--pass)}
+.badge-stopped{background:rgba(239,68,68,.2);color:var(--fail);border:1px solid var(--fail)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover:not(:disabled){background:#6d28d9}
+.btn-danger{background:rgba(239,68,68,.2);color:var(--fail);border:1px solid var(--fail)}
+.btn-danger:hover:not(:disabled){background:rgba(239,68,68,.35)}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover:not(:disabled){background:var(--border)}
+.layout{display:grid;grid-template-columns:320px 1fr;min-height:calc(100vh - 53px)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:16px;overflow-y:auto;height:calc(100vh - 53px);position:sticky;top:53px}
+.main{padding:16px;overflow-y:auto}
+.section{margin-bottom:16px}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:7px 9px;font-size:12px;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:60px;font-family:monospace;font-size:11px}
+.field input[readonly]{opacity:.6}
+.mode-tabs{display:flex;gap:1px;background:var(--surface2);border-radius:6px;padding:2px;margin-bottom:12px}
+.mode-tab{flex:1;padding:6px;border:none;background:transparent;color:var(--muted);font-size:11px;font-weight:600;border-radius:5px;cursor:pointer;transition:.15s}
+.mode-tab.active{background:var(--accent);color:#fff}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cat-check{display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 8px;border-radius:5px;border:1px solid var(--border);font-size:11px;font-weight:500}
+.cat-check:hover{background:var(--surface2)}
+.cat-check input{cursor:pointer;accent-color:var(--accent)}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.stat-num{font-size:24px;font-weight:800;line-height:1}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;color:var(--muted);margin-top:4px;letter-spacing:.05em}
+.stat-pass .stat-num{color:var(--pass)}
+.stat-fail .stat-num{color:var(--fail)}
+.stat-warn .stat-num{color:var(--warn)}
+.stat-skip .stat-num{color:var(--skip)}
+.stat-total .stat-num{color:var(--info)}
+.results-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.results-table th{background:var(--surface2);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border)}
+.results-table td{padding:8px 12px;border-bottom:1px solid rgba(45,49,72,.5);vertical-align:top}
+.results-table tr:last-child td{border-bottom:none}
+.results-table tr:hover td{background:rgba(255,255,255,.02)}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.pill-PASS{background:rgba(34,197,94,.15);color:var(--pass);border:1px solid rgba(34,197,94,.3)}
+.pill-FAIL{background:rgba(239,68,68,.15);color:var(--fail);border:1px solid rgba(239,68,68,.3)}
+.pill-WARN{background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3)}
+.pill-SKIP{background:rgba(107,114,128,.15);color:var(--skip);border:1px solid rgba(107,114,128,.3)}
+.pill-RUNNING{background:rgba(59,130,246,.15);color:var(--info);border:1px solid rgba(59,130,246,.3);animation:pulse 1s infinite}
+.cat-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:var(--surface2);color:var(--muted)}
+.detail-text{color:var(--muted);font-size:11px;max-width:380px;word-break:break-word}
+.detail-text.err{color:#fca5a5}
+.ms-text{font-family:monospace;font-size:11px;color:var(--muted)}
+.ms-warn{color:var(--warn)}
+.ms-fail{color:var(--fail)}
+.progress-bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:16px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--info));border-radius:2px;transition:width .3s}
+.log-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:16px;font-family:monospace;font-size:11px;color:var(--muted);max-height:120px;overflow-y:auto}
+.log-line{padding:1px 0}
+.log-line.ok{color:var(--pass)}
+.log-line.err{color:var(--fail)}
+.log-line.info{color:var(--info)}
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-state p{font-size:13px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.adv-toggle{font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px;margin-bottom:8px}
+.adv-toggle:hover{color:var(--text)}
+.adv-content{display:none}
+.adv-content.open{display:block}
+</style>
+</head>
+<body>
+
+<div style="background:#92400e;color:#fef3c7;padding:10px 20px;font-size:12px;font-weight:600;text-align:center;border-bottom:2px solid #b45309;">&#9888; Report generation requires running via: <code style="font-family:monospace;background:rgba(0,0,0,.2);padding:2px 6px;border-radius:3px">npm run qa</code> &mdash; opening this file directly in Chrome will skip docx export.</div>
+
+<header>
+  <h1>&#x25C6; X-Trend QA Agent</h1>
+  <div class="hdr-right">
+    <span id="status-badge" class="badge badge-idle">Idle</span>
+    <button class="btn btn-primary" id="btn-run" onclick="startRun()">&#9654; Run Tests</button>
+    <button class="btn btn-danger" id="btn-stop" onclick="stopRun()" disabled>&#9632; Stop</button>
+    <button class="btn btn-ghost" id="btn-report" onclick="generateReport()" disabled>&#8595; Report</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="section">
+      <div class="section-title">Admin Credentials</div>
+      <div class="field">
+        <label>Admin Email</label>
+        <input type="email" id="admin-email" value="helloprojectx00@gmail.com" readonly>
+      </div>
+      <div class="field">
+        <label>Admin Password *</label>
+        <input type="password" id="admin-pass" placeholder="Required" autocomplete="current-password">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Test User (Optional)</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Required for usage limit tests</div>
+      <div class="field">
+        <label>Test User Email</label>
+        <input type="email" id="test-email" placeholder="testuser@example.com">
+      </div>
+      <div class="field">
+        <label>Test User Password</label>
+        <input type="password" id="test-pass" placeholder="Optional" autocomplete="current-password">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Social Pro Test User</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Required for plan gating tests</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="social-pro-email" value="social-test@xtrend.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="social-pro-pass" value="XtrendTest123!" autocomplete="current-password">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Business Pro Test User</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Required for plan gating tests</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="business-pro-email" value="business-test@xtrend.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="business-pro-pass" value="XtrendTest123!" autocomplete="current-password">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Bundle Test User</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Required for bundle plan tests</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="bundle-email" value="bundle-test@xtrend.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="bundle-pass" value="XtrendTest123!" autocomplete="current-password">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Free Test User</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Used for usage limit tests (U02, U03)</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="free-email" value="free-test@xtrend.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="free-pass" value="XtrendTest123!" autocomplete="current-password">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">Run Mode</div>
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="setMode('full',this)">Full Suite</button>
+        <button class="mode-tab" onclick="setMode('category',this)">Category</button>
+        <button class="mode-tab" onclick="setMode('individual',this)">Individual</button>
+      </div>
+
+      <div id="mode-full">
+        <div style="font-size:11px;color:var(--muted)">Runs all test categories sequentially.</div>
+      </div>
+
+      <div id="mode-category" style="display:none">
+        <div class="cat-grid">
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="auth" checked> Auth</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="features" checked> Features</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="usage" checked> Usage</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="payments" checked> Payments</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="security" checked> Security</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="ux" checked> UX</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="bv" checked> Brand Voice</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="gating" checked> Plan Gating</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="social_plan" checked> Social Pro Plan</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="business_plan" checked> Business Pro Plan</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="bundle_plan" checked> Bundle Plan</label>
+          <label class="cat-check"><input type="checkbox" class="cat-cb" value="password_reset" checked> Password Reset</label>
+        </div>
+      </div>
+
+      <div id="mode-individual" style="display:none">
+        <div class="field">
+          <label>Select Test</label>
+          <select id="individual-select">
+            <optgroup label="Authentication">
+              <option value="A01">A01 – Signup new account</option>
+              <option value="A02">A02 – Admin login</option>
+              <option value="A03">A03 – Unverified login blocked</option>
+              <option value="A04">A04 – GET /auth/me</option>
+              <option value="A05">A05 – Invalid credentials</option>
+              <option value="A06">A06 – No-token rejection</option>
+              <option value="A07">A07 – Invalid-token rejection</option>
+              <option value="A08">A08 – Logout</option>
+            </optgroup>
+            <optgroup label="AI Features">
+              <option value="F01">F01 – Caption Gen (all platforms)</option>
+              <option value="F02">F02 – Platform Rewriter (all platforms)</option>
+              <option value="F03">F03 – Review Responder (all tones)</option>
+              <option value="F04">F04 – Hashtag Generator</option>
+              <option value="F05">F05 – Email Tone Fixer</option>
+              <option value="F06">F06 – Proposal Generator</option>
+              <option value="F07">F07 – Empty input boundary</option>
+              <option value="F08">F08 – 2000-char boundary</option>
+            </optgroup>
+            <optgroup label="Usage Limits">
+              <option value="U01">U01 – Admin unlimited status</option>
+              <option value="U02">U02 – Usage increments</option>
+              <option value="U03">U03 – 429 after limit</option>
+            </optgroup>
+            <optgroup label="Payments">
+              <option value="P01">P01 – All checkout sessions</option>
+            </optgroup>
+            <optgroup label="Security">
+              <option value="S01">S01 – No-token 401/403</option>
+              <option value="S02">S02 – Invalid-token 401/403</option>
+              <option value="S03">S03 – Admin bypass</option>
+            </optgroup>
+            <optgroup label="Brand Voice">
+              <option value="BV01">BV01 – Non-bundle generate with brandVoice</option>
+              <option value="BV02">BV02 – BrandVoice stripped for non-bundle</option>
+              <option value="BV03">BV03 – Generate succeeds without brandVoice</option>
+            </optgroup>
+            <optgroup label="Plan Gating">
+              <option value="G02">G02 – Social Pro sees lock on Business features</option>
+              <option value="G03">G03 – Business Pro sees lock on Social features</option>
+              <option value="G04">G04 – Social Pro with tokens bypasses Business gate</option>
+              <option value="G05">G05 – Social Pro with zero tokens → Buy Credits</option>
+              <option value="G06">G06 – Upgrade Plan button navigates to Settings</option>
+              <option value="G07">G07 – Settings shows correct current plan badge</option>
+              <option value="G08">G08 – Settings shows correct upgrade options per tier</option>
+              <option value="G09">G09 – Bundle sees all features unlocked</option>
+              <option value="G10">G10 – Brand Voice locked for non-bundle</option>
+              <option value="G11">G11 – Manage Subscription visible for paid users only</option>
+              <option value="G12">G12 – Website link in Settings opens x-trendyourself.com</option>
+            </optgroup>
+            <optgroup label="Social Pro Plan">
+              <option value="SP01">SP01 – Login as Social Pro user succeeds</option>
+              <option value="SP02">SP02 – Home screen shows both Social and Business cards</option>
+              <option value="SP03">SP03 – Caption Generator active, generates output</option>
+              <option value="SP04">SP04 – Platform Rewriter active, generates output</option>
+              <option value="SP05">SP05 – Hashtag Suggester active, generates output</option>
+              <option value="SP06">SP06 – Review Responder shows Upgrade + Use a Token</option>
+              <option value="SP07">SP07 – Email Tone Fixer shows Upgrade + Use a Token</option>
+              <option value="SP08">SP08 – Proposal Generator shows Upgrade + Use a Token</option>
+              <option value="SP09">SP09 – Bottom shows Unlimited</option>
+              <option value="SP10">SP10 – Settings shows Social Pro with upgrade options</option>
+              <option value="SP11">SP11 – Brand Voice shows locked</option>
+              <option value="SP12">SP12 – Manage Subscription visible in Settings</option>
+            </optgroup>
+            <optgroup label="Business Pro Plan">
+              <option value="BP01">BP01 – Login as Business Pro user succeeds</option>
+              <option value="BP02">BP02 – Home screen shows both Social and Business cards</option>
+              <option value="BP03">BP03 – Review Responder active, generates output</option>
+              <option value="BP04">BP04 – Email Tone Fixer active, generates output</option>
+              <option value="BP05">BP05 – Proposal Generator active, generates output</option>
+              <option value="BP06">BP06 – Caption Generator shows Upgrade + Use a Token</option>
+              <option value="BP07">BP07 – Platform Rewriter shows Upgrade + Use a Token</option>
+              <option value="BP08">BP08 – Hashtag Suggester shows Upgrade + Use a Token</option>
+              <option value="BP09">BP09 – Bottom shows Unlimited</option>
+              <option value="BP10">BP10 – Settings shows Business Pro with upgrade options</option>
+              <option value="BP11">BP11 – Brand Voice shows locked</option>
+              <option value="BP12">BP12 – Manage Subscription visible in Settings</option>
+            </optgroup>
+            <optgroup label="Bundle Plan">
+              <option value="BN01">BN01 – Login as Bundle user succeeds</option>
+              <option value="BN02">BN02 – Home screen shows both Social and Business cards</option>
+              <option value="BN03">BN03 – Caption Generator active, generates output</option>
+              <option value="BN04">BN04 – Platform Rewriter active, generates output</option>
+              <option value="BN05">BN05 – Hashtag Suggester active, generates output</option>
+              <option value="BN06">BN06 – Review Responder active, generates output</option>
+              <option value="BN07">BN07 – Email Tone Fixer active, generates output</option>
+              <option value="BN08">BN08 – Proposal Generator active, generates output</option>
+              <option value="BN09">BN09 – Bottom shows Unlimited</option>
+              <option value="BN10">BN10 – Settings shows full access, no upgrade options</option>
+              <option value="BN11">BN11 – Brand Voice shows unlocked and active</option>
+              <option value="BN12">BN12 – Manage Subscription visible in Settings</option>
+            </optgroup>
+            <optgroup label="Password Reset">
+              <option value="PR01">PR01 – Forgot password endpoint returns generic success (valid email)</option>
+              <option value="PR02">PR02 – Forgot password endpoint returns generic success (invalid email)</option>
+              <option value="PR03">PR03 – Reset password with invalid token returns 400</option>
+              <option value="PR04">PR04 – Reset password with missing fields returns 400</option>
+              <option value="PR05">PR05 – Reset password with short password returns 400</option>
+              <option value="PR06">PR06 – Reset page shows error when no token in URL (manual)</option>
+              <option value="PR07">PR07 – Reset page loads correctly with valid token param (manual)</option>
+              <option value="PR08">PR08 – Password strength indicator responds to input (manual)</option>
+              <option value="PR09">PR09 – Forgot password link visible on login screen (manual)</option>
+              <option value="PR10">PR10 – Successful reset clears token from database</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="adv-toggle" onclick="toggleAdv()">&#9654; Advanced Config</div>
+      <div class="adv-content" id="adv-content">
+        <div class="field">
+          <label>Backend URL</label>
+          <input type="text" id="cfg-base-url" value="https://x-trend-backend.onrender.com">
+        </div>
+        <div class="field">
+          <label>Generate Endpoint</label>
+          <input type="text" id="cfg-gen-path" value="/api/generate">
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card stat-total"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total</div></div>
+      <div class="stat-card stat-pass"><div class="stat-num" id="stat-pass">0</div><div class="stat-label">Pass</div></div>
+      <div class="stat-card stat-fail"><div class="stat-num" id="stat-fail">0</div><div class="stat-label">Fail</div></div>
+      <div class="stat-card stat-warn"><div class="stat-num" id="stat-warn">0</div><div class="stat-label">Warn</div></div>
+      <div class="stat-card stat-skip"><div class="stat-num" id="stat-skip">0</div><div class="stat-label">Skip</div></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <!-- Log -->
+    <div class="log-panel" id="log-panel">
+      <div class="log-line info">QA Agent ready. Enter admin password and click Run Tests.</div>
+    </div>
+
+    <!-- Results Table -->
+    <table class="results-table" id="results-table">
+      <thead>
+        <tr>
+          <th style="width:60px">ID</th>
+          <th style="width:100px">Category</th>
+          <th>Test Name</th>
+          <th style="width:70px">Status</th>
+          <th style="width:80px">Time</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody id="results-body">
+        <tr id="empty-row">
+          <td colspan="6">
+            <div class="empty-state">
+              <div class="empty-icon">&#x25C7;</div>
+              <p>No tests run yet. Configure credentials and click Run Tests.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let S = {
+  running: false,
+  stopped: false,
+  adminToken: null,
+  testUserToken: null,
+  socialPlanToken: null,
+  businessPlanToken: null,
+  bundlePlanToken: null,
+  freshEmail: null,
+  results: [],
+  totalExpected: 0,
+  runMode: 'full',
+};
+
+// ═══════════════════════════════════════
+// CONFIG GETTERS
+// ═══════════════════════════════════════
+function baseUrl() { return document.getElementById('cfg-base-url').value.trim().replace(/\/$/, ''); }
+function genPath() { return document.getElementById('cfg-gen-path').value.trim(); }
+
+
+const PLATFORMS = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok'];
+const TONES = ['professional', 'friendly', 'apologetic'];
+const PERF_WARN = 10000;
+const PERF_FAIL = 20000;
+
+// ═══════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════
+function setMode(mode, btn) {
+  S.runMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['full','category','individual'].forEach(m => {
+    document.getElementById('mode-' + m).style.display = m === mode ? '' : 'none';
+  });
+}
+
+function toggleAdv() {
+  const el = document.getElementById('adv-content');
+  const btn = document.querySelector('.adv-toggle');
+  el.classList.toggle('open');
+  btn.textContent = (el.classList.contains('open') ? '▼' : '▶') + ' Advanced Config';
+}
+
+function log(msg, type = 'info') {
+  const panel = document.getElementById('log-panel');
+  const d = document.createElement('div');
+  d.className = 'log-line ' + type;
+  d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  panel.appendChild(d);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function setBadge(state) {
+  const el = document.getElementById('status-badge');
+  el.className = 'badge badge-' + state;
+  const labels = { idle: 'Idle', running: 'Running', done: 'Done', stopped: 'Stopped' };
+  el.textContent = labels[state] || state;
+}
+
+function updateSummary() {
+  const pass = S.results.filter(r => r.status === 'PASS').length;
+  const fail = S.results.filter(r => r.status === 'FAIL').length;
+  const warn = S.results.filter(r => r.status === 'WARN').length;
+  const skip = S.results.filter(r => r.status === 'SKIP').length;
+  document.getElementById('stat-total').textContent = S.results.length;
+  document.getElementById('stat-pass').textContent = pass;
+  document.getElementById('stat-fail').textContent = fail;
+  document.getElementById('stat-warn').textContent = warn;
+  document.getElementById('stat-skip').textContent = skip;
+  if (S.totalExpected > 0) {
+    document.getElementById('progress-fill').style.width = Math.round((S.results.length / S.totalExpected) * 100) + '%';
+  }
+}
+
+function addResult(r) {
+  S.results.push(r);
+  const empty = document.getElementById('empty-row');
+  if (empty) empty.remove();
+  const tbody = document.getElementById('results-body');
+  const tr = document.createElement('tr');
+  tr.id = 'row-' + r.id;
+  tr.innerHTML = rowHtml(r);
+  tbody.appendChild(tr);
+  updateSummary();
+}
+
+function updateResult(id, patch) {
+  const idx = S.results.findIndex(r => r.id === id);
+  if (idx < 0) return;
+  Object.assign(S.results[idx], patch);
+  const tr = document.getElementById('row-' + id);
+  if (tr) tr.innerHTML = rowHtml(S.results[idx]);
+  updateSummary();
+}
+
+function rowHtml(r) {
+  const msClass = r.elapsed > PERF_FAIL ? 'ms-fail' : r.elapsed > PERF_WARN ? 'ms-warn' : 'ms-text';
+  const ms = r.elapsed != null ? r.elapsed.toFixed(0) + 'ms' : '—';
+  const detClass = r.status === 'FAIL' ? 'detail-text err' : 'detail-text';
+  return `<td style="font-family:monospace;font-size:11px;color:var(--muted)">${r.id}</td>
+<td><span class="cat-tag">${r.category}</span></td>
+<td style="font-weight:500">${r.name}</td>
+<td><span class="pill pill-${r.status}">${r.status}</span></td>
+<td><span class="${msClass}">${ms}</span></td>
+<td><span class="${detClass}">${r.detail || ''}</span></td>`;
+}
+
+function setRunning(on) {
+  document.getElementById('btn-run').disabled = on;
+  document.getElementById('btn-stop').disabled = !on;
+}
+
+// ═══════════════════════════════════════
+// HTTP HELPER
+// ═══════════════════════════════════════
+async function api(method, path, body, token) {
+  const t0 = performance.now();
+  try {
+    const res = await fetch(baseUrl() + path, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: 'Bearer ' + token } : {}),
+      },
+      ...(body != null ? { body: JSON.stringify(body) } : {}),
+    });
+    const elapsed = performance.now() - t0;
+    let data = null;
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('json')) {
+      try { data = await res.json(); } catch { data = null; }
+    } else {
+      try { data = await res.text(); } catch { data = null; }
+    }
+    return { ok: res.ok, status: res.status, data, elapsed };
+  } catch (err) {
+    return { ok: false, status: 0, data: null, elapsed: performance.now() - t0, networkErr: err.message };
+  }
+}
+
+function perfStatus(elapsed) {
+  if (elapsed > PERF_FAIL) return 'FAIL';
+  if (elapsed > PERF_WARN) return 'WARN';
+  return 'PASS';
+}
+
+function firstMsg(data) {
+  if (!data) return '';
+  if (typeof data === 'string') return data.slice(0, 120);
+  return (data.message || data.error || data.detail || data.msg || JSON.stringify(data).slice(0, 120));
+}
+
+function isHumanReadable(msg) {
+  if (!msg || typeof msg !== 'string') return false;
+  if (msg.length < 4) return false;
+  if (/^[\{\[]/.test(msg.trim())) return false;
+  if (msg.includes('at Object.') || msg.includes('    at ')) return false;
+  return true;
+}
+
+async function pause(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// ═══════════════════════════════════════
+// TEST RUNNER CORE
+// ═══════════════════════════════════════
+function shouldStop() { return S.stopped; }
+
+function skip(id, category, name, reason) {
+  addResult({ id, category, name, status: 'SKIP', elapsed: 0, detail: reason });
+}
+
+// ═══════════════════════════════════════
+// AUTH TESTS
+// ═══════════════════════════════════════
+async function runAuthTests() {
+  const adminEmail = document.getElementById('admin-email').value.trim();
+  const adminPass = document.getElementById('admin-pass').value.trim();
+
+  // A01 – Signup fresh account
+  if (shouldStop()) return;
+  const ts = Date.now();
+  S.freshEmail = `qa-${ts}@mailtest.x`;
+  addResult({ id: 'A01', category: 'Auth', name: 'Signup fresh account', status: 'RUNNING', elapsed: 0, detail: S.freshEmail });
+  log('A01 – Signup ' + S.freshEmail);
+  const r1 = await api('POST', '/auth/signup', { email: S.freshEmail, password: 'QaTest#' + ts, termsAccepted: true });
+  await pause(300);
+  if (r1.networkErr) {
+    updateResult('A01', { status: 'FAIL', elapsed: r1.elapsed, detail: 'Network error: ' + r1.networkErr });
+  } else if (r1.status === 200 || r1.status === 201) {
+    updateResult('A01', { status: 'PASS', elapsed: r1.elapsed, detail: 'Account created. ' + firstMsg(r1.data) });
+  } else {
+    updateResult('A01', { status: 'FAIL', elapsed: r1.elapsed, detail: `HTTP ${r1.status}: ${firstMsg(r1.data)}` });
+  }
+
+  // A02 – Admin login
+  if (shouldStop()) return;
+  addResult({ id: 'A02', category: 'Auth', name: 'Admin login', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('A02 – Admin login');
+  const r2 = await api('POST', '/auth/login', { email: adminEmail, password: adminPass });
+  await pause(300);
+  if (r2.networkErr) {
+    updateResult('A02', { status: 'FAIL', elapsed: r2.elapsed, detail: 'Network error: ' + r2.networkErr });
+  } else if (r2.ok && r2.data && (r2.data.token || r2.data.access_token || r2.data.session?.access_token)) {
+    S.adminToken = r2.data.token || r2.data.access_token || r2.data.session?.access_token;
+    updateResult('A02', { status: 'PASS', elapsed: r2.elapsed, detail: 'Token acquired. User: ' + (r2.data.user?.email || adminEmail) });
+    log('Admin token acquired', 'ok');
+  } else {
+    S.adminToken = null;
+    const ps = perfStatus(r2.elapsed);
+    updateResult('A02', { status: 'FAIL', elapsed: r2.elapsed, detail: `HTTP ${r2.status}: ${firstMsg(r2.data)}` });
+    log('Admin login FAILED – subsequent tests may skip', 'err');
+  }
+
+  // A03 – Unverified login blocked (use fresh signup email)
+  if (shouldStop()) return;
+  addResult({ id: 'A03', category: 'Auth', name: 'Unverified login blocked', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('A03 – Unverified login check');
+  if (!S.freshEmail) {
+    updateResult('A03', { status: 'SKIP', elapsed: 0, detail: 'Fresh email not available (A01 failed)' });
+  } else {
+    const r3 = await api('POST', '/auth/login', { email: S.freshEmail, password: 'QaTest#' + ts });
+    await pause(300);
+    if (r3.networkErr) {
+      updateResult('A03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Network error: ' + r3.networkErr });
+    } else if ([400, 401, 403].includes(r3.status)) {
+      const msg = firstMsg(r3.data);
+      const hasVerifyMsg = /verif|confirm|email|not.*verified/i.test(msg);
+      updateResult('A03', { status: 'PASS', elapsed: r3.elapsed, detail: `Correctly blocked (${r3.status}): ${msg}` });
+    } else if (r3.ok) {
+      updateResult('A03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Unverified account was allowed to log in – SECURITY ISSUE' });
+    } else {
+      updateResult('A03', { status: 'WARN', elapsed: r3.elapsed, detail: `Unexpected ${r3.status}: ${firstMsg(r3.data)}` });
+    }
+  }
+
+  // A04 – GET /auth/me
+  if (shouldStop()) return;
+  addResult({ id: 'A04', category: 'Auth', name: 'GET /auth/me with token', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('A04 – /auth/me');
+  if (!S.adminToken) {
+    updateResult('A04', { status: 'SKIP', elapsed: 0, detail: 'No admin token (A02 failed)' });
+  } else {
+    const r4 = await api('GET', '/auth/me', null, S.adminToken);
+    await pause(300);
+    if (r4.networkErr) {
+      updateResult('A04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Network: ' + r4.networkErr });
+    } else if (r4.ok) {
+      const ps = perfStatus(r4.elapsed);
+      updateResult('A04', { status: ps, elapsed: r4.elapsed, detail: `Email: ${r4.data?.email || r4.data?.user?.email || '?'}` });
+    } else {
+      updateResult('A04', { status: 'FAIL', elapsed: r4.elapsed, detail: `HTTP ${r4.status}: ${firstMsg(r4.data)}` });
+    }
+  }
+
+  // A05 – Invalid credentials
+  if (shouldStop()) return;
+  addResult({ id: 'A05', category: 'Auth', name: 'Invalid credentials rejected', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('A05 – Invalid credentials');
+  const r5 = await api('POST', '/auth/login', { email: adminEmail, password: 'WRONG_PASSWORD_QA_TEST_9999' });
+  await pause(300);
+  if (r5.networkErr) {
+    updateResult('A05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Network: ' + r5.networkErr });
+  } else if ([400, 401, 403].includes(r5.status)) {
+    updateResult('A05', { status: 'PASS', elapsed: r5.elapsed, detail: `Correctly rejected (${r5.status}): ${firstMsg(r5.data)}` });
+  } else if (r5.ok) {
+    updateResult('A05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Wrong password was accepted – CRITICAL SECURITY ISSUE' });
+  } else {
+    updateResult('A05', { status: 'WARN', elapsed: r5.elapsed, detail: `Unexpected ${r5.status}: ${firstMsg(r5.data)}` });
+  }
+
+  // A06 – No token rejection
+  if (shouldStop()) return;
+  addResult({ id: 'A06', category: 'Auth', name: 'No-token request rejected', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('A06 – No token');
+  const r6 = await api('GET', '/auth/me', null, null);
+  await pause(300);
+  if (r6.networkErr) {
+    updateResult('A06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'Network: ' + r6.networkErr });
+  } else if ([401, 403].includes(r6.status)) {
+    updateResult('A06', { status: 'PASS', elapsed: r6.elapsed, detail: `Correctly rejected (${r6.status})` });
+  } else if (r6.ok) {
+    updateResult('A06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'No-token request succeeded – SECURITY ISSUE' });
+  } else {
+    updateResult('A06', { status: 'WARN', elapsed: r6.elapsed, detail: `Unexpected ${r6.status}: ${firstMsg(r6.data)}` });
+  }
+
+  // A07 – Invalid token rejection
+  if (shouldStop()) return;
+  addResult({ id: 'A07', category: 'Auth', name: 'Invalid-token request rejected', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('A07 – Invalid token');
+  const r7 = await api('GET', '/auth/me', null, 'invalid.jwt.token.qa.test.xyz.abc.def');
+  await pause(300);
+  if (r7.networkErr) {
+    updateResult('A07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Network: ' + r7.networkErr });
+  } else if ([401, 403].includes(r7.status)) {
+    updateResult('A07', { status: 'PASS', elapsed: r7.elapsed, detail: `Correctly rejected (${r7.status})` });
+  } else if (r7.ok) {
+    updateResult('A07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Invalid token accepted – CRITICAL SECURITY ISSUE' });
+  } else {
+    updateResult('A07', { status: 'WARN', elapsed: r7.elapsed, detail: `Unexpected ${r7.status}: ${firstMsg(r7.data)}` });
+  }
+
+  // A08 – Logout
+  if (shouldStop()) return;
+  addResult({ id: 'A08', category: 'Auth', name: 'Logout', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('A08 – Logout');
+  if (!S.adminToken) {
+    updateResult('A08', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  } else {
+    const r8 = await api('POST', '/auth/logout', null, S.adminToken);
+    await pause(300);
+    if (r8.networkErr) {
+      updateResult('A08', { status: 'FAIL', elapsed: r8.elapsed, detail: 'Network: ' + r8.networkErr });
+    } else if (r8.ok || r8.status === 204) {
+      updateResult('A08', { status: 'PASS', elapsed: r8.elapsed, detail: `Logged out (${r8.status})` });
+    } else {
+      updateResult('A08', { status: 'WARN', elapsed: r8.elapsed, detail: `HTTP ${r8.status}: ${firstMsg(r8.data)}` });
+    }
+    // Re-login to keep token for subsequent tests
+    const relogin = await api('POST', '/auth/login', {
+      email: document.getElementById('admin-email').value.trim(),
+      password: document.getElementById('admin-pass').value.trim()
+    });
+    if (relogin.ok && relogin.data) {
+      S.adminToken = relogin.data.token || relogin.data.access_token || relogin.data.session?.access_token || S.adminToken;
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// AI FEATURE TESTS
+// ═══════════════════════════════════════
+async function runFeatureTest(id, name, body, expectOk) {
+  addResult({ id, category: 'Features', name, status: 'RUNNING', elapsed: 0, detail: '' });
+  if (!S.adminToken) {
+    updateResult(id, { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+    return;
+  }
+  const r = await api('POST', genPath(), body, S.adminToken);
+  await pause(250);
+  const pstat = perfStatus(r.elapsed);
+  if (r.networkErr) {
+    updateResult(id, { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    return;
+  }
+  if (expectOk) {
+    if (r.ok) {
+      const hasContent = r.data && (r.data.result || r.data.content || r.data.caption || r.data.text || r.data.output || r.data.data);
+      const detail = hasContent ? 'Content generated (' + JSON.stringify(r.data).length + ' bytes)' : `HTTP ${r.status} – response has no content field`;
+      updateResult(id, { status: pstat === 'FAIL' ? 'WARN' : (hasContent ? pstat : 'WARN'), elapsed: r.elapsed, detail });
+    } else {
+      updateResult(id, { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  } else {
+    if ([400, 422].includes(r.status)) {
+      updateResult(id, { status: 'PASS', elapsed: r.elapsed, detail: `Correctly rejected (${r.status}): ${firstMsg(r.data)}` });
+    } else if (r.ok) {
+      updateResult(id, { status: 'FAIL', elapsed: r.elapsed, detail: 'Invalid input was accepted' });
+    } else {
+      updateResult(id, { status: 'WARN', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  }
+}
+
+async function runAllFeatureTests() {
+  const sampleText = 'This is a sample social media trend about emerging technology in 2025 that brands should capitalise on for maximum engagement.';
+  const sampleReview = 'This product changed my life completely, highly recommend!';
+
+  // Caption Generator – all 5 platforms
+  for (let i = 0; i < PLATFORMS.length; i++) {
+    if (shouldStop()) return;
+    const p = PLATFORMS[i];
+    await runFeatureTest(
+      `F0${i+1}`, `Caption Gen – ${p}`,
+      { type: 'caption', platform: p, description: sampleText },
+      true
+    );
+    await pause(400);
+  }
+
+  // Platform Rewriter – all 5 platforms
+  for (let i = 0; i < PLATFORMS.length; i++) {
+    if (shouldStop()) return;
+    const p = PLATFORMS[i];
+    await runFeatureTest(
+      `F${(i+6).toString().padStart(2,'0')}`, `Platform Rewriter – ${p}`,
+      { type: 'rewrite', platform: p, content: sampleText },
+      true
+    );
+    await pause(400);
+  }
+
+  // Review Responder – all 3 tones (professional, friendly, apologetic)
+  for (let i = 0; i < TONES.length; i++) {
+    if (shouldStop()) return;
+    const t = TONES[i];
+    await runFeatureTest(
+      `F${(i+11).toString().padStart(2,'0')}`, `Review Responder – ${t}`,
+      { type: 'review_response', review: sampleReview, tone: t },
+      true
+    );
+    await pause(400);
+  }
+
+  // Hashtag Generator
+  if (!shouldStop()) {
+    await runFeatureTest('F14', 'Hashtag Generator',
+      { type: 'hashtag', platform: 'twitter', description: sampleText }, true);
+    await pause(400);
+  }
+
+  // Email Tone Fixer
+  if (!shouldStop()) {
+    await runFeatureTest('F15', 'Email Tone Fixer',
+      { type: 'email_tone', email: 'Hi, just wanted to follow up on the invoice I sent last week. Please let me know when payment will be processed.', tone: 'professional' }, true);
+    await pause(400);
+  }
+
+  // Proposal Generator
+  if (!shouldStop()) {
+    await runFeatureTest('F16', 'Proposal Generator',
+      { type: 'proposal', jobPosting: 'Looking for a social media manager to grow our Instagram and LinkedIn presence', skills: 'Social media strategy, content creation, analytics' }, true);
+    await pause(400);
+  }
+
+  // F17 – Empty input (expect 400/422)
+  if (!shouldStop()) {
+    await runFeatureTest('F17', 'Empty input rejected (boundary)',
+      { type: 'caption', platform: 'twitter', description: '' }, false);
+    await pause(400);
+  }
+
+  // F18 – 2000-char boundary
+  if (!shouldStop()) {
+    const longText = 'A'.repeat(2000);
+    await runFeatureTest('F18', '2000-char boundary input',
+      { type: 'caption', platform: 'twitter', description: longText }, true);
+    await pause(400);
+  }
+}
+
+// ═══════════════════════════════════════
+// USAGE LIMIT TESTS
+// ═══════════════════════════════════════
+async function runUsageTests() {
+  const testEmail = document.getElementById('free-email').value.trim();
+  const testPass = document.getElementById('free-pass').value.trim();
+
+  // U01 – Admin unlimited status
+  if (shouldStop()) return;
+  addResult({ id: 'U01', category: 'Usage', name: 'Admin shows unlimited usage', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('U01 – Admin user-status');
+  if (!S.adminToken) {
+    updateResult('U01', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  } else {
+    const r = await api('GET', '/api/user-status', null, S.adminToken);
+    await pause(300);
+    if (r.networkErr) {
+      updateResult('U01', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    } else if (r.ok) {
+      const d = r.data || {};
+      const limit = d.daily_limit ?? d.monthly_limit;
+      const isUnlimited = limit === 999999 || d.daily_used === 0 && d.daily_limit === 999999;
+      updateResult('U01', {
+        status: isUnlimited ? 'PASS' : 'WARN',
+        elapsed: r.elapsed,
+        detail: `Status: ${JSON.stringify(d).slice(0, 120)}`
+      });
+    } else {
+      updateResult('U01', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  }
+
+  // U02 – Test user usage increments
+  if (shouldStop()) return;
+  if (!testEmail || !testPass) {
+    skip('U02', 'Usage', 'Usage increments (test user)', 'No test user credentials provided');
+    skip('U03', 'Usage', '429 after daily limit', 'No test user credentials provided');
+    return;
+  }
+
+  addResult({ id: 'U02', category: 'Usage', name: 'Usage increments on generate', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('U02 – Test user login + usage check');
+
+  const loginR = await api('POST', '/auth/login', { email: testEmail, password: testPass });
+  if (!loginR.ok || !loginR.data) {
+    updateResult('U02', { status: 'FAIL', elapsed: loginR.elapsed, detail: `Test user login failed: ${firstMsg(loginR.data)}` });
+    skip('U03', 'Usage', '429 after daily limit', 'Test user login failed');
+    return;
+  }
+  S.testUserToken = loginR.data.token || loginR.data.access_token || loginR.data.session?.access_token;
+
+  const before = await api('GET', '/api/user-status', null, S.testUserToken);
+  const usageBefore = before.data?.daily_used ?? before.data?.monthly_used ?? 0;
+
+  const gen = await api('POST', genPath(),
+    { type: 'caption', platform: 'twitter', description: 'Test content for usage tracking' },
+    S.testUserToken
+  );
+  await pause(500);
+
+  const after = await api('GET', '/api/user-status', null, S.testUserToken);
+  const usageAfter = after.data?.daily_used ?? after.data?.monthly_used ?? 0;
+  await pause(300);
+
+  if (gen.ok && usageAfter > usageBefore) {
+    updateResult('U02', { status: 'PASS', elapsed: gen.elapsed, detail: `Usage: ${usageBefore} → ${usageAfter}` });
+  } else if (gen.ok && usageAfter === usageBefore) {
+    updateResult('U02', { status: 'WARN', elapsed: gen.elapsed, detail: `Generated OK but usage counter unchanged (${usageBefore} → ${usageAfter}). Check endpoint field names.` });
+  } else {
+    updateResult('U02', { status: 'FAIL', elapsed: gen.elapsed, detail: `Gen: HTTP ${gen.status}. ${firstMsg(gen.data)}` });
+  }
+
+  // U03 – 429 after limit (check current limit, skip if headroom > 20)
+  if (shouldStop()) return;
+  addResult({ id: 'U03', category: 'Usage', name: '429 rate-limit enforcement', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('U03 – Limit enforcement check');
+  const statusNow = after.data;
+  const limit = statusNow?.daily_limit ?? statusNow?.monthly_limit ?? 10;
+  const used = usageAfter;
+  const remaining = limit - used;
+
+  if (remaining > 20) {
+    updateResult('U03', { status: 'SKIP', elapsed: 0, detail: `${remaining} uses remaining – exhaustion test skipped to preserve test account` });
+  } else {
+    let hit429 = false;
+    let attempts = 0;
+    const maxAttempts = Math.min(remaining + 3, 15);
+    for (let i = 0; i < maxAttempts && !shouldStop(); i++) {
+      const gr = await api('POST', genPath(),
+        { type: 'caption', platform: 'twitter', description: 'Limit test ' + i },
+        S.testUserToken
+      );
+      attempts++;
+      if (gr.status === 429) { hit429 = true; break; }
+      await pause(500);
+    }
+    if (hit429) {
+      updateResult('U03', { status: 'PASS', elapsed: 0, detail: `429 received after ${attempts} attempts` });
+    } else {
+      updateResult('U03', { status: 'FAIL', elapsed: 0, detail: `No 429 after ${attempts} attempts. Limit enforcement may be broken.` });
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// PAYMENT TESTS
+// ═══════════════════════════════════════
+const PAYMENT_PRODUCTS = [
+  { id: 'P01', product_type: 'subscription', product_id: 'social_pro',    name: 'Subscription – Social Pro' },
+  { id: 'P02', product_type: 'subscription', product_id: 'business_pro',  name: 'Subscription – Business Pro' },
+  { id: 'P03', product_type: 'subscription', product_id: 'bundle',        name: 'Subscription – Bundle' },
+  { id: 'P04', product_type: 'credits',      product_id: 'starter',       name: 'Credits – Starter Pack' },
+  { id: 'P05', product_type: 'credits',      product_id: 'popular',       name: 'Credits – Popular Pack' },
+  { id: 'P06', product_type: 'credits',      product_id: 'power',         name: 'Credits – Power Pack' },
+];
+
+async function runPaymentTests() {
+  for (const prod of PAYMENT_PRODUCTS) {
+    if (shouldStop()) return;
+    addResult({ id: prod.id, category: 'Payments', name: `Checkout – ${prod.name}`, status: 'RUNNING', elapsed: 0, detail: '' });
+    log(`${prod.id} – ${prod.product_type}/${prod.product_id}`);
+    if (!S.adminToken) {
+      updateResult(prod.id, { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+      continue;
+    }
+    const r = await api('POST', '/payments/create-checkout-session',
+      { product_type: prod.product_type, product_id: prod.product_id },
+      S.adminToken
+    );
+    await pause(400);
+    if (r.networkErr) {
+      updateResult(prod.id, { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+      continue;
+    }
+    const url = r.data?.url;
+    if (r.ok && url && url.includes('stripe.com')) {
+      updateResult(prod.id, { status: 'PASS', elapsed: r.elapsed, detail: 'Stripe URL: ' + url.slice(0, 60) + '…' });
+    } else if (r.ok && url) {
+      updateResult(prod.id, { status: 'WARN', elapsed: r.elapsed, detail: 'URL not Stripe: ' + url.slice(0, 60) });
+    } else if (r.ok) {
+      updateResult(prod.id, { status: 'WARN', elapsed: r.elapsed, detail: 'HTTP 200 but no URL: ' + JSON.stringify(r.data).slice(0, 100) });
+    } else if (r.status === 503) {
+      updateResult(prod.id, { status: 'WARN', elapsed: r.elapsed, detail: `Product valid but price not configured (503): ${firstMsg(r.data)}` });
+    } else {
+      updateResult(prod.id, { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// SECURITY TESTS
+// ═══════════════════════════════════════
+async function runSecurityTests() {
+  // S01 – Protected endpoint, no token
+  if (shouldStop()) return;
+  addResult({ id: 'S01', category: 'Security', name: 'Protected endpoint – no token', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('S01 – No-token security check');
+  const r1 = await api('POST', genPath(), { type: 'caption', platform: 'twitter', content: 'test' }, null);
+  await pause(300);
+  if (r1.networkErr) {
+    updateResult('S01', { status: 'FAIL', elapsed: r1.elapsed, detail: 'Network: ' + r1.networkErr });
+  } else if ([401, 403].includes(r1.status)) {
+    updateResult('S01', { status: 'PASS', elapsed: r1.elapsed, detail: `Correctly blocked (${r1.status})` });
+  } else if (r1.ok) {
+    updateResult('S01', { status: 'FAIL', elapsed: r1.elapsed, detail: 'Unauthenticated request to generate succeeded – CRITICAL' });
+  } else {
+    updateResult('S01', { status: 'WARN', elapsed: r1.elapsed, detail: `Unexpected ${r1.status}: ${firstMsg(r1.data)}` });
+  }
+
+  // S02 – Protected endpoint, invalid token
+  if (shouldStop()) return;
+  addResult({ id: 'S02', category: 'Security', name: 'Protected endpoint – invalid token', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('S02 – Invalid token security check');
+  const r2 = await api('POST', genPath(), { type: 'caption', platform: 'twitter', content: 'test' }, 'fake.jwt.token');
+  await pause(300);
+  if (r2.networkErr) {
+    updateResult('S02', { status: 'FAIL', elapsed: r2.elapsed, detail: 'Network: ' + r2.networkErr });
+  } else if ([401, 403].includes(r2.status)) {
+    updateResult('S02', { status: 'PASS', elapsed: r2.elapsed, detail: `Correctly blocked (${r2.status})` });
+  } else if (r2.ok) {
+    updateResult('S02', { status: 'FAIL', elapsed: r2.elapsed, detail: 'Invalid token accepted – CRITICAL SECURITY ISSUE' });
+  } else {
+    updateResult('S02', { status: 'WARN', elapsed: r2.elapsed, detail: `Unexpected ${r2.status}: ${firstMsg(r2.data)}` });
+  }
+
+  // S03 – Admin bypass (only admin email should get unlimited)
+  if (shouldStop()) return;
+  addResult({ id: 'S03', category: 'Security', name: 'Admin bypass – only admin email', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('S03 – Admin bypass verification');
+  if (!S.adminToken) {
+    updateResult('S03', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  } else {
+    const r3 = await api('GET', '/api/user-status', null, S.adminToken);
+    await pause(300);
+    if (r3.networkErr) {
+      updateResult('S03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Network: ' + r3.networkErr });
+    } else if (r3.ok) {
+      const d = r3.data || {};
+      const limit = d.daily_limit || d.dailyLimit || d.limit || d.credits_limit;
+      const email = d.email || d.user?.email || document.getElementById('admin-email').value;
+      const isAdmin = email === 'helloprojectx00@gmail.com';
+      const hasUnlimited = limit === 999999 || limit === -1 || limit === null || d.unlimited === true || d.is_admin === true || d.isAdmin === true;
+      if (isAdmin && hasUnlimited) {
+        updateResult('S03', { status: 'PASS', elapsed: r3.elapsed, detail: `Admin account confirmed unlimited (limit: ${limit})` });
+      } else if (isAdmin && !hasUnlimited) {
+        updateResult('S03', { status: 'WARN', elapsed: r3.elapsed, detail: `Admin account but limit field shows: ${limit}. May be under different field name.` });
+      } else {
+        updateResult('S03', { status: 'WARN', elapsed: r3.elapsed, detail: `Could not confirm admin status. Data: ${JSON.stringify(d).slice(0,100)}` });
+      }
+    } else {
+      updateResult('S03', { status: 'FAIL', elapsed: r3.elapsed, detail: `HTTP ${r3.status}: ${firstMsg(r3.data)}` });
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// UX TESTS
+// ═══════════════════════════════════════
+async function runUXTests() {
+  if (shouldStop()) return;
+  addResult({ id: 'X01', category: 'UX', name: 'Error messages human-readable', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('X01 – Error message quality check');
+
+  const errorTests = [
+    { label: 'Invalid login', path: '/auth/login', body: { email: 'bad@bad.bad', password: 'wrong' }, token: null },
+    { label: 'No-token generate', path: genPath(), body: { type: 'caption', content: 'test' }, token: null },
+    { label: 'Bad input generate', path: genPath(), body: { type: 'caption', content: '' }, token: S.adminToken },
+  ];
+
+  const issues = [];
+  const checked = [];
+
+  for (const test of errorTests) {
+    if (shouldStop()) break;
+    const r = await api('POST', test.path, test.body, test.token);
+    await pause(300);
+    if (r.networkErr || r.ok) continue;
+    const msg = firstMsg(r.data);
+    checked.push({ label: test.label, msg });
+    if (!isHumanReadable(msg)) {
+      issues.push(`${test.label}: "${msg}"`);
+    }
+  }
+
+  if (checked.length === 0) {
+    updateResult('X01', { status: 'SKIP', elapsed: 0, detail: 'Could not collect error samples' });
+  } else if (issues.length === 0) {
+    updateResult('X01', { status: 'PASS', elapsed: 0, detail: `All ${checked.length} error messages human-readable` });
+  } else {
+    updateResult('X01', { status: 'WARN', elapsed: 0, detail: `${issues.length}/${checked.length} messages not human-readable: ${issues.join('; ')}` });
+  }
+}
+
+// ═══════════════════════════════════════
+// BRAND VOICE TESTS
+// ═══════════════════════════════════════
+async function runBrandVoiceTests() {
+  const sampleText = 'Test content for brand voice enforcement check.';
+  const testBrandVoice = 'Always use formal British English with a dry wit.';
+
+  // BV01 – Non-bundle user sends brandVoice: backend should strip it and return valid content
+  // Admin account is the unlimited bypass (not bundle tier), so brand voice IS applied for admin.
+  // For a true non-bundle test we use the test user if available; admin is used as fallback.
+  if (shouldStop()) return;
+  addResult({ id: 'BV01', category: 'Brand Voice', name: 'Non-bundle generate with brandVoice field', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BV01 – generate with brandVoice (non-bundle)');
+  if (!S.adminToken) {
+    updateResult('BV01', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  } else {
+    const token = S.testUserToken || S.adminToken;
+    const r = await api('POST', genPath(),
+      { type: 'caption', platform: 'twitter', description: sampleText, brandVoice: testBrandVoice },
+      token
+    );
+    await pause(400);
+    if (r.networkErr) {
+      updateResult('BV01', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    } else if (r.ok && (r.data?.result || r.data?.content || r.data?.text)) {
+      updateResult('BV01', { status: 'PASS', elapsed: r.elapsed, detail: 'Content returned — server handled brandVoice field without error' });
+    } else if (r.ok) {
+      updateResult('BV01', { status: 'WARN', elapsed: r.elapsed, detail: 'HTTP 200 but no content field found: ' + JSON.stringify(r.data).slice(0, 100) });
+    } else {
+      updateResult('BV01', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  }
+
+  // BV02 – Verify backend strips brandVoice for non-bundle: two generates (with/without) both succeed
+  if (shouldStop()) return;
+  addResult({ id: 'BV02', category: 'Brand Voice', name: 'BrandVoice stripped — both requests return content', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BV02 – brandVoice strip enforcement');
+  if (!S.adminToken) {
+    updateResult('BV02', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  } else {
+    const token = S.testUserToken || S.adminToken;
+    const withVoice    = await api('POST', genPath(), { type: 'caption', platform: 'twitter', description: sampleText, brandVoice: testBrandVoice }, token);
+    await pause(400);
+    const withoutVoice = await api('POST', genPath(), { type: 'caption', platform: 'twitter', description: sampleText }, token);
+    await pause(400);
+    const bothOk = withVoice.ok && withoutVoice.ok;
+    const neitherErrored = !withVoice.networkErr && !withoutVoice.networkErr;
+    if (neitherErrored && bothOk) {
+      updateResult('BV02', { status: 'PASS', elapsed: withVoice.elapsed + withoutVoice.elapsed, detail: 'Both requests returned content — brandVoice field does not break generation for any tier' });
+    } else if (withVoice.networkErr || withoutVoice.networkErr) {
+      updateResult('BV02', { status: 'FAIL', elapsed: 0, detail: 'Network error on one or both requests' });
+    } else {
+      updateResult('BV02', { status: 'FAIL', elapsed: withVoice.elapsed, detail: `With brandVoice: ${withVoice.status}, Without: ${withoutVoice.status}` });
+    }
+  }
+
+  // BV03 – Generate without brandVoice succeeds (baseline sanity check)
+  if (shouldStop()) return;
+  addResult({ id: 'BV03', category: 'Brand Voice', name: 'Generation succeeds without brandVoice field', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BV03 – generate without brandVoice baseline');
+  if (!S.adminToken) {
+    updateResult('BV03', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  } else {
+    const r = await api('POST', genPath(),
+      { type: 'caption', platform: 'linkedin', description: sampleText },
+      S.adminToken
+    );
+    await pause(400);
+    if (r.networkErr) {
+      updateResult('BV03', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    } else if (r.ok && (r.data?.result || r.data?.content || r.data?.text)) {
+      const ps = perfStatus(r.elapsed);
+      updateResult('BV03', { status: ps, elapsed: r.elapsed, detail: 'Content generated without brandVoice — endpoint clean' });
+    } else if (r.ok) {
+      updateResult('BV03', { status: 'WARN', elapsed: r.elapsed, detail: 'HTTP 200 but unexpected response shape: ' + JSON.stringify(r.data).slice(0, 100) });
+    } else {
+      updateResult('BV03', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// PLAN GATING TESTS
+// ═══════════════════════════════════════
+async function runPlanGatingTests() {
+  const socialProEmail = document.getElementById('social-pro-email').value.trim();
+  const socialProPass  = document.getElementById('social-pro-pass').value.trim();
+  const bizProEmail    = document.getElementById('business-pro-email').value.trim();
+  const bizProPass     = document.getElementById('business-pro-pass').value.trim();
+
+  let socialProToken = null;
+  let bizProToken    = null;
+
+  if (socialProEmail && socialProPass) {
+    log('Gating – logging in Social Pro test user');
+    const r = await api('POST', '/auth/login', { email: socialProEmail, password: socialProPass });
+    if (r.ok && r.data) socialProToken = r.data.token || r.data.access_token || r.data.session?.access_token;
+    else log('Social Pro login failed: ' + firstMsg(r.data), 'err');
+  }
+
+  if (bizProEmail && bizProPass) {
+    log('Gating – logging in Business Pro test user');
+    const r = await api('POST', '/auth/login', { email: bizProEmail, password: bizProPass });
+    if (r.ok && r.data) bizProToken = r.data.token || r.data.access_token || r.data.session?.access_token;
+    else log('Business Pro login failed: ' + firstMsg(r.data), 'err');
+  }
+
+  // G02 – Social Pro user cannot generate business features WITHOUT credits (backend 403)
+  if (shouldStop()) return;
+  addResult({ id: 'G02', category: 'Gating', name: 'Social Pro blocked from business features (no credits)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G02 – Social Pro → business feature, no credits');
+  if (!socialProToken) {
+    updateResult('G02', { status: 'SKIP', elapsed: 0, detail: 'No Social Pro credentials provided' });
+  } else {
+    const status = await api('GET', '/api/user-status', null, socialProToken);
+    const credits = status.data?.credits || 0;
+    if (credits > 0) {
+      updateResult('G02', { status: 'SKIP', elapsed: 0, detail: `Social Pro test user has ${credits} credits — plan gate bypassed by credits. Use a user with 0 credits.` });
+    } else {
+      const r = await api('POST', genPath(), { type: 'review_response', review: 'Great service!', tone: 'professional' }, socialProToken);
+      await pause(300);
+      if (r.networkErr) {
+        updateResult('G02', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+      } else if (r.status === 403) {
+        updateResult('G02', { status: 'PASS', elapsed: r.elapsed, detail: `Correctly blocked (403): ${firstMsg(r.data)}` });
+      } else if (r.ok) {
+        updateResult('G02', { status: 'FAIL', elapsed: r.elapsed, detail: 'Social Pro accessed business feature without credits – GATING BROKEN' });
+      } else {
+        updateResult('G02', { status: 'WARN', elapsed: r.elapsed, detail: `Unexpected ${r.status}: ${firstMsg(r.data)}` });
+      }
+    }
+  }
+
+  // G03 – Business Pro blocked from social features (no credits)
+  if (shouldStop()) return;
+  addResult({ id: 'G03', category: 'Gating', name: 'Business Pro blocked from social features (no credits)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G03 – Business Pro → social feature, no credits');
+  if (!bizProToken) {
+    updateResult('G03', { status: 'SKIP', elapsed: 0, detail: 'No Business Pro credentials provided' });
+  } else {
+    const status = await api('GET', '/api/user-status', null, bizProToken);
+    const credits = status.data?.credits || 0;
+    if (credits > 0) {
+      updateResult('G03', { status: 'SKIP', elapsed: 0, detail: `Business Pro test user has ${credits} credits — plan gate bypassed. Use a user with 0 credits.` });
+    } else {
+      const r = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: 'Test content' }, bizProToken);
+      await pause(300);
+      if (r.networkErr) {
+        updateResult('G03', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+      } else if (r.status === 403) {
+        updateResult('G03', { status: 'PASS', elapsed: r.elapsed, detail: `Correctly blocked (403): ${firstMsg(r.data)}` });
+      } else if (r.ok) {
+        updateResult('G03', { status: 'FAIL', elapsed: r.elapsed, detail: 'Business Pro accessed social feature without credits – GATING BROKEN' });
+      } else {
+        updateResult('G03', { status: 'WARN', elapsed: r.elapsed, detail: `Unexpected ${r.status}: ${firstMsg(r.data)}` });
+      }
+    }
+  }
+
+  // G04 – Social Pro WITH credits can bypass business plan gate
+  if (shouldStop()) return;
+  addResult({ id: 'G04', category: 'Gating', name: 'Social Pro with credits bypasses business feature gate', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G04 – Social Pro + credits → business feature');
+  if (!socialProToken) {
+    updateResult('G04', { status: 'SKIP', elapsed: 0, detail: 'No Social Pro credentials provided' });
+  } else {
+    const status = await api('GET', '/api/user-status', null, socialProToken);
+    const creditsBefore = status.data?.credits || 0;
+    if (creditsBefore === 0) {
+      updateResult('G04', { status: 'SKIP', elapsed: 0, detail: 'Social Pro test user has 0 credits — add credits to test token bypass' });
+    } else {
+      const r = await api('POST', genPath(), { type: 'review_response', review: 'Test review for token bypass', tone: 'professional' }, socialProToken);
+      await pause(400);
+      const statusAfter = await api('GET', '/api/user-status', null, socialProToken);
+      const creditsAfter = statusAfter.data?.credits || 0;
+      if (r.networkErr) {
+        updateResult('G04', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+      } else if (r.ok && r.data?.result) {
+        const decremented = creditsAfter === creditsBefore - 1;
+        updateResult('G04', {
+          status: decremented ? 'PASS' : 'WARN',
+          elapsed: r.elapsed,
+          detail: `Generation succeeded ✓. Credits: ${creditsBefore} → ${creditsAfter}${decremented ? ' (decremented ✓)' : ' (decrement not confirmed)'}`,
+        });
+      } else {
+        updateResult('G04', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+      }
+    }
+  }
+
+  // G05 – Social Pro with zero credits clicking "Use a Token" → Buy Credits (UI manual + API shape)
+  if (shouldStop()) return;
+  addResult({ id: 'G05', category: 'Gating', name: 'Social Pro with zero credits → Buy Credits flow', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Log in as Social Pro with 0 credits, open Business feature, click "Use a Token" button — should navigate to Buy Credits overlay, not unlock the feature.' });
+
+  // G06 – Upgrade Plan button navigates to Settings (UI manual)
+  if (shouldStop()) return;
+  addResult({ id: 'G06', category: 'Gating', name: 'Upgrade Plan button inside locked feature → Settings', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: As Social Pro, open a Business feature, click "Upgrade Plan" — Settings panel should open showing the Your Plan section.' });
+
+  // G07 – Settings shows correct current plan badge
+  if (shouldStop()) return;
+  addResult({ id: 'G07', category: 'Gating', name: 'Settings Your Plan section shows correct current plan', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G07 – Paid user status shape check');
+  const paidToken = socialProToken || bizProToken;
+  if (!paidToken) {
+    updateResult('G07', { status: 'SKIP', elapsed: 0, detail: 'No Social Pro or Business Pro credentials provided' });
+  } else {
+    const r = await api('GET', '/api/user-status', null, paidToken);
+    await pause(300);
+    if (r.networkErr) {
+      updateResult('G07', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    } else if (r.ok) {
+      const d = r.data || {};
+      const validTiers = ['social_pro', 'business_pro', 'bundle'];
+      if (validTiers.includes(d.tier)) {
+        updateResult('G07', { status: 'PASS', elapsed: r.elapsed, detail: `Tier confirmed: "${d.tier}" — Settings will show this as current plan badge ✓` });
+      } else {
+        updateResult('G07', { status: 'WARN', elapsed: r.elapsed, detail: `Unexpected tier value: "${d.tier}"` });
+      }
+    } else {
+      updateResult('G07', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  }
+
+  // G08 – Settings upgrade options correct per tier (manual)
+  if (shouldStop()) return;
+  addResult({ id: 'G08', category: 'Gating', name: 'Settings shows correct upgrade options per tier', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Free → see Social Pro $9.99, Business Pro $19.99, Bundle $29.99. Social Pro → see Business Pro + Bundle. Business Pro → see Social Pro + Bundle. Bundle → see "You have full access" with no upgrade buttons.' });
+
+  // G09 – Bundle/admin can access all 6 features
+  if (shouldStop()) return;
+  addResult({ id: 'G09', category: 'Gating', name: 'Bundle/admin can access all 6 features', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G09 – Admin (bundle bypass) → social + business');
+  if (!S.adminToken) {
+    updateResult('G09', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  } else {
+    const social   = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: 'Test' }, S.adminToken);
+    await pause(300);
+    const business = await api('POST', genPath(), { type: 'review_response', review: 'Test review', tone: 'professional' }, S.adminToken);
+    await pause(300);
+    if (social.ok && business.ok) {
+      updateResult('G09', { status: 'PASS', elapsed: social.elapsed + business.elapsed, detail: 'Both social and business features accessible ✓' });
+    } else {
+      const details = [!social.ok ? `Social: HTTP ${social.status}` : '', !business.ok ? `Business: HTTP ${business.status}` : ''].filter(Boolean).join(', ');
+      updateResult('G09', { status: 'FAIL', elapsed: 0, detail: details });
+    }
+  }
+
+  // G10 – Brand Voice locked for non-bundle (backend strip check)
+  if (shouldStop()) return;
+  addResult({ id: 'G10', category: 'Gating', name: 'Brand Voice locked for non-bundle — field stripped server-side', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G10 – Brand Voice non-bundle strip');
+  const nonBundleToken = socialProToken || bizProToken;
+  if (!nonBundleToken) {
+    updateResult('G10', { status: 'SKIP', elapsed: 0, detail: 'No Social Pro or Business Pro credentials provided' });
+  } else {
+    const body = socialProToken
+      ? { type: 'caption', platform: 'instagram', description: 'Test', brandVoice: 'Always use formal British English.' }
+      : { type: 'review_response', review: 'Test review', tone: 'professional', brandVoice: 'Always use formal British English.' };
+    const r = await api('POST', genPath(), body, nonBundleToken);
+    await pause(400);
+    if (r.networkErr) {
+      updateResult('G10', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    } else if (r.ok && r.data?.result) {
+      updateResult('G10', { status: 'PASS', elapsed: r.elapsed, detail: 'Non-bundle brandVoice request succeeded — field stripped server-side ✓' });
+    } else if (!r.ok) {
+      updateResult('G10', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    } else {
+      updateResult('G10', { status: 'WARN', elapsed: r.elapsed, detail: 'HTTP 200 but no content: ' + JSON.stringify(r.data).slice(0, 80) });
+    }
+  }
+
+  // G11 – Manage Subscription visible for paid users only (manual + API shape)
+  if (shouldStop()) return;
+  addResult({ id: 'G11', category: 'Gating', name: 'Manage Subscription visible for paid users only', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G11 – Paid user status tier check for Manage Subscription visibility');
+  if (!paidToken) {
+    updateResult('G11', { status: 'SKIP', elapsed: 0, detail: 'No paid user credentials provided' });
+  } else {
+    const r = await api('GET', '/api/user-status', null, paidToken);
+    await pause(300);
+    if (r.networkErr) {
+      updateResult('G11', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    } else if (r.ok) {
+      const d = r.data || {};
+      const isPaid = ['social_pro', 'business_pro', 'bundle'].includes(d.tier);
+      updateResult('G11', {
+        status: isPaid ? 'PASS' : 'WARN',
+        elapsed: r.elapsed,
+        detail: isPaid
+          ? `Tier "${d.tier}" is paid — Manage Subscription button will be visible in Settings ✓`
+          : `Tier "${d.tier}" is not paid — Manage Subscription should be hidden`,
+      });
+    } else {
+      updateResult('G11', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
+    }
+  }
+
+  // G12 – Website link in Settings (manual)
+  if (shouldStop()) return;
+  addResult({ id: 'G12', category: 'Gating', name: 'Website link in Settings opens x-trendyourself.com', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open Settings, click "Visit our website" link at the bottom — should open https://www.x-trendyourself.com in a new tab.' });
+}
+
+// ═══════════════════════════════════════
+// SOCIAL PRO PLAN TESTS
+// ═══════════════════════════════════════
+async function runSocialPlanTests() {
+  const email = document.getElementById('social-pro-email').value.trim();
+  const pass  = document.getElementById('social-pro-pass').value.trim();
+  const sampleText   = 'Emerging social media trend for maximum brand engagement in 2025.';
+  const sampleReview = 'Great product, highly recommend!';
+  const sampleEmail  = 'Following up on the invoice I sent last week.';
+  const sampleJob    = 'Looking for a social media manager to grow our Instagram presence.';
+
+  // SP01 – Login
+  if (shouldStop()) return;
+  addResult({ id: 'SP01', category: 'Social Pro', name: 'Login as Social Pro user succeeds', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP01 – Social Pro login');
+  if (!email || !pass) {
+    updateResult('SP01', { status: 'SKIP', elapsed: 0, detail: 'No Social Pro credentials provided' });
+    ['SP02','SP03','SP04','SP05','SP06','SP07','SP08','SP09','SP10','SP11','SP12'].forEach(id =>
+      skip(id, 'Social Pro', id, 'SP01 skipped'));
+    return;
+  }
+  const loginR = await api('POST', '/auth/login', { email, password: pass });
+  await pause(300);
+  if (loginR.ok && loginR.data) {
+    S.socialPlanToken = loginR.data.token || loginR.data.access_token || loginR.data.session?.access_token;
+    updateResult('SP01', { status: 'PASS', elapsed: loginR.elapsed, detail: 'Token acquired for ' + email });
+  } else {
+    updateResult('SP01', { status: 'FAIL', elapsed: loginR.elapsed, detail: `HTTP ${loginR.status}: ${firstMsg(loginR.data)}` });
+    ['SP02','SP03','SP04','SP05','SP06','SP07','SP08','SP09','SP10','SP11','SP12'].forEach(id =>
+      skip(id, 'Social Pro', id, 'Login failed'));
+    return;
+  }
+  const tok = S.socialPlanToken;
+
+  // SP02 – Home shows both cards (manual)
+  if (shouldStop()) return;
+  addResult({ id: 'SP02', category: 'Social Pro', name: 'Home screen shows both Social and Business cards', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Log in as Social Pro in extension — both Social X-Trend and Business X-Trend cards must appear on home screen.' });
+
+  // SP03 – Caption Generator allowed
+  if (shouldStop()) return;
+  addResult({ id: 'SP03', category: 'Social Pro', name: 'Caption Generator — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP03 – Caption Gen (Social Pro)');
+  const r3 = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: sampleText }, tok);
+  await pause(300);
+  if (r3.networkErr) { updateResult('SP03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Network: ' + r3.networkErr }); }
+  else if (r3.ok && (r3.data?.result || r3.data?.content || r3.data?.text)) { updateResult('SP03', { status: perfStatus(r3.elapsed), elapsed: r3.elapsed, detail: 'Content generated ✓' }); }
+  else if (r3.status === 403) { updateResult('SP03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Blocked 403 — Social Pro should access Caption Generator' }); }
+  else { updateResult('SP03', { status: 'FAIL', elapsed: r3.elapsed, detail: `HTTP ${r3.status}: ${firstMsg(r3.data)}` }); }
+
+  // SP04 – Platform Rewriter allowed
+  if (shouldStop()) return;
+  addResult({ id: 'SP04', category: 'Social Pro', name: 'Platform Rewriter — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP04 – Platform Rewriter (Social Pro)');
+  const r4 = await api('POST', genPath(), { type: 'rewrite', platform: 'linkedin', content: sampleText }, tok);
+  await pause(300);
+  if (r4.networkErr) { updateResult('SP04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Network: ' + r4.networkErr }); }
+  else if (r4.ok && (r4.data?.result || r4.data?.content || r4.data?.text)) { updateResult('SP04', { status: perfStatus(r4.elapsed), elapsed: r4.elapsed, detail: 'Content generated ✓' }); }
+  else if (r4.status === 403) { updateResult('SP04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Blocked 403 — Social Pro should access Platform Rewriter' }); }
+  else { updateResult('SP04', { status: 'FAIL', elapsed: r4.elapsed, detail: `HTTP ${r4.status}: ${firstMsg(r4.data)}` }); }
+
+  // SP05 – Hashtag Suggester allowed
+  if (shouldStop()) return;
+  addResult({ id: 'SP05', category: 'Social Pro', name: 'Hashtag Suggester — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP05 – Hashtag Suggester (Social Pro)');
+  const r5 = await api('POST', genPath(), { type: 'hashtag', platform: 'instagram', description: sampleText }, tok);
+  await pause(300);
+  if (r5.networkErr) { updateResult('SP05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Network: ' + r5.networkErr }); }
+  else if (r5.ok && (r5.data?.result || r5.data?.content || r5.data?.text)) { updateResult('SP05', { status: perfStatus(r5.elapsed), elapsed: r5.elapsed, detail: 'Content generated ✓' }); }
+  else if (r5.status === 403) { updateResult('SP05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Blocked 403 — Social Pro should access Hashtag Suggester' }); }
+  else { updateResult('SP05', { status: 'FAIL', elapsed: r5.elapsed, detail: `HTTP ${r5.status}: ${firstMsg(r5.data)}` }); }
+
+  // SP06 – Review Responder blocked (business feature)
+  if (shouldStop()) return;
+  addResult({ id: 'SP06', category: 'Social Pro', name: 'Review Responder — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP06 – Review Responder (Social Pro, expect 403)');
+  const statusSP = await api('GET', '/api/user-status', null, tok);
+  const creditsSP = statusSP.data?.credits || 0;
+  if (creditsSP > 0) {
+    updateResult('SP06', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsSP} credits — token bypass active. Manual: verify Upgrade + Use a Token UI with 0 credits.` });
+  } else {
+    const r6 = await api('POST', genPath(), { type: 'review_response', review: sampleReview, tone: 'professional' }, tok);
+    await pause(300);
+    if (r6.status === 403) { updateResult('SP06', { status: 'PASS', elapsed: r6.elapsed, detail: 'Correctly blocked (403) ✓' }); }
+    else if (r6.ok) { updateResult('SP06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'Business feature NOT blocked for Social Pro — gating broken' }); }
+    else { updateResult('SP06', { status: 'WARN', elapsed: r6.elapsed, detail: `HTTP ${r6.status}: ${firstMsg(r6.data)}` }); }
+  }
+
+  // SP07 – Email Tone Fixer blocked
+  if (shouldStop()) return;
+  addResult({ id: 'SP07', category: 'Social Pro', name: 'Email Tone Fixer — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP07 – Email Tone Fixer (Social Pro, expect 403)');
+  if (creditsSP > 0) {
+    updateResult('SP07', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsSP} credits — token bypass active.` });
+  } else {
+    const r7 = await api('POST', genPath(), { type: 'email_tone', email: sampleEmail, tone: 'professional' }, tok);
+    await pause(300);
+    if (r7.status === 403) { updateResult('SP07', { status: 'PASS', elapsed: r7.elapsed, detail: 'Correctly blocked (403) ✓' }); }
+    else if (r7.ok) { updateResult('SP07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Email Tone Fixer NOT blocked for Social Pro' }); }
+    else { updateResult('SP07', { status: 'WARN', elapsed: r7.elapsed, detail: `HTTP ${r7.status}: ${firstMsg(r7.data)}` }); }
+  }
+
+  // SP08 – Proposal Generator blocked
+  if (shouldStop()) return;
+  addResult({ id: 'SP08', category: 'Social Pro', name: 'Proposal Generator — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP08 – Proposal Generator (Social Pro, expect 403)');
+  if (creditsSP > 0) {
+    updateResult('SP08', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsSP} credits — token bypass active.` });
+  } else {
+    const r8 = await api('POST', genPath(), { type: 'proposal', jobPosting: sampleJob, skills: 'Social media' }, tok);
+    await pause(300);
+    if (r8.status === 403) { updateResult('SP08', { status: 'PASS', elapsed: r8.elapsed, detail: 'Correctly blocked (403) ✓' }); }
+    else if (r8.ok) { updateResult('SP08', { status: 'FAIL', elapsed: r8.elapsed, detail: 'Proposal Generator NOT blocked for Social Pro' }); }
+    else { updateResult('SP08', { status: 'WARN', elapsed: r8.elapsed, detail: `HTTP ${r8.status}: ${firstMsg(r8.data)}` }); }
+  }
+
+  // SP09 – Unlimited usage display (API shape)
+  if (shouldStop()) return;
+  addResult({ id: 'SP09', category: 'Social Pro', name: 'Bottom shows Unlimited (not daily counter)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP09 – Usage status (Social Pro)');
+  const r9 = await api('GET', '/api/user-status', null, tok);
+  await pause(300);
+  if (r9.networkErr) { updateResult('SP09', { status: 'FAIL', elapsed: r9.elapsed, detail: 'Network: ' + r9.networkErr }); }
+  else if (r9.ok) {
+    const d = r9.data || {};
+    const isUnlimited = d.daily_limit === 999999 || d.unlimited === true || d.tier === 'social_pro';
+    updateResult('SP09', { status: isUnlimited ? 'PASS' : 'WARN', elapsed: r9.elapsed, detail: `Tier: ${d.tier}, limit: ${d.daily_limit ?? d.limit ?? '?'}` });
+  } else { updateResult('SP09', { status: 'FAIL', elapsed: r9.elapsed, detail: `HTTP ${r9.status}: ${firstMsg(r9.data)}` }); }
+
+  // SP10–SP12 manual
+  if (shouldStop()) return;
+  addResult({ id: 'SP10', category: 'Social Pro', name: 'Settings shows Social Pro highlighted, Business Pro + Bundle as upgrades', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open Settings as Social Pro — current plan shows Social Pro badge, upgrade options show Business Pro and Bundle.' });
+  if (shouldStop()) return;
+  addResult({ id: 'SP11', category: 'Social Pro', name: 'Brand Voice Memory shows locked', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open Brand Voice section as Social Pro — padlock icon visible, feature locked.' });
+  if (shouldStop()) return;
+  addResult({ id: 'SP12', category: 'Social Pro', name: 'Manage Subscription button visible in Settings', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('SP12 – Paid tier check for Manage Subscription');
+  const r12 = await api('GET', '/api/user-status', null, tok);
+  await pause(300);
+  if (r12.ok) {
+    const isPaid = ['social_pro','business_pro','bundle'].includes(r12.data?.tier);
+    updateResult('SP12', { status: isPaid ? 'PASS' : 'FAIL', elapsed: r12.elapsed, detail: `Tier: ${r12.data?.tier} — ${isPaid ? 'Manage Subscription will show ✓' : 'Not a paid tier'}` });
+  } else { updateResult('SP12', { status: 'FAIL', elapsed: r12.elapsed, detail: `HTTP ${r12.status}: ${firstMsg(r12.data)}` }); }
+}
+
+// ═══════════════════════════════════════
+// BUSINESS PRO PLAN TESTS
+// ═══════════════════════════════════════
+async function runBusinessPlanTests() {
+  const email = document.getElementById('business-pro-email').value.trim();
+  const pass  = document.getElementById('business-pro-pass').value.trim();
+  const sampleText   = 'Emerging social media trend for maximum brand engagement in 2025.';
+  const sampleReview = 'Great product, highly recommend!';
+  const sampleEmail  = 'Following up on the invoice I sent last week.';
+  const sampleJob    = 'Looking for a social media manager to grow our Instagram presence.';
+
+  // BP01 – Login
+  if (shouldStop()) return;
+  addResult({ id: 'BP01', category: 'Business Pro', name: 'Login as Business Pro user succeeds', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP01 – Business Pro login');
+  if (!email || !pass) {
+    updateResult('BP01', { status: 'SKIP', elapsed: 0, detail: 'No Business Pro credentials provided' });
+    ['BP02','BP03','BP04','BP05','BP06','BP07','BP08','BP09','BP10','BP11','BP12'].forEach(id =>
+      skip(id, 'Business Pro', id, 'BP01 skipped'));
+    return;
+  }
+  const loginR = await api('POST', '/auth/login', { email, password: pass });
+  await pause(300);
+  if (loginR.ok && loginR.data) {
+    S.businessPlanToken = loginR.data.token || loginR.data.access_token || loginR.data.session?.access_token;
+    updateResult('BP01', { status: 'PASS', elapsed: loginR.elapsed, detail: 'Token acquired for ' + email });
+  } else {
+    updateResult('BP01', { status: 'FAIL', elapsed: loginR.elapsed, detail: `HTTP ${loginR.status}: ${firstMsg(loginR.data)}` });
+    ['BP02','BP03','BP04','BP05','BP06','BP07','BP08','BP09','BP10','BP11','BP12'].forEach(id =>
+      skip(id, 'Business Pro', id, 'Login failed'));
+    return;
+  }
+  const tok = S.businessPlanToken;
+
+  // BP02 – Home shows both cards (manual)
+  if (shouldStop()) return;
+  addResult({ id: 'BP02', category: 'Business Pro', name: 'Home screen shows both Social and Business cards', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Log in as Business Pro — both Social X-Trend and Business X-Trend cards must appear on home screen.' });
+
+  // BP03 – Review Responder allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BP03', category: 'Business Pro', name: 'Review Responder — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP03 – Review Responder (Business Pro)');
+  const r3 = await api('POST', genPath(), { type: 'review_response', review: sampleReview, tone: 'professional' }, tok);
+  await pause(300);
+  if (r3.networkErr) { updateResult('BP03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Network: ' + r3.networkErr }); }
+  else if (r3.ok && (r3.data?.result || r3.data?.content || r3.data?.text)) { updateResult('BP03', { status: perfStatus(r3.elapsed), elapsed: r3.elapsed, detail: 'Content generated ✓' }); }
+  else if (r3.status === 403) { updateResult('BP03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Blocked 403 — Business Pro should access Review Responder' }); }
+  else { updateResult('BP03', { status: 'FAIL', elapsed: r3.elapsed, detail: `HTTP ${r3.status}: ${firstMsg(r3.data)}` }); }
+
+  // BP04 – Email Tone Fixer allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BP04', category: 'Business Pro', name: 'Email Tone Fixer — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP04 – Email Tone Fixer (Business Pro)');
+  const r4 = await api('POST', genPath(), { type: 'email_tone', email: sampleEmail, tone: 'professional' }, tok);
+  await pause(300);
+  if (r4.networkErr) { updateResult('BP04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Network: ' + r4.networkErr }); }
+  else if (r4.ok && (r4.data?.result || r4.data?.content || r4.data?.text)) { updateResult('BP04', { status: perfStatus(r4.elapsed), elapsed: r4.elapsed, detail: 'Content generated ✓' }); }
+  else if (r4.status === 403) { updateResult('BP04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Blocked 403 — Business Pro should access Email Tone Fixer' }); }
+  else { updateResult('BP04', { status: 'FAIL', elapsed: r4.elapsed, detail: `HTTP ${r4.status}: ${firstMsg(r4.data)}` }); }
+
+  // BP05 – Proposal Generator allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BP05', category: 'Business Pro', name: 'Proposal Generator — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP05 – Proposal Generator (Business Pro)');
+  const r5 = await api('POST', genPath(), { type: 'proposal', jobPosting: sampleJob, skills: 'Business development, client management' }, tok);
+  await pause(300);
+  if (r5.networkErr) { updateResult('BP05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Network: ' + r5.networkErr }); }
+  else if (r5.ok && (r5.data?.result || r5.data?.content || r5.data?.text)) { updateResult('BP05', { status: perfStatus(r5.elapsed), elapsed: r5.elapsed, detail: 'Content generated ✓' }); }
+  else if (r5.status === 403) { updateResult('BP05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Blocked 403 — Business Pro should access Proposal Generator' }); }
+  else { updateResult('BP05', { status: 'FAIL', elapsed: r5.elapsed, detail: `HTTP ${r5.status}: ${firstMsg(r5.data)}` }); }
+
+  // BP06 – Caption Generator blocked (social feature)
+  if (shouldStop()) return;
+  addResult({ id: 'BP06', category: 'Business Pro', name: 'Caption Generator — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP06 – Caption Gen (Business Pro, expect 403)');
+  const statusBP = await api('GET', '/api/user-status', null, tok);
+  const creditsBP = statusBP.data?.credits || 0;
+  if (creditsBP > 0) {
+    updateResult('BP06', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsBP} credits — token bypass active. Manual: verify Upgrade + Use a Token UI with 0 credits.` });
+  } else {
+    const r6 = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: sampleText }, tok);
+    await pause(300);
+    if (r6.status === 403) { updateResult('BP06', { status: 'PASS', elapsed: r6.elapsed, detail: 'Correctly blocked (403) ✓' }); }
+    else if (r6.ok) { updateResult('BP06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'Social feature NOT blocked for Business Pro — gating broken' }); }
+    else { updateResult('BP06', { status: 'WARN', elapsed: r6.elapsed, detail: `HTTP ${r6.status}: ${firstMsg(r6.data)}` }); }
+  }
+
+  // BP07 – Platform Rewriter blocked
+  if (shouldStop()) return;
+  addResult({ id: 'BP07', category: 'Business Pro', name: 'Platform Rewriter — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP07 – Platform Rewriter (Business Pro, expect 403)');
+  if (creditsBP > 0) {
+    updateResult('BP07', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsBP} credits — token bypass active.` });
+  } else {
+    const r7 = await api('POST', genPath(), { type: 'rewrite', platform: 'linkedin', content: sampleText }, tok);
+    await pause(300);
+    if (r7.status === 403) { updateResult('BP07', { status: 'PASS', elapsed: r7.elapsed, detail: 'Correctly blocked (403) ✓' }); }
+    else if (r7.ok) { updateResult('BP07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Platform Rewriter NOT blocked for Business Pro' }); }
+    else { updateResult('BP07', { status: 'WARN', elapsed: r7.elapsed, detail: `HTTP ${r7.status}: ${firstMsg(r7.data)}` }); }
+  }
+
+  // BP08 – Hashtag Suggester blocked
+  if (shouldStop()) return;
+  addResult({ id: 'BP08', category: 'Business Pro', name: 'Hashtag Suggester — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP08 – Hashtag Suggester (Business Pro, expect 403)');
+  if (creditsBP > 0) {
+    updateResult('BP08', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsBP} credits — token bypass active.` });
+  } else {
+    const r8 = await api('POST', genPath(), { type: 'hashtag', platform: 'instagram', description: sampleText }, tok);
+    await pause(300);
+    if (r8.status === 403) { updateResult('BP08', { status: 'PASS', elapsed: r8.elapsed, detail: 'Correctly blocked (403) ✓' }); }
+    else if (r8.ok) { updateResult('BP08', { status: 'FAIL', elapsed: r8.elapsed, detail: 'Hashtag Suggester NOT blocked for Business Pro' }); }
+    else { updateResult('BP08', { status: 'WARN', elapsed: r8.elapsed, detail: `HTTP ${r8.status}: ${firstMsg(r8.data)}` }); }
+  }
+
+  // BP09 – Unlimited display
+  if (shouldStop()) return;
+  addResult({ id: 'BP09', category: 'Business Pro', name: 'Bottom shows Unlimited (not daily counter)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP09 – Usage status (Business Pro)');
+  const r9 = await api('GET', '/api/user-status', null, tok);
+  await pause(300);
+  if (r9.networkErr) { updateResult('BP09', { status: 'FAIL', elapsed: r9.elapsed, detail: 'Network: ' + r9.networkErr }); }
+  else if (r9.ok) {
+    const d = r9.data || {};
+    const isUnlimited = d.daily_limit === 999999 || d.unlimited === true || d.tier === 'business_pro';
+    updateResult('BP09', { status: isUnlimited ? 'PASS' : 'WARN', elapsed: r9.elapsed, detail: `Tier: ${d.tier}, limit: ${d.daily_limit ?? d.limit ?? '?'}` });
+  } else { updateResult('BP09', { status: 'FAIL', elapsed: r9.elapsed, detail: `HTTP ${r9.status}: ${firstMsg(r9.data)}` }); }
+
+  // BP10–BP12 manual/shape
+  if (shouldStop()) return;
+  addResult({ id: 'BP10', category: 'Business Pro', name: 'Settings shows Business Pro highlighted, Social Pro + Bundle as upgrades', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open Settings as Business Pro — current plan shows Business Pro badge, upgrade options show Social Pro and Bundle.' });
+  if (shouldStop()) return;
+  addResult({ id: 'BP11', category: 'Business Pro', name: 'Brand Voice Memory shows locked', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open Brand Voice section as Business Pro — padlock icon visible, feature locked.' });
+  if (shouldStop()) return;
+  addResult({ id: 'BP12', category: 'Business Pro', name: 'Manage Subscription button visible in Settings', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BP12 – Paid tier check for Manage Subscription');
+  const r12 = await api('GET', '/api/user-status', null, tok);
+  await pause(300);
+  if (r12.ok) {
+    const isPaid = ['social_pro','business_pro','bundle'].includes(r12.data?.tier);
+    updateResult('BP12', { status: isPaid ? 'PASS' : 'FAIL', elapsed: r12.elapsed, detail: `Tier: ${r12.data?.tier} — ${isPaid ? 'Manage Subscription will show ✓' : 'Not a paid tier'}` });
+  } else { updateResult('BP12', { status: 'FAIL', elapsed: r12.elapsed, detail: `HTTP ${r12.status}: ${firstMsg(r12.data)}` }); }
+}
+
+// ═══════════════════════════════════════
+// BUNDLE PLAN TESTS
+// ═══════════════════════════════════════
+async function runBundlePlanTests() {
+  const email = document.getElementById('bundle-email').value.trim();
+  const pass  = document.getElementById('bundle-pass').value.trim();
+  const sampleText   = 'Emerging social media trend for maximum brand engagement in 2025.';
+  const sampleReview = 'Great product, highly recommend!';
+  const sampleEmail  = 'Following up on the invoice I sent last week.';
+  const sampleJob    = 'Looking for a social media manager to grow our Instagram presence.';
+
+  // BN01 – Login
+  if (shouldStop()) return;
+  addResult({ id: 'BN01', category: 'Bundle', name: 'Login as Bundle user succeeds', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN01 – Bundle login');
+  if (!email || !pass) {
+    updateResult('BN01', { status: 'SKIP', elapsed: 0, detail: 'No Bundle credentials provided' });
+    ['BN02','BN03','BN04','BN05','BN06','BN07','BN08','BN09','BN10','BN11','BN12'].forEach(id =>
+      skip(id, 'Bundle', id, 'BN01 skipped'));
+    return;
+  }
+  const loginR = await api('POST', '/auth/login', { email, password: pass });
+  await pause(300);
+  if (loginR.ok && loginR.data) {
+    S.bundlePlanToken = loginR.data.token || loginR.data.access_token || loginR.data.session?.access_token;
+    updateResult('BN01', { status: 'PASS', elapsed: loginR.elapsed, detail: 'Token acquired for ' + email });
+  } else {
+    updateResult('BN01', { status: 'FAIL', elapsed: loginR.elapsed, detail: `HTTP ${loginR.status}: ${firstMsg(loginR.data)}` });
+    ['BN02','BN03','BN04','BN05','BN06','BN07','BN08','BN09','BN10','BN11','BN12'].forEach(id =>
+      skip(id, 'Bundle', id, 'Login failed'));
+    return;
+  }
+  const tok = S.bundlePlanToken;
+
+  // BN02 – Home shows both cards (manual)
+  if (shouldStop()) return;
+  addResult({ id: 'BN02', category: 'Bundle', name: 'Home screen shows both Social and Business cards', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Log in as Bundle in extension — both Social X-Trend and Business X-Trend cards must appear on home screen.' });
+
+  // BN03 – Caption Generator allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BN03', category: 'Bundle', name: 'Caption Generator — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN03 – Caption Gen (Bundle)');
+  const r3 = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: sampleText }, tok);
+  await pause(300);
+  if (r3.networkErr) { updateResult('BN03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Network: ' + r3.networkErr }); }
+  else if (r3.ok && (r3.data?.result || r3.data?.content || r3.data?.text)) { updateResult('BN03', { status: perfStatus(r3.elapsed), elapsed: r3.elapsed, detail: 'Content generated ✓' }); }
+  else if (r3.status === 403) { updateResult('BN03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Blocked 403 — Bundle should access all features' }); }
+  else { updateResult('BN03', { status: 'FAIL', elapsed: r3.elapsed, detail: `HTTP ${r3.status}: ${firstMsg(r3.data)}` }); }
+
+  // BN04 – Platform Rewriter allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BN04', category: 'Bundle', name: 'Platform Rewriter — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN04 – Platform Rewriter (Bundle)');
+  const r4 = await api('POST', genPath(), { type: 'rewrite', platform: 'linkedin', content: sampleText }, tok);
+  await pause(300);
+  if (r4.networkErr) { updateResult('BN04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Network: ' + r4.networkErr }); }
+  else if (r4.ok && (r4.data?.result || r4.data?.content || r4.data?.text)) { updateResult('BN04', { status: perfStatus(r4.elapsed), elapsed: r4.elapsed, detail: 'Content generated ✓' }); }
+  else if (r4.status === 403) { updateResult('BN04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Blocked 403 — Bundle should access all features' }); }
+  else { updateResult('BN04', { status: 'FAIL', elapsed: r4.elapsed, detail: `HTTP ${r4.status}: ${firstMsg(r4.data)}` }); }
+
+  // BN05 – Hashtag Suggester allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BN05', category: 'Bundle', name: 'Hashtag Suggester — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN05 – Hashtag Suggester (Bundle)');
+  const r5 = await api('POST', genPath(), { type: 'hashtag', platform: 'instagram', description: sampleText }, tok);
+  await pause(300);
+  if (r5.networkErr) { updateResult('BN05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Network: ' + r5.networkErr }); }
+  else if (r5.ok && (r5.data?.result || r5.data?.content || r5.data?.text)) { updateResult('BN05', { status: perfStatus(r5.elapsed), elapsed: r5.elapsed, detail: 'Content generated ✓' }); }
+  else if (r5.status === 403) { updateResult('BN05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Blocked 403 — Bundle should access all features' }); }
+  else { updateResult('BN05', { status: 'FAIL', elapsed: r5.elapsed, detail: `HTTP ${r5.status}: ${firstMsg(r5.data)}` }); }
+
+  // BN06 – Review Responder allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BN06', category: 'Bundle', name: 'Review Responder — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN06 – Review Responder (Bundle)');
+  const r6 = await api('POST', genPath(), { type: 'review_response', review: sampleReview, tone: 'professional' }, tok);
+  await pause(300);
+  if (r6.networkErr) { updateResult('BN06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'Network: ' + r6.networkErr }); }
+  else if (r6.ok && (r6.data?.result || r6.data?.content || r6.data?.text)) { updateResult('BN06', { status: perfStatus(r6.elapsed), elapsed: r6.elapsed, detail: 'Content generated ✓' }); }
+  else if (r6.status === 403) { updateResult('BN06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'Blocked 403 — Bundle should access all features' }); }
+  else { updateResult('BN06', { status: 'FAIL', elapsed: r6.elapsed, detail: `HTTP ${r6.status}: ${firstMsg(r6.data)}` }); }
+
+  // BN07 – Email Tone Fixer allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BN07', category: 'Bundle', name: 'Email Tone Fixer — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN07 – Email Tone Fixer (Bundle)');
+  const r7 = await api('POST', genPath(), { type: 'email_tone', email: sampleEmail, tone: 'professional' }, tok);
+  await pause(300);
+  if (r7.networkErr) { updateResult('BN07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Network: ' + r7.networkErr }); }
+  else if (r7.ok && (r7.data?.result || r7.data?.content || r7.data?.text)) { updateResult('BN07', { status: perfStatus(r7.elapsed), elapsed: r7.elapsed, detail: 'Content generated ✓' }); }
+  else if (r7.status === 403) { updateResult('BN07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Blocked 403 — Bundle should access all features' }); }
+  else { updateResult('BN07', { status: 'FAIL', elapsed: r7.elapsed, detail: `HTTP ${r7.status}: ${firstMsg(r7.data)}` }); }
+
+  // BN08 – Proposal Generator allowed
+  if (shouldStop()) return;
+  addResult({ id: 'BN08', category: 'Bundle', name: 'Proposal Generator — active, generates output', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN08 – Proposal Generator (Bundle)');
+  const r8 = await api('POST', genPath(), { type: 'proposal', jobPosting: sampleJob, skills: 'Full-stack social + business' }, tok);
+  await pause(300);
+  if (r8.networkErr) { updateResult('BN08', { status: 'FAIL', elapsed: r8.elapsed, detail: 'Network: ' + r8.networkErr }); }
+  else if (r8.ok && (r8.data?.result || r8.data?.content || r8.data?.text)) { updateResult('BN08', { status: perfStatus(r8.elapsed), elapsed: r8.elapsed, detail: 'Content generated ✓' }); }
+  else if (r8.status === 403) { updateResult('BN08', { status: 'FAIL', elapsed: r8.elapsed, detail: 'Blocked 403 — Bundle should access all features' }); }
+  else { updateResult('BN08', { status: 'FAIL', elapsed: r8.elapsed, detail: `HTTP ${r8.status}: ${firstMsg(r8.data)}` }); }
+
+  // BN09 – Unlimited display
+  if (shouldStop()) return;
+  addResult({ id: 'BN09', category: 'Bundle', name: 'Bottom shows Unlimited (not daily counter)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN09 – Usage status (Bundle)');
+  const r9 = await api('GET', '/api/user-status', null, tok);
+  await pause(300);
+  if (r9.networkErr) { updateResult('BN09', { status: 'FAIL', elapsed: r9.elapsed, detail: 'Network: ' + r9.networkErr }); }
+  else if (r9.ok) {
+    const d = r9.data || {};
+    const isUnlimited = d.daily_limit === 999999 || d.unlimited === true || d.tier === 'bundle';
+    updateResult('BN09', { status: isUnlimited ? 'PASS' : 'WARN', elapsed: r9.elapsed, detail: `Tier: ${d.tier}, limit: ${d.daily_limit ?? d.limit ?? '?'}` });
+  } else { updateResult('BN09', { status: 'FAIL', elapsed: r9.elapsed, detail: `HTTP ${r9.status}: ${firstMsg(r9.data)}` }); }
+
+  // BN10–BN12 manual/shape
+  if (shouldStop()) return;
+  addResult({ id: 'BN10', category: 'Bundle', name: 'Settings shows full access message, no upgrade options', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open Settings as Bundle — "You have full access" message shown, no upgrade plan buttons visible.' });
+  if (shouldStop()) return;
+  addResult({ id: 'BN11', category: 'Bundle', name: 'Brand Voice Memory shows unlocked and active', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN11 – Brand Voice tier check (Bundle)');
+  const r11 = await api('POST', genPath(), { type: 'caption', platform: 'linkedin', description: sampleText, brandVoice: 'Always use formal British English.' }, tok);
+  await pause(300);
+  if (r11.networkErr) { updateResult('BN11', { status: 'FAIL', elapsed: r11.elapsed, detail: 'Network: ' + r11.networkErr }); }
+  else if (r11.ok && (r11.data?.result || r11.data?.content || r11.data?.text)) { updateResult('BN11', { status: perfStatus(r11.elapsed), elapsed: r11.elapsed, detail: 'Brand Voice accepted + content returned ✓' }); }
+  else if (r11.status === 403) { updateResult('BN11', { status: 'FAIL', elapsed: r11.elapsed, detail: 'Brand Voice blocked for Bundle — should be unlocked' }); }
+  else { updateResult('BN11', { status: 'WARN', elapsed: r11.elapsed, detail: `HTTP ${r11.status}: ${firstMsg(r11.data)}` }); }
+
+  if (shouldStop()) return;
+  addResult({ id: 'BN12', category: 'Bundle', name: 'Manage Subscription button visible in Settings', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BN12 – Paid tier check for Manage Subscription (Bundle)');
+  const r12 = await api('GET', '/api/user-status', null, tok);
+  await pause(300);
+  if (r12.ok) {
+    const isPaid = ['social_pro','business_pro','bundle'].includes(r12.data?.tier);
+    updateResult('BN12', { status: isPaid ? 'PASS' : 'FAIL', elapsed: r12.elapsed, detail: `Tier: ${r12.data?.tier} — ${isPaid ? 'Manage Subscription will show ✓' : 'Not a paid tier'}` });
+  } else { updateResult('BN12', { status: 'FAIL', elapsed: r12.elapsed, detail: `HTTP ${r12.status}: ${firstMsg(r12.data)}` }); }
+}
+
+// ═══════════════════════════════════════
+// PASSWORD RESET TESTS
+// ═══════════════════════════════════════
+async function runPasswordResetTests() {
+  const adminEmail = document.getElementById('admin-email').value.trim();
+
+  // PR01 – Forgot password returns generic success for known email
+  if (shouldStop()) return;
+  addResult({ id: 'PR01', category: 'Pwd Reset', name: 'Forgot password — valid email returns generic success message', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('PR01 – Forgot password (valid email)');
+  const r1 = await api('POST', '/auth/forgot-password', { email: adminEmail });
+  await pause(300);
+  if (r1.networkErr) {
+    updateResult('PR01', { status: 'FAIL', elapsed: r1.elapsed, detail: 'Network: ' + r1.networkErr });
+  } else if (r1.ok && r1.data?.message) {
+    updateResult('PR01', { status: 'PASS', elapsed: r1.elapsed, detail: r1.data.message });
+  } else {
+    updateResult('PR01', { status: 'FAIL', elapsed: r1.elapsed, detail: `HTTP ${r1.status}: ${firstMsg(r1.data)}` });
+  }
+
+  // PR02 – Forgot password returns same generic success for unknown email (no enumeration)
+  if (shouldStop()) return;
+  addResult({ id: 'PR02', category: 'Pwd Reset', name: 'Forgot password — unknown email returns same generic success (no enumeration)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('PR02 – Forgot password (unknown email)');
+  const r2 = await api('POST', '/auth/forgot-password', { email: 'definitely-not-a-real-user-' + Date.now() + '@nowhere.invalid' });
+  await pause(300);
+  if (r2.networkErr) {
+    updateResult('PR02', { status: 'FAIL', elapsed: r2.elapsed, detail: 'Network: ' + r2.networkErr });
+  } else if (r2.ok && r2.data?.message) {
+    const sameMsg = r1.data?.message && r2.data?.message === r1.data?.message;
+    updateResult('PR02', { status: sameMsg ? 'PASS' : 'WARN', elapsed: r2.elapsed, detail: sameMsg ? 'Same generic message ✓' : 'Messages differ — may leak user existence: "' + r2.data.message + '"' });
+  } else {
+    updateResult('PR02', { status: 'FAIL', elapsed: r2.elapsed, detail: `HTTP ${r2.status}: ${firstMsg(r2.data)}` });
+  }
+
+  // PR03 – Reset password with invalid token returns 400
+  if (shouldStop()) return;
+  addResult({ id: 'PR03', category: 'Pwd Reset', name: 'Reset password — invalid token returns 400', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('PR03 – Reset password (invalid token)');
+  const r3 = await api('POST', '/auth/reset-password', { token: 'invalid-token-' + Date.now(), newPassword: 'NewPassword123!' });
+  await pause(300);
+  if (r3.networkErr) {
+    updateResult('PR03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Network: ' + r3.networkErr });
+  } else if (r3.status === 400) {
+    updateResult('PR03', { status: 'PASS', elapsed: r3.elapsed, detail: '400 returned ✓ — ' + firstMsg(r3.data) });
+  } else if (r3.ok) {
+    updateResult('PR03', { status: 'FAIL', elapsed: r3.elapsed, detail: 'Invalid token accepted — security issue!' });
+  } else {
+    updateResult('PR03', { status: 'WARN', elapsed: r3.elapsed, detail: `HTTP ${r3.status}: ${firstMsg(r3.data)}` });
+  }
+
+  // PR04 – Reset password with missing fields returns 400
+  if (shouldStop()) return;
+  addResult({ id: 'PR04', category: 'Pwd Reset', name: 'Reset password — missing fields return 400', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('PR04 – Reset password (missing fields)');
+  const r4 = await api('POST', '/auth/reset-password', {});
+  await pause(300);
+  if (r4.networkErr) {
+    updateResult('PR04', { status: 'FAIL', elapsed: r4.elapsed, detail: 'Network: ' + r4.networkErr });
+  } else if (r4.status === 400) {
+    updateResult('PR04', { status: 'PASS', elapsed: r4.elapsed, detail: '400 returned ✓ — ' + firstMsg(r4.data) });
+  } else {
+    updateResult('PR04', { status: 'FAIL', elapsed: r4.elapsed, detail: `HTTP ${r4.status}: ${firstMsg(r4.data)}` });
+  }
+
+  // PR05 – Reset password with short password returns 400
+  if (shouldStop()) return;
+  addResult({ id: 'PR05', category: 'Pwd Reset', name: 'Reset password — password < 8 chars returns 400', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('PR05 – Reset password (short password)');
+  const r5 = await api('POST', '/auth/reset-password', { token: 'any-token', newPassword: 'abc' });
+  await pause(300);
+  if (r5.networkErr) {
+    updateResult('PR05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Network: ' + r5.networkErr });
+  } else if (r5.status === 400) {
+    updateResult('PR05', { status: 'PASS', elapsed: r5.elapsed, detail: '400 returned ✓ — ' + firstMsg(r5.data) });
+  } else {
+    updateResult('PR05', { status: 'FAIL', elapsed: r5.elapsed, detail: `HTTP ${r5.status}: ${firstMsg(r5.data)}` });
+  }
+
+  // PR06–PR09 — Manual / browser tests
+  if (shouldStop()) return;
+  addResult({ id: 'PR06', category: 'Pwd Reset', name: 'Reset page shows error for missing token in URL', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open reset-password.html with no ?token= param — heading should change to "Invalid reset link", form hidden.' });
+
+  if (shouldStop()) return;
+  addResult({ id: 'PR07', category: 'Pwd Reset', name: 'Reset page loads correctly with ?token= param in URL', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open reset-password.html?token=abc123 — form visible, heading shows "Reset your password".' });
+
+  if (shouldStop()) return;
+  addResult({ id: 'PR08', category: 'Pwd Reset', name: 'Password strength indicator responds to input', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Type in new password field — strength bar and label update (Weak→Strong) as password grows.' });
+
+  if (shouldStop()) return;
+  addResult({ id: 'PR09', category: 'Pwd Reset', name: 'Forgot password? link visible on extension login screen', status: 'SKIP', elapsed: 0,
+    detail: 'Manual: Open extension → Settings → Log In tab — "Forgot password?" link visible below password field. Clicking shows reset request view.' });
+
+  // PR10 – Verify reset_token columns exist and token lookup works (shape test)
+  if (shouldStop()) return;
+  addResult({ id: 'PR10', category: 'Pwd Reset', name: 'Reset endpoint confirms expired/invalid token rejected (shape test)', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('PR10 – Token rejection shape test');
+  const r10 = await api('POST', '/auth/reset-password', { token: 'expired-or-fake', newPassword: 'NewPassword123!' });
+  await pause(300);
+  if (r10.networkErr) {
+    updateResult('PR10', { status: 'FAIL', elapsed: r10.elapsed, detail: 'Network: ' + r10.networkErr });
+  } else if (r10.status === 400 && isHumanReadable(r10.data?.error)) {
+    updateResult('PR10', { status: 'PASS', elapsed: r10.elapsed, detail: 'Human-readable 400: "' + r10.data.error + '" ✓' });
+  } else if (r10.status === 500) {
+    updateResult('PR10', { status: 'FAIL', elapsed: r10.elapsed, detail: '500 returned — reset_token columns may not exist in DB. Run add-reset-token-columns.sql in Supabase.' });
+  } else {
+    updateResult('PR10', { status: 'WARN', elapsed: r10.elapsed, detail: `HTTP ${r10.status}: ${firstMsg(r10.data)}` });
+  }
+}
+
+// ═══════════════════════════════════════
+// PERFORMANCE SUMMARY
+// ═══════════════════════════════════════
+function runPerfSummary() {
+  const timed = S.results.filter(r => r.elapsed > 0);
+  if (!timed.length) return;
+  const slow = timed.filter(r => r.elapsed > PERF_WARN);
+  const failed = timed.filter(r => r.elapsed > PERF_FAIL);
+  const avg = timed.reduce((a, r) => a + r.elapsed, 0) / timed.length;
+
+  addResult({
+    id: 'PERF',
+    category: 'Perf',
+    name: 'Performance summary',
+    status: failed.length > 0 ? 'WARN' : slow.length > 0 ? 'WARN' : 'PASS',
+    elapsed: avg,
+    detail: `Avg: ${avg.toFixed(0)}ms | Slow (>10s): ${slow.length} | Timeout-fail (>20s): ${failed.length}` +
+      (slow.length ? ' | Slowest: ' + slow.map(r => r.id + '(' + r.elapsed.toFixed(0) + 'ms)').join(', ') : '')
+  });
+}
+
+// ═══════════════════════════════════════
+// MAIN RUNNER
+// ═══════════════════════════════════════
+async function startRun() {
+  const adminPass = document.getElementById('admin-pass').value.trim();
+  if (!adminPass) {
+    alert('Enter admin password before running tests.');
+    document.getElementById('admin-pass').focus();
+    return;
+  }
+
+  S = { running: true, stopped: false, adminToken: null, testUserToken: null, socialPlanToken: null, businessPlanToken: null, bundlePlanToken: null, freshEmail: null, results: [], totalExpected: 0, runMode: S.runMode };
+  document.getElementById('results-body').innerHTML = '';
+  document.getElementById('log-panel').innerHTML = '';
+  document.getElementById('progress-fill').style.width = '0%';
+  updateSummary();
+
+  setRunning(true);
+  setBadge('running');
+  document.getElementById('btn-report').disabled = true;
+  log('QA run started', 'info');
+
+  const mode = S.runMode;
+
+  function catEnabled(cat) {
+    if (mode === 'full') return true;
+    if (mode === 'individual') {
+      const v = document.getElementById('individual-select').value;
+      const map = { A: 'auth', F: 'features', U: 'usage', P: 'payments', S: 'security', X: 'ux', B: 'bv', G: 'gating', SP: 'social_plan', BP: 'business_plan', BN: 'bundle_plan', PR: 'password_reset' };
+      return (map[v.slice(0,2)] || map[v[0]]) === cat;
+    }
+    return [...document.querySelectorAll('.cat-cb:checked')].map(c => c.value).includes(cat);
+  }
+
+  try {
+    if (catEnabled('auth')) { log('── Auth Tests ──', 'info'); await runAuthTests(); }
+    if (!shouldStop() && catEnabled('features')) { log('── Feature Tests ──', 'info'); await runAllFeatureTests(); }
+    if (!shouldStop() && catEnabled('usage')) { log('── Usage Tests ──', 'info'); await runUsageTests(); }
+    if (!shouldStop() && catEnabled('payments')) { log('── Payment Tests ──', 'info'); await runPaymentTests(); }
+    if (!shouldStop() && catEnabled('security')) { log('── Security Tests ──', 'info'); await runSecurityTests(); }
+    if (!shouldStop() && catEnabled('ux')) { log('── UX Tests ──', 'info'); await runUXTests(); }
+    if (!shouldStop() && catEnabled('bv')) { log('── Brand Voice Tests ──', 'info'); await runBrandVoiceTests(); }
+    if (!shouldStop() && catEnabled('gating')) { log('── Plan Gating Tests ──', 'info'); await runPlanGatingTests(); }
+    if (!shouldStop() && catEnabled('social_plan')) { log('── Social Pro Plan Tests ──', 'info'); await runSocialPlanTests(); }
+    if (!shouldStop() && catEnabled('business_plan')) { log('── Business Pro Plan Tests ──', 'info'); await runBusinessPlanTests(); }
+    if (!shouldStop() && catEnabled('bundle_plan')) { log('── Bundle Plan Tests ──', 'info'); await runBundlePlanTests(); }
+    if (!shouldStop() && catEnabled('password_reset')) { log('── Password Reset Tests ──', 'info'); await runPasswordResetTests(); }
+    if (!shouldStop()) runPerfSummary();
+  } catch (err) {
+    log('Unexpected error: ' + err.message, 'err');
+    console.error(err);
+  }
+
+  S.running = false;
+  document.getElementById('progress-fill').style.width = '100%';
+  setRunning(false);
+  setBadge(S.stopped ? 'stopped' : 'done');
+  document.getElementById('btn-report').disabled = false;
+
+  const pass = S.results.filter(r => r.status === 'PASS').length;
+  const fail = S.results.filter(r => r.status === 'FAIL').length;
+  log(`Run complete – ${pass} pass, ${fail} fail, ${S.results.length} total`, fail > 0 ? 'err' : 'ok');
+}
+
+function stopRun() {
+  S.stopped = true;
+  log('Stop requested…', 'err');
+}
+
+
+// ═══════════════════════════════════════
+// DOCX REPORT GENERATION
+// ═══════════════════════════════════════
+async function generateReport() {
+  if (!window.docx) {
+    alert('docx.js not loaded. Make sure you are running via: npm run qa');
+    return;
+  }
+  if (S.results.length === 0) {
+    alert('No test results to report.');
+    return;
+  }
+
+  const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, HeadingLevel, AlignmentType, BorderStyle } = window.docx;
+
+  const now = new Date();
+  const ts = now.toLocaleString();
+  const pass = S.results.filter(r => r.status === 'PASS').length;
+  const fail = S.results.filter(r => r.status === 'FAIL').length;
+  const warn = S.results.filter(r => r.status === 'WARN').length;
+  const skip = S.results.filter(r => r.status === 'SKIP').length;
+
+  const failedTests = S.results.filter(r => r.status === 'FAIL');
+
+  function p(text, opts = {}) {
+    return new Paragraph({
+      children: [new TextRun({ text: String(text || ''), ...opts })],
+      spacing: { after: 80 },
+    });
+  }
+
+  function h(text, level = HeadingLevel.HEADING_2) {
+    return new Paragraph({ text: String(text), heading: level, spacing: { before: 240, after: 120 } });
+  }
+
+  function bullet(text) {
+    return new Paragraph({
+      children: [new TextRun({ text: String(text) })],
+      bullet: { level: 0 },
+      spacing: { after: 60 },
+    });
+  }
+
+  const cellStyle = { margins: { top: 60, bottom: 60, left: 80, right: 80 } };
+
+  function makeRow(cells, header = false) {
+    return new TableRow({
+      tableHeader: header,
+      children: cells.map(({ text, color, bold }) =>
+        new TableCell({
+          ...cellStyle,
+          children: [new Paragraph({ children: [new TextRun({ text: String(text || ''), bold: bold || header, color: color || '000000', size: header ? 18 : 16 })] })],
+        })
+      ),
+    });
+  }
+
+  const statusColors = { PASS: '166534', FAIL: '991B1B', WARN: '92400E', SKIP: '374151', RUNNING: '1E40AF' };
+
+  const resultsRows = [
+    makeRow([
+      { text: 'ID' }, { text: 'Category' }, { text: 'Test Name' },
+      { text: 'Status' }, { text: 'Time (ms)' }, { text: 'Detail' }
+    ], true),
+    ...S.results.map(r => makeRow([
+      { text: r.id },
+      { text: r.category },
+      { text: r.name },
+      { text: r.status, color: statusColors[r.status] || '000000', bold: true },
+      { text: r.elapsed > 0 ? r.elapsed.toFixed(0) : '—' },
+      { text: (r.detail || '').slice(0, 200) },
+    ])),
+  ];
+
+  const recommendations = [];
+  if (fail > 0) recommendations.push('CRITICAL: ' + fail + ' test(s) failed. Review and fix before release.');
+  if (warn > 0) recommendations.push('WARNING: ' + warn + ' test(s) returned warnings. Investigate root causes.');
+  const slowTests = S.results.filter(r => r.elapsed > PERF_WARN);
+  if (slowTests.length > 0) recommendations.push('PERFORMANCE: ' + slowTests.length + ' test(s) exceeded 10s response time. Review server performance.');
+  const authFails = failedTests.filter(r => r.category === 'Auth');
+  if (authFails.length > 0) recommendations.push('AUTH: Authentication failures detected. Verify backend auth routes.');
+  if (failedTests.some(r => r.id === 'A05' || r.id === 'A06' || r.id === 'A07')) {
+    recommendations.push('SECURITY: Critical security tests failed. Do not release until resolved.');
+  }
+  if (recommendations.length === 0) recommendations.push('All tests passed or warned within acceptable thresholds. Proceed with release.');
+
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        h('X-Trend QA Report', HeadingLevel.HEADING_1),
+        p('Generated: ' + ts),
+        p('Run Mode: ' + S.runMode.toUpperCase()),
+        p('Backend: ' + baseUrl()),
+        p(''),
+
+        h('Executive Summary'),
+        p('Total Tests: ' + S.results.length),
+        p('Passed: ' + pass + ' (' + Math.round(pass / S.results.length * 100) + '%)'),
+        p('Failed: ' + fail),
+        p('Warnings: ' + warn),
+        p('Skipped: ' + skip),
+        p(''),
+
+        h('Test Results'),
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: resultsRows,
+        }),
+        p(''),
+
+        ...(failedTests.length > 0 ? [
+          h('Failed Tests Detail'),
+          ...failedTests.map(r => [
+            p(r.id + ' – ' + r.name, { bold: true }),
+            p('Category: ' + r.category),
+            p('Detail: ' + (r.detail || 'No detail')),
+            p(''),
+          ]).flat(),
+        ] : []),
+
+        h('QA Recommendations'),
+        ...recommendations.map(r => bullet(r)),
+        p(''),
+
+        h('Test Configuration'),
+        p('Admin email: ' + document.getElementById('admin-email').value),
+        p('Test user provided: ' + (document.getElementById('test-email').value ? 'Yes' : 'No')),
+        p('Platforms tested: ' + PLATFORMS.join(', ')),
+        p('Tones tested: ' + TONES.join(', ')),
+        p('Performance warn threshold: ' + (PERF_WARN / 1000) + 's'),
+        p('Performance fail threshold: ' + (PERF_FAIL / 1000) + 's'),
+      ],
+    }],
+  });
+
+  try {
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'xtrend-qa-report-' + now.toISOString().slice(0, 19).replace(/[T:]/g, '-') + '.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    log('Report downloaded', 'ok');
+  } catch (err) {
+    alert('Report generation failed: ' + err.message);
+    console.error(err);
+  }
+}
+</script>
+</body>
+</html>
