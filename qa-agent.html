@@ -1197,28 +1197,32 @@ async function runPlanGatingTests() {
     else log('Business Pro login failed: ' + firstMsg(r.data), 'err');
   }
 
-  // G02 – Social Pro user cannot generate business features WITHOUT credits (backend 403)
+  // G02 – Social Pro: consume 1 credit on business feature, then verify 403 with 0 credits
   if (shouldStop()) return;
-  addResult({ id: 'G02', category: 'Gating', name: 'Social Pro blocked from business features (no credits)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('G02 – Social Pro → business feature, no credits');
+  addResult({ id: 'G02', category: 'Gating', name: 'Social Pro: credit bypass then 403 when credits exhausted', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G02 – Social Pro credit exhaustion → 403 gate');
   if (!socialProToken) {
     updateResult('G02', { status: 'SKIP', elapsed: 0, detail: 'No Social Pro credentials provided' });
   } else {
-    const status = await api('GET', '/api/user-status', null, socialProToken);
-    const credits = status.data?.credits || 0;
-    if (credits > 0) {
-      updateResult('G02', { status: 'SKIP', elapsed: 0, detail: `Social Pro test user has ${credits} credits — plan gate bypassed by credits. Use a user with 0 credits.` });
+    // Step 1: social-test has 1 credit — business feature should succeed (credit consumed)
+    const r1 = await api('POST', genPath(), { type: 'review_response', review: 'Great service!', tone: 'professional' }, socialProToken);
+    await pause(300);
+    if (r1.networkErr) {
+      updateResult('G02', { status: 'FAIL', elapsed: r1.elapsed, detail: 'Step 1 network error: ' + r1.networkErr });
+    } else if (!r1.ok) {
+      updateResult('G02', { status: 'FAIL', elapsed: r1.elapsed, detail: `Step 1 (credit bypass expected): HTTP ${r1.status}: ${firstMsg(r1.data)}` });
     } else {
-      const r = await api('POST', genPath(), { type: 'review_response', review: 'Great service!', tone: 'professional' }, socialProToken);
+      // Step 2: credits now 0 — next business feature call should be blocked 403
+      const r2 = await api('POST', genPath(), { type: 'review_response', review: 'Great service!', tone: 'professional' }, socialProToken);
       await pause(300);
-      if (r.networkErr) {
-        updateResult('G02', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
-      } else if (r.status === 403) {
-        updateResult('G02', { status: 'PASS', elapsed: r.elapsed, detail: `Correctly blocked (403): ${firstMsg(r.data)}` });
-      } else if (r.ok) {
-        updateResult('G02', { status: 'FAIL', elapsed: r.elapsed, detail: 'Social Pro accessed business feature without credits – GATING BROKEN' });
+      if (r2.networkErr) {
+        updateResult('G02', { status: 'FAIL', elapsed: r2.elapsed, detail: 'Step 2 network error: ' + r2.networkErr });
+      } else if (r2.status === 403) {
+        updateResult('G02', { status: 'PASS', elapsed: r1.elapsed + r2.elapsed, detail: 'Step 1: credit used ✓ | Step 2: blocked 403 ✓' });
+      } else if (r2.ok) {
+        updateResult('G02', { status: 'FAIL', elapsed: r2.elapsed, detail: 'Step 2: business feature NOT blocked after credits exhausted — GATING BROKEN' });
       } else {
-        updateResult('G02', { status: 'WARN', elapsed: r.elapsed, detail: `Unexpected ${r.status}: ${firstMsg(r.data)}` });
+        updateResult('G02', { status: 'WARN', elapsed: r2.elapsed, detail: `Step 2: unexpected ${r2.status}: ${firstMsg(r2.data)}` });
       }
     }
   }
@@ -1844,6 +1848,26 @@ async function startRun() {
   }
 
   try {
+    // Pre-run: reset test accounts to clean state before any tests run
+    log('── Pre-run Reset ──', 'info');
+    const preResetEmail = document.getElementById('admin-email').value.trim();
+    const preResetPass  = document.getElementById('admin-pass').value.trim();
+    const preLoginR = await api('POST', '/auth/login', { email: preResetEmail, password: preResetPass });
+    if (preLoginR.ok && preLoginR.data) {
+      const preToken = preLoginR.data.token || preLoginR.data.access_token || preLoginR.data.session?.access_token;
+      const preReset = await api('POST', '/api/admin/reset-test-credits', null, preToken);
+      if (preReset.ok) {
+        addResult({ id: 'RESET', category: 'Setup', name: 'Test accounts reset to defaults — ready to run', status: 'PASS', elapsed: preReset.elapsed, detail: preReset.data?.message || 'Credits and usage_count reset ✓' });
+        log('Test accounts reset — proceeding with tests', 'ok');
+      } else {
+        addResult({ id: 'RESET', category: 'Setup', name: 'Pre-run account reset', status: 'WARN', elapsed: preReset.elapsed, detail: `Reset failed (${preReset.status}): ${firstMsg(preReset.data)}` });
+        log('Pre-run reset failed — tests may have stale account state', 'err');
+      }
+    } else {
+      addResult({ id: 'RESET', category: 'Setup', name: 'Pre-run account reset', status: 'WARN', elapsed: preLoginR.elapsed, detail: 'Admin login failed — skipping reset: ' + firstMsg(preLoginR.data) });
+      log('Pre-run reset skipped (admin login failed)', 'err');
+    }
+
     if (catEnabled('auth')) { log('── Auth Tests ──', 'info'); await runAuthTests(); }
     if (!shouldStop() && catEnabled('features')) { log('── Feature Tests ──', 'info'); await runAllFeatureTests(); }
     if (!shouldStop() && catEnabled('usage')) { log('── Usage Tests ──', 'info'); await runUsageTests(); }
