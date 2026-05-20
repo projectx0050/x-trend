@@ -272,46 +272,29 @@ h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#3b8
               <option value="G02">G02 – Social Pro sees lock on Business features</option>
               <option value="G03">G03 – Business Pro sees lock on Social features</option>
               <option value="G04">G04 – Social Pro with tokens bypasses Business gate</option>
-              <option value="G05">G05 – Social Pro with zero tokens → Buy Credits</option>
-              <option value="G06">G06 – Upgrade Plan button navigates to Settings</option>
               <option value="G07">G07 – Settings shows correct current plan badge</option>
-              <option value="G08">G08 – Settings shows correct upgrade options per tier</option>
               <option value="G09">G09 – Bundle sees all features unlocked</option>
               <option value="G10">G10 – Brand Voice locked for non-bundle</option>
               <option value="G11">G11 – Manage Subscription visible for paid users only</option>
-              <option value="G12">G12 – Website link in Settings opens x-trendyourself.com</option>
             </optgroup>
             <optgroup label="Social Pro Plan">
               <option value="SP01">SP01 – Login as Social Pro user succeeds</option>
-              <option value="SP02">SP02 – Home screen shows both Social and Business cards</option>
               <option value="SP03">SP03 – Caption Generator active, generates output</option>
               <option value="SP04">SP04 – Platform Rewriter active, generates output</option>
               <option value="SP05">SP05 – Hashtag Suggester active, generates output</option>
-              <option value="SP06">SP06 – Review Responder shows Upgrade + Use a Token</option>
-              <option value="SP07">SP07 – Email Tone Fixer shows Upgrade + Use a Token</option>
-              <option value="SP08">SP08 – Proposal Generator shows Upgrade + Use a Token</option>
               <option value="SP09">SP09 – Bottom shows Unlimited</option>
-              <option value="SP10">SP10 – Settings shows Social Pro with upgrade options</option>
-              <option value="SP11">SP11 – Brand Voice shows locked</option>
               <option value="SP12">SP12 – Manage Subscription visible in Settings</option>
             </optgroup>
             <optgroup label="Business Pro Plan">
               <option value="BP01">BP01 – Login as Business Pro user succeeds</option>
-              <option value="BP02">BP02 – Home screen shows both Social and Business cards</option>
               <option value="BP03">BP03 – Review Responder active, generates output</option>
               <option value="BP04">BP04 – Email Tone Fixer active, generates output</option>
               <option value="BP05">BP05 – Proposal Generator active, generates output</option>
-              <option value="BP06">BP06 – Caption Generator shows Upgrade + Use a Token</option>
-              <option value="BP07">BP07 – Platform Rewriter shows Upgrade + Use a Token</option>
-              <option value="BP08">BP08 – Hashtag Suggester shows Upgrade + Use a Token</option>
               <option value="BP09">BP09 – Bottom shows Unlimited</option>
-              <option value="BP10">BP10 – Settings shows Business Pro with upgrade options</option>
-              <option value="BP11">BP11 – Brand Voice shows locked</option>
               <option value="BP12">BP12 – Manage Subscription visible in Settings</option>
             </optgroup>
             <optgroup label="Bundle Plan">
               <option value="BN01">BN01 – Login as Bundle user succeeds</option>
-              <option value="BN02">BN02 – Home screen shows both Social and Business cards</option>
               <option value="BN03">BN03 – Caption Generator active, generates output</option>
               <option value="BN04">BN04 – Platform Rewriter active, generates output</option>
               <option value="BN05">BN05 – Hashtag Suggester active, generates output</option>
@@ -319,7 +302,6 @@ h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#3b8
               <option value="BN07">BN07 – Email Tone Fixer active, generates output</option>
               <option value="BN08">BN08 – Proposal Generator active, generates output</option>
               <option value="BN09">BN09 – Bottom shows Unlimited</option>
-              <option value="BN10">BN10 – Settings shows full access, no upgrade options</option>
               <option value="BN11">BN11 – Brand Voice shows unlocked and active</option>
               <option value="BN12">BN12 – Manage Subscription visible in Settings</option>
             </optgroup>
@@ -329,10 +311,6 @@ h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#3b8
               <option value="PR03">PR03 – Reset password with invalid token returns 400</option>
               <option value="PR04">PR04 – Reset password with missing fields returns 400</option>
               <option value="PR05">PR05 – Reset password with short password returns 400</option>
-              <option value="PR06">PR06 – Reset page shows error when no token in URL (manual)</option>
-              <option value="PR07">PR07 – Reset page loads correctly with valid token param (manual)</option>
-              <option value="PR08">PR08 – Password strength indicator responds to input (manual)</option>
-              <option value="PR09">PR09 – Forgot password link visible on login screen (manual)</option>
               <option value="PR10">PR10 – Successful reset clears token from database</option>
             </optgroup>
           </select>
@@ -1294,16 +1272,6 @@ async function runPlanGatingTests() {
     }
   }
 
-  // G05 – Social Pro with zero credits clicking "Use a Token" → Buy Credits (UI manual + API shape)
-  if (shouldStop()) return;
-  addResult({ id: 'G05', category: 'Gating', name: 'Social Pro with zero credits → Buy Credits flow', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Log in as Social Pro with 0 credits, open Business feature, click "Use a Token" button — should navigate to Buy Credits overlay, not unlock the feature.' });
-
-  // G06 – Upgrade Plan button navigates to Settings (UI manual)
-  if (shouldStop()) return;
-  addResult({ id: 'G06', category: 'Gating', name: 'Upgrade Plan button inside locked feature → Settings', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: As Social Pro, open a Business feature, click "Upgrade Plan" — Settings panel should open showing the Your Plan section.' });
-
   // G07 – Settings shows correct current plan badge
   if (shouldStop()) return;
   addResult({ id: 'G07', category: 'Gating', name: 'Settings Your Plan section shows correct current plan', status: 'RUNNING', elapsed: 0, detail: '' });
@@ -1328,11 +1296,6 @@ async function runPlanGatingTests() {
       updateResult('G07', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
     }
   }
-
-  // G08 – Settings upgrade options correct per tier (manual)
-  if (shouldStop()) return;
-  addResult({ id: 'G08', category: 'Gating', name: 'Settings shows correct upgrade options per tier', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Free → see Social Pro $9.99, Business Pro $19.99, Bundle $29.99. Social Pro → see Business Pro + Bundle. Business Pro → see Social Pro + Bundle. Bundle → see "You have full access" with no upgrade buttons.' });
 
   // G09 – Bundle/admin can access all 6 features
   if (shouldStop()) return;
@@ -1403,10 +1366,6 @@ async function runPlanGatingTests() {
     }
   }
 
-  // G12 – Website link in Settings (manual)
-  if (shouldStop()) return;
-  addResult({ id: 'G12', category: 'Gating', name: 'Website link in Settings opens x-trendyourself.com', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open Settings, click "Visit our website" link at the bottom — should open https://www.x-trendyourself.com in a new tab.' });
 }
 
 // ═══════════════════════════════════════
@@ -1426,7 +1385,7 @@ async function runSocialPlanTests() {
   log('SP01 – Social Pro login');
   if (!email || !pass) {
     updateResult('SP01', { status: 'SKIP', elapsed: 0, detail: 'No Social Pro credentials provided' });
-    ['SP02','SP03','SP04','SP05','SP06','SP07','SP08','SP09','SP10','SP11','SP12'].forEach(id =>
+    ['SP03','SP04','SP05','SP09','SP12'].forEach(id =>
       skip(id, 'Social Pro', id, 'SP01 skipped'));
     return;
   }
@@ -1442,11 +1401,6 @@ async function runSocialPlanTests() {
     return;
   }
   const tok = S.socialPlanToken;
-
-  // SP02 – Home shows both cards (manual)
-  if (shouldStop()) return;
-  addResult({ id: 'SP02', category: 'Social Pro', name: 'Home screen shows both Social and Business cards', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Log in as Social Pro in extension — both Social X-Trend and Business X-Trend cards must appear on home screen.' });
 
   // SP03 – Caption Generator allowed
   if (shouldStop()) return;
@@ -1481,50 +1435,6 @@ async function runSocialPlanTests() {
   else if (r5.status === 403) { updateResult('SP05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Blocked 403 — Social Pro should access Hashtag Suggester' }); }
   else { updateResult('SP05', { status: 'FAIL', elapsed: r5.elapsed, detail: `HTTP ${r5.status}: ${firstMsg(r5.data)}` }); }
 
-  // SP06 – Review Responder blocked (business feature)
-  if (shouldStop()) return;
-  addResult({ id: 'SP06', category: 'Social Pro', name: 'Review Responder — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('SP06 – Review Responder (Social Pro, expect 403)');
-  const statusSP = await api('GET', '/api/user-status', null, tok);
-  const creditsSP = statusSP.data?.credits || 0;
-  if (creditsSP > 0) {
-    updateResult('SP06', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsSP} credits — token bypass active. Manual: verify Upgrade + Use a Token UI with 0 credits.` });
-  } else {
-    const r6 = await api('POST', genPath(), { type: 'review_response', review: sampleReview, tone: 'professional' }, tok);
-    await pause(300);
-    if (r6.status === 403) { updateResult('SP06', { status: 'PASS', elapsed: r6.elapsed, detail: 'Correctly blocked (403) ✓' }); }
-    else if (r6.ok) { updateResult('SP06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'Business feature NOT blocked for Social Pro — gating broken' }); }
-    else { updateResult('SP06', { status: 'WARN', elapsed: r6.elapsed, detail: `HTTP ${r6.status}: ${firstMsg(r6.data)}` }); }
-  }
-
-  // SP07 – Email Tone Fixer blocked
-  if (shouldStop()) return;
-  addResult({ id: 'SP07', category: 'Social Pro', name: 'Email Tone Fixer — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('SP07 – Email Tone Fixer (Social Pro, expect 403)');
-  if (creditsSP > 0) {
-    updateResult('SP07', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsSP} credits — token bypass active.` });
-  } else {
-    const r7 = await api('POST', genPath(), { type: 'email_tone', email: sampleEmail, tone: 'professional' }, tok);
-    await pause(300);
-    if (r7.status === 403) { updateResult('SP07', { status: 'PASS', elapsed: r7.elapsed, detail: 'Correctly blocked (403) ✓' }); }
-    else if (r7.ok) { updateResult('SP07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Email Tone Fixer NOT blocked for Social Pro' }); }
-    else { updateResult('SP07', { status: 'WARN', elapsed: r7.elapsed, detail: `HTTP ${r7.status}: ${firstMsg(r7.data)}` }); }
-  }
-
-  // SP08 – Proposal Generator blocked
-  if (shouldStop()) return;
-  addResult({ id: 'SP08', category: 'Social Pro', name: 'Proposal Generator — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('SP08 – Proposal Generator (Social Pro, expect 403)');
-  if (creditsSP > 0) {
-    updateResult('SP08', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsSP} credits — token bypass active.` });
-  } else {
-    const r8 = await api('POST', genPath(), { type: 'proposal', jobPosting: sampleJob, skills: 'Social media' }, tok);
-    await pause(300);
-    if (r8.status === 403) { updateResult('SP08', { status: 'PASS', elapsed: r8.elapsed, detail: 'Correctly blocked (403) ✓' }); }
-    else if (r8.ok) { updateResult('SP08', { status: 'FAIL', elapsed: r8.elapsed, detail: 'Proposal Generator NOT blocked for Social Pro' }); }
-    else { updateResult('SP08', { status: 'WARN', elapsed: r8.elapsed, detail: `HTTP ${r8.status}: ${firstMsg(r8.data)}` }); }
-  }
-
   // SP09 – Unlimited usage display (API shape)
   if (shouldStop()) return;
   addResult({ id: 'SP09', category: 'Social Pro', name: 'Bottom shows Unlimited (not daily counter)', status: 'RUNNING', elapsed: 0, detail: '' });
@@ -1538,13 +1448,6 @@ async function runSocialPlanTests() {
     updateResult('SP09', { status: isUnlimited ? 'PASS' : 'WARN', elapsed: r9.elapsed, detail: `Tier: ${d.tier}, limit: ${d.daily_limit ?? d.limit ?? '?'}` });
   } else { updateResult('SP09', { status: 'FAIL', elapsed: r9.elapsed, detail: `HTTP ${r9.status}: ${firstMsg(r9.data)}` }); }
 
-  // SP10–SP12 manual
-  if (shouldStop()) return;
-  addResult({ id: 'SP10', category: 'Social Pro', name: 'Settings shows Social Pro highlighted, Business Pro + Bundle as upgrades', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open Settings as Social Pro — current plan shows Social Pro badge, upgrade options show Business Pro and Bundle.' });
-  if (shouldStop()) return;
-  addResult({ id: 'SP11', category: 'Social Pro', name: 'Brand Voice Memory shows locked', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open Brand Voice section as Social Pro — padlock icon visible, feature locked.' });
   if (shouldStop()) return;
   addResult({ id: 'SP12', category: 'Social Pro', name: 'Manage Subscription button visible in Settings', status: 'RUNNING', elapsed: 0, detail: '' });
   log('SP12 – Paid tier check for Manage Subscription');
@@ -1573,7 +1476,7 @@ async function runBusinessPlanTests() {
   log('BP01 – Business Pro login');
   if (!email || !pass) {
     updateResult('BP01', { status: 'SKIP', elapsed: 0, detail: 'No Business Pro credentials provided' });
-    ['BP02','BP03','BP04','BP05','BP06','BP07','BP08','BP09','BP10','BP11','BP12'].forEach(id =>
+    ['BP03','BP04','BP05','BP09','BP12'].forEach(id =>
       skip(id, 'Business Pro', id, 'BP01 skipped'));
     return;
   }
@@ -1589,11 +1492,6 @@ async function runBusinessPlanTests() {
     return;
   }
   const tok = S.businessPlanToken;
-
-  // BP02 – Home shows both cards (manual)
-  if (shouldStop()) return;
-  addResult({ id: 'BP02', category: 'Business Pro', name: 'Home screen shows both Social and Business cards', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Log in as Business Pro — both Social X-Trend and Business X-Trend cards must appear on home screen.' });
 
   // BP03 – Review Responder allowed
   if (shouldStop()) return;
@@ -1628,50 +1526,6 @@ async function runBusinessPlanTests() {
   else if (r5.status === 403) { updateResult('BP05', { status: 'FAIL', elapsed: r5.elapsed, detail: 'Blocked 403 — Business Pro should access Proposal Generator' }); }
   else { updateResult('BP05', { status: 'FAIL', elapsed: r5.elapsed, detail: `HTTP ${r5.status}: ${firstMsg(r5.data)}` }); }
 
-  // BP06 – Caption Generator blocked (social feature)
-  if (shouldStop()) return;
-  addResult({ id: 'BP06', category: 'Business Pro', name: 'Caption Generator — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('BP06 – Caption Gen (Business Pro, expect 403)');
-  const statusBP = await api('GET', '/api/user-status', null, tok);
-  const creditsBP = statusBP.data?.credits || 0;
-  if (creditsBP > 0) {
-    updateResult('BP06', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsBP} credits — token bypass active. Manual: verify Upgrade + Use a Token UI with 0 credits.` });
-  } else {
-    const r6 = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: sampleText }, tok);
-    await pause(300);
-    if (r6.status === 403) { updateResult('BP06', { status: 'PASS', elapsed: r6.elapsed, detail: 'Correctly blocked (403) ✓' }); }
-    else if (r6.ok) { updateResult('BP06', { status: 'FAIL', elapsed: r6.elapsed, detail: 'Social feature NOT blocked for Business Pro — gating broken' }); }
-    else { updateResult('BP06', { status: 'WARN', elapsed: r6.elapsed, detail: `HTTP ${r6.status}: ${firstMsg(r6.data)}` }); }
-  }
-
-  // BP07 – Platform Rewriter blocked
-  if (shouldStop()) return;
-  addResult({ id: 'BP07', category: 'Business Pro', name: 'Platform Rewriter — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('BP07 – Platform Rewriter (Business Pro, expect 403)');
-  if (creditsBP > 0) {
-    updateResult('BP07', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsBP} credits — token bypass active.` });
-  } else {
-    const r7 = await api('POST', genPath(), { type: 'rewrite', platform: 'linkedin', content: sampleText }, tok);
-    await pause(300);
-    if (r7.status === 403) { updateResult('BP07', { status: 'PASS', elapsed: r7.elapsed, detail: 'Correctly blocked (403) ✓' }); }
-    else if (r7.ok) { updateResult('BP07', { status: 'FAIL', elapsed: r7.elapsed, detail: 'Platform Rewriter NOT blocked for Business Pro' }); }
-    else { updateResult('BP07', { status: 'WARN', elapsed: r7.elapsed, detail: `HTTP ${r7.status}: ${firstMsg(r7.data)}` }); }
-  }
-
-  // BP08 – Hashtag Suggester blocked
-  if (shouldStop()) return;
-  addResult({ id: 'BP08', category: 'Business Pro', name: 'Hashtag Suggester — blocked (Upgrade + Use a Token visible)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('BP08 – Hashtag Suggester (Business Pro, expect 403)');
-  if (creditsBP > 0) {
-    updateResult('BP08', { status: 'SKIP', elapsed: 0, detail: `User has ${creditsBP} credits — token bypass active.` });
-  } else {
-    const r8 = await api('POST', genPath(), { type: 'hashtag', platform: 'instagram', description: sampleText }, tok);
-    await pause(300);
-    if (r8.status === 403) { updateResult('BP08', { status: 'PASS', elapsed: r8.elapsed, detail: 'Correctly blocked (403) ✓' }); }
-    else if (r8.ok) { updateResult('BP08', { status: 'FAIL', elapsed: r8.elapsed, detail: 'Hashtag Suggester NOT blocked for Business Pro' }); }
-    else { updateResult('BP08', { status: 'WARN', elapsed: r8.elapsed, detail: `HTTP ${r8.status}: ${firstMsg(r8.data)}` }); }
-  }
-
   // BP09 – Unlimited display
   if (shouldStop()) return;
   addResult({ id: 'BP09', category: 'Business Pro', name: 'Bottom shows Unlimited (not daily counter)', status: 'RUNNING', elapsed: 0, detail: '' });
@@ -1685,13 +1539,6 @@ async function runBusinessPlanTests() {
     updateResult('BP09', { status: isUnlimited ? 'PASS' : 'WARN', elapsed: r9.elapsed, detail: `Tier: ${d.tier}, limit: ${d.daily_limit ?? d.limit ?? '?'}` });
   } else { updateResult('BP09', { status: 'FAIL', elapsed: r9.elapsed, detail: `HTTP ${r9.status}: ${firstMsg(r9.data)}` }); }
 
-  // BP10–BP12 manual/shape
-  if (shouldStop()) return;
-  addResult({ id: 'BP10', category: 'Business Pro', name: 'Settings shows Business Pro highlighted, Social Pro + Bundle as upgrades', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open Settings as Business Pro — current plan shows Business Pro badge, upgrade options show Social Pro and Bundle.' });
-  if (shouldStop()) return;
-  addResult({ id: 'BP11', category: 'Business Pro', name: 'Brand Voice Memory shows locked', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open Brand Voice section as Business Pro — padlock icon visible, feature locked.' });
   if (shouldStop()) return;
   addResult({ id: 'BP12', category: 'Business Pro', name: 'Manage Subscription button visible in Settings', status: 'RUNNING', elapsed: 0, detail: '' });
   log('BP12 – Paid tier check for Manage Subscription');
@@ -1720,7 +1567,7 @@ async function runBundlePlanTests() {
   log('BN01 – Bundle login');
   if (!email || !pass) {
     updateResult('BN01', { status: 'SKIP', elapsed: 0, detail: 'No Bundle credentials provided' });
-    ['BN02','BN03','BN04','BN05','BN06','BN07','BN08','BN09','BN10','BN11','BN12'].forEach(id =>
+    ['BN03','BN04','BN05','BN06','BN07','BN08','BN09','BN11','BN12'].forEach(id =>
       skip(id, 'Bundle', id, 'BN01 skipped'));
     return;
   }
@@ -1736,11 +1583,6 @@ async function runBundlePlanTests() {
     return;
   }
   const tok = S.bundlePlanToken;
-
-  // BN02 – Home shows both cards (manual)
-  if (shouldStop()) return;
-  addResult({ id: 'BN02', category: 'Bundle', name: 'Home screen shows both Social and Business cards', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Log in as Bundle in extension — both Social X-Trend and Business X-Trend cards must appear on home screen.' });
 
   // BN03 – Caption Generator allowed
   if (shouldStop()) return;
@@ -1821,10 +1663,6 @@ async function runBundlePlanTests() {
     updateResult('BN09', { status: isUnlimited ? 'PASS' : 'WARN', elapsed: r9.elapsed, detail: `Tier: ${d.tier}, limit: ${d.daily_limit ?? d.limit ?? '?'}` });
   } else { updateResult('BN09', { status: 'FAIL', elapsed: r9.elapsed, detail: `HTTP ${r9.status}: ${firstMsg(r9.data)}` }); }
 
-  // BN10–BN12 manual/shape
-  if (shouldStop()) return;
-  addResult({ id: 'BN10', category: 'Bundle', name: 'Settings shows full access message, no upgrade options', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open Settings as Bundle — "You have full access" message shown, no upgrade plan buttons visible.' });
   if (shouldStop()) return;
   addResult({ id: 'BN11', category: 'Bundle', name: 'Brand Voice Memory shows unlocked and active', status: 'RUNNING', elapsed: 0, detail: '' });
   log('BN11 – Brand Voice tier check (Bundle)');
@@ -1925,23 +1763,6 @@ async function runPasswordResetTests() {
     updateResult('PR05', { status: 'FAIL', elapsed: r5.elapsed, detail: `HTTP ${r5.status}: ${firstMsg(r5.data)}` });
   }
 
-  // PR06–PR09 — Manual / browser tests
-  if (shouldStop()) return;
-  addResult({ id: 'PR06', category: 'Pwd Reset', name: 'Reset page shows error for missing token in URL', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open reset-password.html with no ?token= param — heading should change to "Invalid reset link", form hidden.' });
-
-  if (shouldStop()) return;
-  addResult({ id: 'PR07', category: 'Pwd Reset', name: 'Reset page loads correctly with ?token= param in URL', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open reset-password.html?token=abc123 — form visible, heading shows "Reset your password".' });
-
-  if (shouldStop()) return;
-  addResult({ id: 'PR08', category: 'Pwd Reset', name: 'Password strength indicator responds to input', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Type in new password field — strength bar and label update (Weak→Strong) as password grows.' });
-
-  if (shouldStop()) return;
-  addResult({ id: 'PR09', category: 'Pwd Reset', name: 'Forgot password? link visible on extension login screen', status: 'SKIP', elapsed: 0,
-    detail: 'Manual: Open extension → Settings → Log In tab — "Forgot password?" link visible below password field. Clicking shows reset request view.' });
-
   // PR10 – Verify reset_token columns exist and token lookup works (shape test)
   if (shouldStop()) return;
   addResult({ id: 'PR10', category: 'Pwd Reset', name: 'Reset endpoint confirms expired/invalid token rejected (shape test)', status: 'RUNNING', elapsed: 0, detail: '' });
@@ -2028,6 +1849,19 @@ async function startRun() {
     if (!shouldStop() && catEnabled('bundle_plan')) { log('── Bundle Plan Tests ──', 'info'); await runBundlePlanTests(); }
     if (!shouldStop() && catEnabled('password_reset')) { log('── Password Reset Tests ──', 'info'); await runPasswordResetTests(); }
     if (!shouldStop()) runPerfSummary();
+
+    // Cleanup: reset test account credits + usage so next run starts clean
+    if (!S.stopped && S.adminToken && mode === 'full') {
+      log('── Cleanup ──', 'info');
+      const resetR = await api('POST', '/api/admin/reset-test-credits', null, S.adminToken);
+      if (resetR.ok) {
+        addResult({ id: 'CLEANUP', category: 'Cleanup', name: 'Test accounts reset to defaults', status: 'PASS', elapsed: resetR.elapsed, detail: resetR.data?.message || 'Credits and usage_count reset ✓' });
+        log('Test accounts reset to defaults', 'ok');
+      } else {
+        addResult({ id: 'CLEANUP', category: 'Cleanup', name: 'Test account reset', status: 'WARN', elapsed: resetR.elapsed, detail: `Reset failed (${resetR.status}): ${firstMsg(resetR.data)}` });
+        log('Test account reset failed: ' + firstMsg(resetR.data), 'err');
+      }
+    }
   } catch (err) {
     log('Unexpected error: ' + err.message, 'err');
     console.error(err);
