@@ -1227,28 +1227,39 @@ async function runPlanGatingTests() {
     }
   }
 
-  // G03 – Business Pro blocked from social features (no credits)
+  // Mid-test reset: restore social-test and business-test to 1 credit before G03/G04
+  if (!shouldStop() && S.adminToken) {
+    log('Gating – mid-test reset (restoring credits for G03/G04)');
+    await api('POST', '/api/admin/reset-test-credits', null, S.adminToken);
+    await pause(300);
+  }
+
+  // G03 – Business Pro: consume 1 credit on social feature, then verify 403 with 0 credits
   if (shouldStop()) return;
-  addResult({ id: 'G03', category: 'Gating', name: 'Business Pro blocked from social features (no credits)', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('G03 – Business Pro → social feature, no credits');
+  addResult({ id: 'G03', category: 'Gating', name: 'Business Pro: credit bypass then 403 when credits exhausted', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('G03 – Business Pro credit exhaustion → 403 gate');
   if (!bizProToken) {
     updateResult('G03', { status: 'SKIP', elapsed: 0, detail: 'No Business Pro credentials provided' });
   } else {
-    const status = await api('GET', '/api/user-status', null, bizProToken);
-    const credits = status.data?.credits || 0;
-    if (credits > 0) {
-      updateResult('G03', { status: 'SKIP', elapsed: 0, detail: `Business Pro test user has ${credits} credits — plan gate bypassed. Use a user with 0 credits.` });
+    // Step 1: business-test has 1 credit — social feature should succeed (credit consumed)
+    const r1g3 = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: 'Test content' }, bizProToken);
+    await pause(300);
+    if (r1g3.networkErr) {
+      updateResult('G03', { status: 'FAIL', elapsed: r1g3.elapsed, detail: 'Step 1 network error: ' + r1g3.networkErr });
+    } else if (!r1g3.ok) {
+      updateResult('G03', { status: 'FAIL', elapsed: r1g3.elapsed, detail: `Step 1 (credit bypass expected): HTTP ${r1g3.status}: ${firstMsg(r1g3.data)}` });
     } else {
-      const r = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: 'Test content' }, bizProToken);
+      // Step 2: credits now 0 — next social feature call should be blocked 403
+      const r2g3 = await api('POST', genPath(), { type: 'caption', platform: 'instagram', description: 'Test content' }, bizProToken);
       await pause(300);
-      if (r.networkErr) {
-        updateResult('G03', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
-      } else if (r.status === 403) {
-        updateResult('G03', { status: 'PASS', elapsed: r.elapsed, detail: `Correctly blocked (403): ${firstMsg(r.data)}` });
-      } else if (r.ok) {
-        updateResult('G03', { status: 'FAIL', elapsed: r.elapsed, detail: 'Business Pro accessed social feature without credits – GATING BROKEN' });
+      if (r2g3.networkErr) {
+        updateResult('G03', { status: 'FAIL', elapsed: r2g3.elapsed, detail: 'Step 2 network error: ' + r2g3.networkErr });
+      } else if (r2g3.status === 403) {
+        updateResult('G03', { status: 'PASS', elapsed: r1g3.elapsed + r2g3.elapsed, detail: 'Step 1: credit used ✓ | Step 2: blocked 403 ✓' });
+      } else if (r2g3.ok) {
+        updateResult('G03', { status: 'FAIL', elapsed: r2g3.elapsed, detail: 'Step 2: social feature NOT blocked after credits exhausted — GATING BROKEN' });
       } else {
-        updateResult('G03', { status: 'WARN', elapsed: r.elapsed, detail: `Unexpected ${r.status}: ${firstMsg(r.data)}` });
+        updateResult('G03', { status: 'WARN', elapsed: r2g3.elapsed, detail: `Step 2: unexpected ${r2g3.status}: ${firstMsg(r2g3.data)}` });
       }
     }
   }
@@ -1262,25 +1273,21 @@ async function runPlanGatingTests() {
   } else {
     const status = await api('GET', '/api/user-status', null, socialProToken);
     const creditsBefore = status.data?.credits || 0;
-    if (creditsBefore === 0) {
-      updateResult('G04', { status: 'SKIP', elapsed: 0, detail: 'Social Pro test user has 0 credits — add credits to test token bypass' });
+    const r = await api('POST', genPath(), { type: 'review_response', review: 'Test review for token bypass', tone: 'professional' }, socialProToken);
+    await pause(400);
+    const statusAfter = await api('GET', '/api/user-status', null, socialProToken);
+    const creditsAfter = statusAfter.data?.credits || 0;
+    if (r.networkErr) {
+      updateResult('G04', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
+    } else if (r.ok && r.data?.result) {
+      const decremented = creditsAfter === creditsBefore - 1;
+      updateResult('G04', {
+        status: decremented ? 'PASS' : 'WARN',
+        elapsed: r.elapsed,
+        detail: `Generation succeeded ✓. Credits: ${creditsBefore} → ${creditsAfter}${decremented ? ' (decremented ✓)' : ' (decrement not confirmed)'}`,
+      });
     } else {
-      const r = await api('POST', genPath(), { type: 'review_response', review: 'Test review for token bypass', tone: 'professional' }, socialProToken);
-      await pause(400);
-      const statusAfter = await api('GET', '/api/user-status', null, socialProToken);
-      const creditsAfter = statusAfter.data?.credits || 0;
-      if (r.networkErr) {
-        updateResult('G04', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
-      } else if (r.ok && r.data?.result) {
-        const decremented = creditsAfter === creditsBefore - 1;
-        updateResult('G04', {
-          status: decremented ? 'PASS' : 'WARN',
-          elapsed: r.elapsed,
-          detail: `Generation succeeded ✓. Credits: ${creditsBefore} → ${creditsAfter}${decremented ? ' (decremented ✓)' : ' (decrement not confirmed)'}`,
-        });
-      } else {
-        updateResult('G04', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
-      }
+      updateResult('G04', { status: 'FAIL', elapsed: r.elapsed, detail: `HTTP ${r.status}: ${firstMsg(r.data)}` });
     }
   }
 
