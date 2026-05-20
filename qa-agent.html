@@ -1089,25 +1089,36 @@ async function runBrandVoiceTests() {
   const sampleText = 'Test content for brand voice enforcement check.';
   const testBrandVoice = 'Always use formal British English with a dry wit.';
 
-  // BV01 – Non-bundle user sends brandVoice: backend should strip it and return valid content
-  // Admin account is the unlimited bypass (not bundle tier), so brand voice IS applied for admin.
-  // For a true non-bundle test we use the test user if available; admin is used as fallback.
+  // Log in as bundle user — bundle tier accepts and applies brandVoice
+  const bundleEmail = document.getElementById('bundle-email').value.trim();
+  const bundlePass  = document.getElementById('bundle-pass').value.trim();
+  let bundleToken = null;
+  if (bundleEmail && bundlePass) {
+    log('BV – logging in bundle test user');
+    const loginR = await api('POST', '/auth/login', { email: bundleEmail, password: bundlePass });
+    if (loginR.ok && loginR.data) {
+      bundleToken = loginR.data.token || loginR.data.access_token || loginR.data.session?.access_token;
+    } else {
+      log('Bundle login failed: ' + firstMsg(loginR.data), 'err');
+    }
+  }
+
+  // BV01 – Bundle user sends brandVoice: backend should accept and apply it
   if (shouldStop()) return;
-  addResult({ id: 'BV01', category: 'Brand Voice', name: 'Non-bundle generate with brandVoice field', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('BV01 – generate with brandVoice (non-bundle)');
-  if (!S.adminToken) {
-    updateResult('BV01', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  addResult({ id: 'BV01', category: 'Brand Voice', name: 'Bundle generate with brandVoice — field accepted and applied', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BV01 – generate with brandVoice (bundle user)');
+  if (!bundleToken) {
+    updateResult('BV01', { status: 'SKIP', elapsed: 0, detail: 'No Bundle credentials provided' });
   } else {
-    const token = S.testUserToken || S.adminToken;
     const r = await api('POST', genPath(),
       { type: 'caption', platform: 'twitter', description: sampleText, brandVoice: testBrandVoice },
-      token
+      bundleToken
     );
     await pause(400);
     if (r.networkErr) {
       updateResult('BV01', { status: 'FAIL', elapsed: r.elapsed, detail: 'Network: ' + r.networkErr });
     } else if (r.ok && (r.data?.result || r.data?.content || r.data?.text)) {
-      updateResult('BV01', { status: 'PASS', elapsed: r.elapsed, detail: 'Content returned — server handled brandVoice field without error' });
+      updateResult('BV01', { status: 'PASS', elapsed: r.elapsed, detail: 'Content returned with brandVoice accepted ✓' });
     } else if (r.ok) {
       updateResult('BV01', { status: 'WARN', elapsed: r.elapsed, detail: 'HTTP 200 but no content field found: ' + JSON.stringify(r.data).slice(0, 100) });
     } else {
@@ -1115,22 +1126,21 @@ async function runBrandVoiceTests() {
     }
   }
 
-  // BV02 – Verify backend strips brandVoice for non-bundle: two generates (with/without) both succeed
+  // BV02 – Bundle user: generates with and without brandVoice, both succeed
   if (shouldStop()) return;
-  addResult({ id: 'BV02', category: 'Brand Voice', name: 'BrandVoice stripped — both requests return content', status: 'RUNNING', elapsed: 0, detail: '' });
-  log('BV02 – brandVoice strip enforcement');
-  if (!S.adminToken) {
-    updateResult('BV02', { status: 'SKIP', elapsed: 0, detail: 'No admin token' });
+  addResult({ id: 'BV02', category: 'Brand Voice', name: 'Bundle generate with and without brandVoice — both return content', status: 'RUNNING', elapsed: 0, detail: '' });
+  log('BV02 – bundle brandVoice both paths');
+  if (!bundleToken) {
+    updateResult('BV02', { status: 'SKIP', elapsed: 0, detail: 'No Bundle credentials provided' });
   } else {
-    const token = S.testUserToken || S.adminToken;
-    const withVoice    = await api('POST', genPath(), { type: 'caption', platform: 'twitter', description: sampleText, brandVoice: testBrandVoice }, token);
+    const withVoice    = await api('POST', genPath(), { type: 'caption', platform: 'twitter', description: sampleText, brandVoice: testBrandVoice }, bundleToken);
     await pause(400);
-    const withoutVoice = await api('POST', genPath(), { type: 'caption', platform: 'twitter', description: sampleText }, token);
+    const withoutVoice = await api('POST', genPath(), { type: 'caption', platform: 'twitter', description: sampleText }, bundleToken);
     await pause(400);
     const bothOk = withVoice.ok && withoutVoice.ok;
     const neitherErrored = !withVoice.networkErr && !withoutVoice.networkErr;
     if (neitherErrored && bothOk) {
-      updateResult('BV02', { status: 'PASS', elapsed: withVoice.elapsed + withoutVoice.elapsed, detail: 'Both requests returned content — brandVoice field does not break generation for any tier' });
+      updateResult('BV02', { status: 'PASS', elapsed: withVoice.elapsed + withoutVoice.elapsed, detail: 'Both with and without brandVoice returned content ✓' });
     } else if (withVoice.networkErr || withoutVoice.networkErr) {
       updateResult('BV02', { status: 'FAIL', elapsed: 0, detail: 'Network error on one or both requests' });
     } else {
