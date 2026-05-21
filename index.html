@@ -373,6 +373,15 @@ section{position:relative;z-index:2;}
 .device--p{--dr:-2deg;}
 .device--t{--dr:2deg;}
 
+/* fan cascade */
+.fan-wrap{position:relative;display:inline-block;}
+.fan-ghost{position:absolute;top:0;left:0;width:100%;height:auto;border-radius:16px;pointer-events:none;}
+.fan-ghost--left-1{z-index:2;opacity:0.45;transform:perspective(800px) rotateY(-18deg) translateX(-45px) translateY(8px) scale(0.92);filter:drop-shadow(0 0 20px rgba(124,58,237,0.3));}
+.fan-ghost--left-2{z-index:1;opacity:0.22;transform:perspective(800px) rotateY(-32deg) translateX(-85px) translateY(16px) scale(0.84);filter:drop-shadow(0 0 20px rgba(124,58,237,0.3));}
+.fan-ghost--right-1{z-index:2;opacity:0.45;transform:perspective(800px) rotateY(18deg) translateX(45px) translateY(8px) scale(0.92);filter:drop-shadow(0 0 20px rgba(13,148,136,0.3));}
+.fan-ghost--right-2{z-index:1;opacity:0.22;transform:perspective(800px) rotateY(32deg) translateX(85px) translateY(16px) scale(0.84);filter:drop-shadow(0 0 20px rgba(13,148,136,0.3));}
+.fan-main{position:relative;z-index:3;}
+
 /* feature cards */
 .feat-cards{display:flex;flex-direction:column;gap:14px;margin-top:32px;}
 .fc{
@@ -883,9 +892,13 @@ footer{
   <div class="container">
     <div class="feat-grid">
       <div class="device-wrap rev">
-        <img src="Images/Actual Extension 2.png"
-             alt="X-Trend Caption Generator — extension screenshot"
-             class="device device--p">
+        <div class="fan-wrap">
+          <img src="Images/Actual Extension 2.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--left-2">
+          <img src="Images/Actual Extension 2.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--left-1">
+          <img src="Images/Actual Extension 2.png"
+               alt="X-Trend Caption Generator — extension screenshot"
+               class="device device--p fan-main">
+        </div>
       </div>
       <div>
         <span class="sec-label sec-label--p rev">Social X-Trend</span>
@@ -929,9 +942,13 @@ footer{
   <div class="container">
     <div class="feat-grid rev">
       <div class="device-wrap">
-        <img src="Images/Actual Extension 3.png"
-             alt="X-Trend Review Responder — extension screenshot"
-             class="device device--t">
+        <div class="fan-wrap">
+          <img src="Images/Actual Extension 3.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--right-2">
+          <img src="Images/Actual Extension 3.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--right-1">
+          <img src="Images/Actual Extension 3.png"
+               alt="X-Trend Review Responder — extension screenshot"
+               class="device device--t fan-main">
+        </div>
       </div>
       <div>
         <span class="sec-label sec-label--t rev">Business X-Trend</span>
