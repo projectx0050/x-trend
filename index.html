@@ -374,13 +374,17 @@ section{position:relative;z-index:2;}
 .device--t{--dr:2deg;}
 
 /* fan cascade */
-.fan-wrap{position:relative;display:inline-block;}
+.fan-wrap{position:relative;display:inline-block;overflow:visible;}
 @keyframes floatGhostY{0%,100%{translate:0 0;}50%{translate:0 -12px;}}
 .fan-ghost{position:absolute;top:0;left:0;width:100%;height:auto;border-radius:16px;pointer-events:none;animation:floatGhostY 5s ease-in-out infinite;}
 .fan-ghost--left-1{z-index:2;opacity:0.45;transform:perspective(800px) rotateY(-18deg) translateX(-45px) translateY(8px) scale(0.92);filter:drop-shadow(0 0 20px rgba(124,58,237,0.3));}
 .fan-ghost--left-2{z-index:1;opacity:0.22;transform:perspective(800px) rotateY(-32deg) translateX(-85px) translateY(16px) scale(0.84);filter:drop-shadow(0 0 20px rgba(124,58,237,0.3));}
+.fan-ghost--left-3{z-index:0;opacity:0.25;transform:perspective(800px) rotateY(-40deg) translateX(-118px) translateY(18px) scale(0.82);filter:drop-shadow(0 0 24px rgba(124,58,237,0.4));}
+.fan-ghost--left-4{z-index:-1;opacity:0.12;transform:perspective(800px) rotateY(-50deg) translateX(-152px) translateY(24px) scale(0.76);filter:drop-shadow(0 0 24px rgba(124,58,237,0.4));}
 .fan-ghost--right-1{z-index:2;opacity:0.45;transform:perspective(800px) rotateY(18deg) translateX(45px) translateY(8px) scale(0.92);filter:drop-shadow(0 0 20px rgba(13,148,136,0.3));}
 .fan-ghost--right-2{z-index:1;opacity:0.22;transform:perspective(800px) rotateY(32deg) translateX(85px) translateY(16px) scale(0.84);filter:drop-shadow(0 0 20px rgba(13,148,136,0.3));}
+.fan-ghost--right-3{z-index:0;opacity:0.25;transform:perspective(800px) rotateY(40deg) translateX(118px) translateY(18px) scale(0.82);filter:drop-shadow(0 0 24px rgba(13,148,136,0.4));}
+.fan-ghost--right-4{z-index:-1;opacity:0.12;transform:perspective(800px) rotateY(50deg) translateX(152px) translateY(24px) scale(0.76);filter:drop-shadow(0 0 24px rgba(13,148,136,0.4));}
 .fan-main{position:relative;z-index:3;}
 
 /* feature cards */
@@ -894,6 +898,8 @@ footer{
     <div class="feat-grid">
       <div class="device-wrap rev">
         <div class="fan-wrap">
+          <img src="Images/Actual Extension 2.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--left-4" style="animation-delay:1.2s">
+          <img src="Images/Actual Extension 2.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--left-3" style="animation-delay:0.9s">
           <img src="Images/Actual Extension 2.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--left-2" style="animation-delay:0.6s">
           <img src="Images/Actual Extension 2.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--left-1" style="animation-delay:0.3s">
           <img src="Images/Actual Extension 2.png"
@@ -944,6 +950,8 @@ footer{
     <div class="feat-grid rev">
       <div class="device-wrap">
         <div class="fan-wrap">
+          <img src="Images/Actual Extension 3.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--right-4" style="animation-delay:1.6s">
+          <img src="Images/Actual Extension 3.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--right-3" style="animation-delay:1.2s">
           <img src="Images/Actual Extension 3.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--right-2" style="animation-delay:0.8s">
           <img src="Images/Actual Extension 3.png" alt="" aria-hidden="true" class="fan-ghost fan-ghost--right-1" style="animation-delay:0.4s">
           <img src="Images/Actual Extension 3.png"
