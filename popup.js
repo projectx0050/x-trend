@@ -2,7 +2,7 @@
 
 // Live Stripe Customer Portal URL — get from: Stripe Dashboard → Customer Portal → Share a link
 // Set this to your live portal URL (billing.stripe.com/p/login/live_...)
-const STRIPE_PORTAL_URL = '';
+const STRIPE_PORTAL_URL = 'https://billing.stripe.com/p/login/3cleVd6gwfsl2WL9audZ600';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let jwtToken     = '';
