@@ -673,6 +673,7 @@ input::placeholder {
 
 .output-text.expanded {
   max-height: none !important;
+  overflow-y: auto;
 }
 
 .output-label {
@@ -713,7 +714,7 @@ input::placeholder {
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 200px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .output-text::-webkit-scrollbar {
