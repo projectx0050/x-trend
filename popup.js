@@ -132,6 +132,12 @@ const proposalOutputCard  = document.getElementById('proposal-output-card');
 const proposalOutput      = document.getElementById('proposal-output');
 const proposalCopyBtn     = document.getElementById('proposal-copy-btn');
 
+// ── DOM refs — Reading panel ──────────────────────────────────────────────────
+const readingPanel         = document.getElementById('reading-panel');
+const readingPanelText     = document.getElementById('reading-panel-text');
+const readingPanelCopyBtn  = document.getElementById('reading-panel-copy-btn');
+const readingPanelCloseBtn = document.getElementById('reading-panel-close-btn');
+
 // ── DOM refs — Brand Voice strip sub ─────────────────────────────────────────
 const bvStripSub = document.getElementById('bv-strip-sub');
 
@@ -1163,10 +1169,8 @@ function hideError(el) {
 }
 
 function showOutput(card, textEl, text) {
+  closeReadingPanel();
   textEl.textContent = text;
-  textEl.classList.remove('expanded');
-  const expandBtn = card.querySelector('.expand-toggle-btn');
-  if (expandBtn) expandBtn.textContent = 'Expand ⤢';
   card.classList.add('visible');
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1194,14 +1198,53 @@ setupCopyBtn(reviewCopyBtn,   reviewOutput);
 setupCopyBtn(emailCopyBtn,    emailOutput);
 setupCopyBtn(proposalCopyBtn, proposalOutput);
 
-// ── Expand toggle ─────────────────────────────────────────────────────────────
+// ── Reading panel ─────────────────────────────────────────────────────────────
+let activeExpandBtn = null;
+
+function openReadingPanel(text, expandBtn) {
+  if (activeExpandBtn && activeExpandBtn !== expandBtn) {
+    activeExpandBtn.textContent = 'Expand ⤢';
+  }
+  readingPanelText.textContent = text;
+  readingPanel.classList.add('open');
+  expandBtn.textContent = 'Collapse ⤡';
+  activeExpandBtn = expandBtn;
+}
+
+function closeReadingPanel() {
+  readingPanel.classList.remove('open');
+  if (activeExpandBtn) {
+    activeExpandBtn.textContent = 'Expand ⤢';
+    activeExpandBtn = null;
+  }
+}
+
+readingPanelCloseBtn.addEventListener('click', closeReadingPanel);
+
+readingPanelCopyBtn.addEventListener('click', () => {
+  const text = readingPanelText.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    readingPanelCopyBtn.textContent = '✓ Copied!';
+    readingPanelCopyBtn.classList.add('copied');
+    setTimeout(() => {
+      readingPanelCopyBtn.textContent = 'Copy';
+      readingPanelCopyBtn.classList.remove('copied');
+    }, 2000);
+  });
+});
+
+// ── Expand toggle → opens reading panel ───────────────────────────────────────
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.expand-toggle-btn');
   if (!btn) return;
+  if (btn === activeExpandBtn) {
+    closeReadingPanel();
+    return;
+  }
   const card   = btn.closest('.output-card');
   const textEl = card ? card.querySelector('.output-text') : null;
-  if (!textEl) return;
-  const isExpanded = textEl.classList.toggle('expanded');
-  btn.textContent  = isExpanded ? 'Collapse ⤡' : 'Expand ⤢';
+  if (!textEl || !textEl.textContent) return;
+  openReadingPanel(textEl.textContent, btn);
 });
 

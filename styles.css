@@ -671,11 +671,6 @@ input::placeholder {
   color: var(--text-secondary);
 }
 
-.output-text.expanded {
-  max-height: none !important;
-  overflow-y: auto;
-}
-
 .output-label {
   font-size: 10.5px;
   font-weight: 600;
@@ -714,7 +709,7 @@ input::placeholder {
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 200px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .output-text::-webkit-scrollbar {
@@ -726,6 +721,111 @@ input::placeholder {
 }
 
 .output-text::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* ─── Reading Panel ──────────────────────────────────────────────────────── */
+#reading-panel {
+  width: 0;
+  min-width: 0;
+  height: 600px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 250ms ease, min-width 250ms ease;
+  flex-shrink: 0;
+}
+
+#reading-panel.open {
+  width: 340px;
+  min-width: 340px;
+}
+
+.reading-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.reading-panel-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reading-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reading-panel-copy-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.reading-panel-copy-btn:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: rgba(124, 109, 240, 0.4);
+}
+
+.reading-panel-copy-btn.copied {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.reading-panel-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: inherit;
+  transition: color var(--transition);
+}
+
+.reading-panel-close-btn:hover {
+  color: var(--danger);
+}
+
+.reading-panel-text {
+  flex: 1;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+}
+
+.reading-panel-text::-webkit-scrollbar {
+  width: 4px;
+}
+
+.reading-panel-text::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.reading-panel-text::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
 }
