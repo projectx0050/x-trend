@@ -57,6 +57,14 @@ const usageLine1  = document.getElementById('usage-line-1');
 const usageLine2  = document.getElementById('usage-line-2');
 const themeToggle = document.getElementById('theme-toggle');
 
+// ── DOM refs — footer left (auth links / plan badge) ─────────────────────────
+const footerAuthLinks = document.getElementById('footer-auth-links');
+const footerPlanBadge = document.getElementById('footer-plan-badge');
+const footerLoginBtn  = document.getElementById('footer-login-btn');
+const footerSignupBtn = document.getElementById('footer-signup-btn');
+const footerPlanDot   = document.getElementById('footer-plan-dot');
+const footerPlanName  = document.getElementById('footer-plan-name');
+
 // ── DOM refs — upgrade banner ─────────────────────────────────────────────────
 const upgradeBanner     = document.getElementById('upgrade-banner');
 const upgradeCreditsBtn = document.getElementById('upgrade-credits-btn');
@@ -138,7 +146,10 @@ const readingPanelCopyBtn  = document.getElementById('reading-panel-copy');
 const readingPanelCloseBtn = document.getElementById('reading-panel-close');
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-chrome.storage.local.get(['jwtToken', 'userEmail', 'userTier', 'themeMode', 'brandVoice', 'expandedViewEnabled'], (result) => {
+chrome.storage.local.get([
+  'jwtToken', 'userEmail', 'userTier', 'themeMode', 'brandVoice', 'expandedViewEnabled',
+  'cachedCredits', 'cachedDailyUsed', 'cachedDailyLimit', 'cachedDaysSince', 'cachedTrialActive',
+], (result) => {
   isDarkMode = result.themeMode !== 'light';
   applyTheme();
 
@@ -154,6 +165,21 @@ chrome.storage.local.get(['jwtToken', 'userEmail', 'userTier', 'themeMode', 'bra
     jwtToken  = result.jwtToken;
     userEmail = result.userEmail || '';
     userTier  = result.userTier  || 'free';
+
+    // Instant display from cache — eliminates "Not signed in" flash
+    if (result.cachedDailyUsed !== undefined || result.cachedCredits !== undefined) {
+      userStatus = {
+        tier:              userTier,
+        credits:           result.cachedCredits   ?? 0,
+        daily_used:        result.cachedDailyUsed  ?? 0,
+        daily_limit:       result.cachedDailyLimit ?? 5,
+        days_since_signup: result.cachedDaysSince  ?? 1,
+        trial_active:      result.cachedTrialActive || false,
+      };
+      updateUsageDisplay(userStatus);
+      applyFeatureGating(userTier, userStatus.credits);
+    }
+
     renderAccountSection();
     verifyAndInit();
   } else {
@@ -283,14 +309,61 @@ settingsToggle.addEventListener('click', () => {
 
 settingsBackBtn.addEventListener('click', closeSettings);
 
+// ── Footer left — plan badge or auth links ────────────────────────────────────
+function updateFooterLeft() {
+  const PLAN_DOT_COLORS = {
+    free:         '#888888',
+    social_pro:   '#7c3aed',
+    business_pro: '#0d9488',
+    bundle:       '#d97706',
+  };
+  const PLAN_DISPLAY_NAMES = {
+    free:         'Free Plan',
+    social_pro:   'Social Pro',
+    business_pro: 'Business Pro',
+    bundle:       'Bundle',
+  };
+  if (!jwtToken) {
+    footerAuthLinks.style.display = '';
+    footerPlanBadge.style.display = 'none';
+  } else {
+    footerAuthLinks.style.display = 'none';
+    footerPlanBadge.style.display = '';
+    footerPlanDot.style.background = PLAN_DOT_COLORS[userTier] || '#888888';
+    footerPlanName.textContent     = PLAN_DISPLAY_NAMES[userTier] || 'Free Plan';
+  }
+}
+
+footerLoginBtn.addEventListener('click', () => {
+  openSettings();
+  authMode = 'login';
+  authTabs.forEach(t => t.classList.toggle('active', t.dataset.auth === 'login'));
+  authSubmitBtn.textContent = 'Log In';
+  termsField.style.display  = 'none';
+  forgotLinkWrap.style.display = '';
+  hideForgotPasswordView();
+});
+
+footerSignupBtn.addEventListener('click', () => {
+  openSettings();
+  authMode = 'signup';
+  authTabs.forEach(t => t.classList.toggle('active', t.dataset.auth === 'signup'));
+  authSubmitBtn.textContent = 'Create Account';
+  termsField.style.display  = 'block';
+  forgotLinkWrap.style.display = 'none';
+  hideForgotPasswordView();
+});
+
 // ── Auth section rendering ────────────────────────────────────────────────────
 function renderAuthSection() {
   authSection.style.display    = 'flex';
   accountSection.style.display = 'none';
   bvSection.style.display      = 'none';
+  updateFooterLeft();
 }
 
 function renderAccountSection() {
+  updateFooterLeft();
   authSection.style.display    = 'none';
   accountSection.style.display = 'flex';
   bvSection.style.display      = '';
@@ -637,7 +710,10 @@ function clearStoredAuth() {
   userEmail  = '';
   userTier   = 'free';
   userStatus = null;
-  chrome.storage.local.remove(['jwtToken', 'userEmail', 'userTier']);
+  chrome.storage.local.remove([
+    'jwtToken', 'userEmail', 'userTier',
+    'cachedCredits', 'cachedDailyUsed', 'cachedDailyLimit', 'cachedDaysSince', 'cachedTrialActive',
+  ]);
   authEmailInput.value    = '';
   authPasswordInput.value = '';
   renderAuthSection();
@@ -689,6 +765,14 @@ function fetchAndUpdateStatus() {
   chrome.runtime.sendMessage({ action: 'getUserStatus', token: jwtToken }, (response) => {
     if (chrome.runtime.lastError || !response || !response.success) return;
     userStatus = response.data;
+    // Cache for instant display on next open
+    chrome.storage.local.set({
+      cachedCredits:     userStatus.credits           ?? 0,
+      cachedDailyUsed:   userStatus.daily_used        ?? userStatus.dailyUsed        ?? 0,
+      cachedDailyLimit:  userStatus.daily_limit       ?? userStatus.dailyLimit       ?? 5,
+      cachedDaysSince:   userStatus.days_since_signup ?? userStatus.daysSinceSignup  ?? 1,
+      cachedTrialActive: userStatus.trial_active      ?? userStatus.trialActive      ?? false,
+    });
     if (userStatus.tier && userStatus.tier !== userTier) {
       userTier = userStatus.tier;
       chrome.storage.local.set({ userTier });
@@ -1097,6 +1181,9 @@ function hideError(el) {
 
 function showOutput(card, textEl, text) {
   textEl.textContent = text;
+  textEl.classList.remove('expanded');
+  const expandBtn = card.querySelector('.expand-toggle-btn');
+  if (expandBtn) expandBtn.textContent = 'Expand ⤢';
   card.classList.add('visible');
   card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -1123,6 +1210,17 @@ setupCopyBtn(hashtagCopyBtn,  hashtagOutput);
 setupCopyBtn(reviewCopyBtn,   reviewOutput);
 setupCopyBtn(emailCopyBtn,    emailOutput);
 setupCopyBtn(proposalCopyBtn, proposalOutput);
+
+// ── Expand toggle ─────────────────────────────────────────────────────────────
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.expand-toggle-btn');
+  if (!btn) return;
+  const card   = btn.closest('.output-card');
+  const textEl = card ? card.querySelector('.output-text') : null;
+  if (!textEl) return;
+  const isExpanded = textEl.classList.toggle('expanded');
+  btn.textContent  = isExpanded ? 'Collapse ⤡' : 'Expand ⤢';
+});
 
 // ── Reading Panel ─────────────────────────────────────────────────────────────
 function openReadingPanel(text, label) {

@@ -648,6 +648,33 @@ input::placeholder {
   background: var(--surface-3);
 }
 
+.output-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.expand-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: inherit;
+  transition: color var(--transition);
+  white-space: nowrap;
+}
+
+.expand-toggle-btn:hover {
+  color: var(--text-secondary);
+}
+
+.output-text.expanded {
+  max-height: none !important;
+}
+
 .output-label {
   font-size: 10.5px;
   font-weight: 600;
@@ -1397,19 +1424,57 @@ input::placeholder {
   flex-shrink: 0;
 }
 
-.model-badge {
+#footer-left {
+  display: flex;
+  align-items: center;
+}
+
+#footer-auth-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-link-btn {
+  background: none;
+  border: none;
+  color: #7c3aed;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 3px;
+  font-family: inherit;
+  transition: opacity var(--transition);
+}
+
+.footer-link-btn:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+.footer-link-sep {
+  font-size: 10px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+#footer-plan-badge {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 10.5px;
-  color: var(--text-muted);
 }
 
-.model-dot {
+.footer-plan-dot {
   width: 6px;
   height: 6px;
-  background: var(--success);
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.footer-plan-name {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .footer-right {
@@ -1636,4 +1701,88 @@ body.light-mode .reading-panel-scroll::-webkit-scrollbar-thumb:hover {
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* ─── Light mode — selector overlays (Buy Credits / Choose Plan) ─────────── */
+body.light-mode .selector-overlay {
+  background: #f8f8ff;
+}
+
+body.light-mode .selector-overlay-header {
+  border-bottom-color: #e2e2f0;
+}
+
+body.light-mode .selector-overlay-title {
+  color: #1a1a2e;
+}
+
+body.light-mode .selector-overlay-close {
+  color: #666666;
+}
+
+body.light-mode .selector-overlay-close:hover {
+  background: rgba(108, 99, 255, 0.1);
+  color: #1a1a2e;
+}
+
+body.light-mode .selector-overlay-desc {
+  color: #666666;
+}
+
+body.light-mode .plan-card {
+  background: #ffffff;
+  border-color: #e2e2f0;
+}
+
+body.light-mode .plan-card-featured {
+  background: rgba(108, 99, 255, 0.05);
+  border-color: rgba(108, 99, 255, 0.35);
+}
+
+body.light-mode .plan-card-name {
+  color: #1a1a2e;
+}
+
+body.light-mode .plan-card-price {
+  color: #7c3aed;
+}
+
+body.light-mode .plan-card-period {
+  color: #888888;
+}
+
+body.light-mode .plan-card-features li {
+  color: #444444;
+}
+
+body.light-mode .plan-card-features li::before {
+  color: #7c3aed;
+}
+
+body.light-mode .credit-pack {
+  background: #ffffff;
+  border-color: #e2e2f0;
+}
+
+body.light-mode .credit-pack-popular {
+  background: rgba(108, 99, 255, 0.05);
+  border-color: rgba(108, 99, 255, 0.35);
+}
+
+body.light-mode .credit-pack-name {
+  color: #1a1a2e;
+}
+
+body.light-mode .credit-popular-badge {
+  color: #7c3aed;
+  background: rgba(108, 99, 255, 0.1);
+  border-color: rgba(108, 99, 255, 0.3);
+}
+
+body.light-mode .credit-pack-amount {
+  color: #666666;
+}
+
+body.light-mode .credit-pack-price {
+  color: #7c3aed;
 }

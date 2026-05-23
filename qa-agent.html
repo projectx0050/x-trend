@@ -261,6 +261,11 @@ h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,#7c3aed,#3b8
               <option value="S02">S02 – Invalid-token 401/403</option>
               <option value="S03">S03 – Admin bypass</option>
             </optgroup>
+            <optgroup label="UX">
+              <option value="X01">X01 – Error messages human-readable</option>
+              <option value="X02">X02 – API responses contain no AI model names</option>
+              <option value="X05">X05 – user-status returns valid tier</option>
+            </optgroup>
             <optgroup label="Brand Voice">
               <option value="BV01">BV01 – Non-bundle generate with brandVoice</option>
               <option value="BV02">BV02 – BrandVoice stripped for non-bundle</option>
@@ -1077,6 +1082,59 @@ async function runUXTests() {
     updateResult('X01', { status: 'PASS', elapsed: 0, detail: `All ${checked.length} error messages human-readable` });
   } else {
     updateResult('X01', { status: 'WARN', elapsed: 0, detail: `${issues.length}/${checked.length} messages not human-readable: ${issues.join('; ')}` });
+  }
+
+  // X02 — API responses contain no AI model names
+  if (!shouldStop()) {
+    addResult({ id: 'X02', category: 'UX', name: 'API responses contain no AI model names', status: 'RUNNING', elapsed: 0, detail: '' });
+    log('X02 – API model name leak check');
+    if (!S.adminToken) {
+      updateResult('X02', { status: 'SKIP', elapsed: 0, detail: 'No admin token — run auth tests first' });
+    } else {
+      const t2 = Date.now();
+      const modelRx = /claude-?sonnet|claude-?haiku|claude-?opus|gpt-4|gpt-3\.5|gemini|llama/i;
+      const leaks = [];
+      for (const path of ['/api/auth/me', '/api/user-status']) {
+        if (shouldStop()) break;
+        const r = await api('GET', path, null, S.adminToken);
+        await pause(200);
+        if (!r.networkErr && modelRx.test(JSON.stringify(r.data))) {
+          leaks.push(path);
+        }
+      }
+      const elapsed2 = Date.now() - t2;
+      if (leaks.length === 0) {
+        updateResult('X02', { status: 'PASS', elapsed: elapsed2, detail: 'No AI model names found in /api/auth/me or /api/user-status' });
+      } else {
+        updateResult('X02', { status: 'FAIL', elapsed: elapsed2, detail: `AI model name found in: ${leaks.join(', ')}` });
+      }
+    }
+  }
+
+  // X05 — user-status returns valid tier
+  if (!shouldStop()) {
+    addResult({ id: 'X05', category: 'UX', name: 'user-status returns valid tier', status: 'RUNNING', elapsed: 0, detail: '' });
+    log('X05 – user-status tier field validation');
+    if (!S.adminToken) {
+      updateResult('X05', { status: 'SKIP', elapsed: 0, detail: 'No admin token — run auth tests first' });
+    } else {
+      const t5 = Date.now();
+      const r5 = await api('GET', '/api/user-status', null, S.adminToken);
+      const elapsed5 = Date.now() - t5;
+      if (r5.networkErr || !r5.ok) {
+        updateResult('X05', { status: 'FAIL', elapsed: elapsed5, detail: `Request failed: ${firstMsg(r5.data)}` });
+      } else {
+        const validTiers = ['free', 'social_pro', 'business_pro', 'bundle'];
+        const tier = r5.data && r5.data.tier;
+        if (!tier) {
+          updateResult('X05', { status: 'FAIL', elapsed: elapsed5, detail: 'tier field missing from /api/user-status response' });
+        } else if (!validTiers.includes(tier)) {
+          updateResult('X05', { status: 'FAIL', elapsed: elapsed5, detail: `Invalid tier value: "${tier}" — expected one of: ${validTiers.join(', ')}` });
+        } else {
+          updateResult('X05', { status: 'PASS', elapsed: elapsed5, detail: `tier="${tier}" is a valid value` });
+        }
+      }
+    }
   }
 }
 
