@@ -61,8 +61,7 @@ const footerAuthLinks = document.getElementById('footer-auth-links');
 const footerPlanBadge = document.getElementById('footer-plan-badge');
 const footerLoginBtn  = document.getElementById('footer-login-btn');
 const footerSignupBtn = document.getElementById('footer-signup-btn');
-const footerPlanDot   = document.getElementById('footer-plan-dot');
-const footerPlanName  = document.getElementById('footer-plan-name');
+const footerLogoutBtn = document.getElementById('footer-logout-btn');
 
 // ── DOM refs — upgrade banner ─────────────────────────────────────────────────
 const upgradeBanner     = document.getElementById('upgrade-banner');
@@ -305,28 +304,14 @@ settingsToggle.addEventListener('click', () => {
 
 settingsBackBtn.addEventListener('click', closeSettings);
 
-// ── Footer left — plan badge or auth links ────────────────────────────────────
+// ── Footer left — log out link or auth links ──────────────────────────────────
 function updateFooterLeft() {
-  const PLAN_DOT_COLORS = {
-    free:         '#888888',
-    social_pro:   '#7c3aed',
-    business_pro: '#0d9488',
-    bundle:       '#d97706',
-  };
-  const PLAN_DISPLAY_NAMES = {
-    free:         'Free Plan',
-    social_pro:   'Social Pro',
-    business_pro: 'Business Pro',
-    bundle:       'Bundle',
-  };
   if (!jwtToken) {
     footerAuthLinks.style.display = '';
     footerPlanBadge.style.display = 'none';
   } else {
     footerAuthLinks.style.display = 'none';
     footerPlanBadge.style.display = '';
-    footerPlanDot.style.background = PLAN_DOT_COLORS[userTier] || '#888888';
-    footerPlanName.textContent     = PLAN_DISPLAY_NAMES[userTier] || 'Free Plan';
   }
 }
 
@@ -348,6 +333,13 @@ footerSignupBtn.addEventListener('click', () => {
   termsField.style.display  = 'block';
   forgotLinkWrap.style.display = 'none';
   hideForgotPasswordView();
+});
+
+footerLogoutBtn.addEventListener('click', () => {
+  if (jwtToken) {
+    chrome.runtime.sendMessage({ action: 'authLogout', token: jwtToken });
+  }
+  clearStoredAuth();
 });
 
 // ── Auth section rendering ────────────────────────────────────────────────────
