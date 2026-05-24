@@ -157,6 +157,9 @@ chrome.storage.local.get([
   if (proTipCount < 5) {
     proTipBanner.style.display = '';
     chrome.storage.local.set({ proTipOpenCount: proTipCount + 1 });
+  } else {
+    proTipBanner.style.display = 'none';
+    document.getElementById('screen-home').classList.add('no-pro-tip');
   }
 
   if (result.brandVoice) {

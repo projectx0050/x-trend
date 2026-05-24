@@ -239,6 +239,10 @@ body {
   margin-top: -6px;
 }
 
+.no-pro-tip .home-greeting {
+  padding: 16px 18px 12px;
+}
+
 /* ─── Suite Cards ────────────────────────────────────────────────────────── */
 
 .suite-card {
