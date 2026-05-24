@@ -147,9 +147,17 @@ const settingsBackBtn = document.getElementById('settings-back-btn');
 chrome.storage.local.get([
   'jwtToken', 'userEmail', 'userTier', 'themeMode', 'brandVoice',
   'cachedCredits', 'cachedDailyUsed', 'cachedDailyLimit', 'cachedDaysSince', 'cachedTrialActive',
+  'proTipOpenCount',
 ], (result) => {
   isDarkMode = result.themeMode !== 'light';
   applyTheme();
+
+  const proTipBanner = document.getElementById('pro-tip-banner');
+  const proTipCount = result.proTipOpenCount || 0;
+  if (proTipCount < 5) {
+    proTipBanner.style.display = '';
+    chrome.storage.local.set({ proTipOpenCount: proTipCount + 1 });
+  }
 
   if (result.brandVoice) {
     brandVoice = result.brandVoice;

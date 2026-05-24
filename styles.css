@@ -228,6 +228,19 @@ body {
   flex-shrink: 0;
 }
 
+/* ─── Pro Tip Banner ─────────────────────────────────────────────────────── */
+
+.pro-tip-banner {
+  font-size: 12px;
+  padding: 8px 12px;
+  background: rgba(124, 58, 237, 0.15);
+  border-left: 3px solid #7c3aed;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
 /* ─── Suite Cards ────────────────────────────────────────────────────────── */
 
 .suite-card {
