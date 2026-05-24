@@ -719,6 +719,41 @@ footer{
 .rev.d1{transition-delay:.1s;}.rev.d2{transition-delay:.2s;}
 .rev.d3{transition-delay:.3s;}.rev.d4{transition-delay:.4s;}
 
+/* ═══ WORKFLOW VIDEO SECTION ══════════════════════════════════════════ */
+.workflow-section{background:#050508;padding:100px 0;}
+.workflow-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.workflow-badge{
+  display:inline-flex;align-items:center;
+  background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);
+  color:var(--p3);border-radius:100px;
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+  padding:5px 14px;
+}
+.workflow-heading{
+  font-family:var(--fd);font-weight:800;
+  font-size:clamp(32px,4vw,48px);color:#fff;
+  margin-top:14px;letter-spacing:-.03em;line-height:1.1;
+}
+.workflow-sub{
+  font-family:var(--fb);font-size:16px;color:var(--text2);
+  line-height:1.8;margin-top:16px;max-width:480px;
+}
+.workflow-soon{
+  display:inline-flex;align-items:center;gap:6px;
+  color:var(--t3);background:rgba(13,148,136,0.1);
+  border:1px solid rgba(13,148,136,0.2);border-radius:100px;
+  padding:6px 16px;font-size:13px;font-weight:600;margin-top:24px;
+}
+.workflow-video-wrap{
+  box-shadow:0 0 60px rgba(124,58,237,0.15);
+  border-radius:16px;
+}
+.workflow-video{
+  width:100%;border-radius:16px;display:block;
+  -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 40%,transparent 100%);
+  mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 40%,transparent 100%);
+}
+
 /* ═══ REDUCED MOTION ════════════════════════════════════════════════════ */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{
@@ -735,6 +770,7 @@ footer{
   .pricing-grid{grid-template-columns:repeat(2,1fr);}
 }
 @media(max-width:900px){
+  .workflow-grid{grid-template-columns:1fr;gap:40px;}
   .feat-grid{grid-template-columns:1fr;gap:40px;}
   .feat-grid.rev{direction:ltr;}
   .device-wrap{order:-1;}
@@ -887,6 +923,23 @@ footer{
         <span class="plat" style="--plat-color:#0A66C2">LinkedIn</span>
         <span class="plat" style="--plat-color:#1DA1F2">X (Twitter)</span>
         <span class="plat" style="--plat-color:#1877F2">Facebook</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WORKFLOW VIDEO ════════════════════════════════════════════════ -->
+<section class="workflow-section" aria-label="Workflow tip">
+  <div class="container">
+    <div class="workflow-grid">
+      <div class="workflow-text">
+        <span class="workflow-badge">Pro Tip</span>
+        <h2 class="workflow-heading">Get the most out of X-Trend</h2>
+        <p class="workflow-sub">Open X-Trend in its own browser window alongside your social media tabs. Copy AI-generated content across in seconds — no switching, no losing your work.</p>
+        <span class="workflow-soon">⚡ Side panel version coming soon</span>
+      </div>
+      <div class="workflow-video-wrap">
+        <video class="workflow-video" src="Videos/workflow_video.mp4" autoplay muted loop playsinline></video>
       </div>
     </div>
   </div>
