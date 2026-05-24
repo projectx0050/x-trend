@@ -720,7 +720,7 @@ footer{
 .rev.d3{transition-delay:.3s;}.rev.d4{transition-delay:.4s;}
 
 /* ═══ WORKFLOW VIDEO SECTION ══════════════════════════════════════════ */
-.workflow-section{background:#050508;padding:100px 0;}
+.workflow-section{background:transparent;padding:100px 0;}
 .workflow-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
 .workflow-badge{
   display:inline-flex;align-items:center;
@@ -744,14 +744,11 @@ footer{
   border:1px solid rgba(13,148,136,0.2);border-radius:100px;
   padding:6px 16px;font-size:13px;font-weight:600;margin-top:24px;
 }
-.workflow-video-wrap{
-  box-shadow:0 0 60px rgba(124,58,237,0.15);
-  border-radius:16px;
-}
+.workflow-video-wrap{}
 .workflow-video{
-  width:100%;border-radius:16px;display:block;
-  -webkit-mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 40%,transparent 100%);
-  mask-image:radial-gradient(ellipse 85% 85% at 50% 50%,black 40%,transparent 100%);
+  width:100%;display:block;
+  -webkit-mask-image:radial-gradient(ellipse 70% 75% at 50% 50%, black 25%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.1) 75%, transparent 100%);
+  mask-image:radial-gradient(ellipse 70% 75% at 50% 50%, black 25%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.1) 75%, transparent 100%);
 }
 
 /* ═══ REDUCED MOTION ════════════════════════════════════════════════════ */
