@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>X-Trend</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="brand-mark" src="icon128.png" alt="" width="28" height="28" />
+    <span class="brand-name">X-Trend</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch to light mode">
+      <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+      <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button class="account-btn" id="account-btn" type="button" aria-haspopup="dialog">Sign in</button>
+  </div>
+</header>
+
+<section class="usage" aria-live="polite">
+  <div class="usage-row">
+    <span class="usage-title" id="usage-title">Loading…</span>
+    <span class="plan-tag" id="plan-tag">Guest</span>
+  </div>
+  <div class="meter" id="usage-meter" role="progressbar" aria-label="Free generations left" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+    <div class="meter-fill" id="usage-meter-fill"></div>
+  </div>
+  <div class="usage-row usage-row-sub">
+    <span class="usage-sub" id="usage-sub"></span>
+    <span class="credits-chip" id="credits-chip" hidden></span>
+  </div>
+</section>
+
+<nav class="suite-switch" role="tablist" aria-label="Workspace">
+  <button class="suite-btn" role="tab" type="button" data-suite="social" aria-selected="true">Social X-Trend</button>
+  <button class="suite-btn" role="tab" type="button" data-suite="business" aria-selected="false">Business X-Trend</button>
+</nav>
+
+<nav class="tool-tabs" id="tool-tabs" role="tablist" aria-label="Tools"></nav>
+
+<main class="workspace" id="workspace">
+  <!-- One <section class="tool"> per tool is rendered here by sidepanel.js -->
+</main>
+
+<!-- ── Account sheet ─────────────────────────────────────────────────────── -->
+<div class="sheet" id="sheet-account" role="dialog" aria-modal="true" aria-labelledby="account-sheet-title" hidden>
+  <div class="sheet-head">
+    <h2 id="account-sheet-title">Account</h2>
+    <button class="icon-btn sheet-close" type="button" data-close-sheet aria-label="Close">&#10005;</button>
+  </div>
+
+  <div class="sheet-body">
+    <!-- Signed out -->
+    <div id="auth-section">
+      <div class="seg" role="tablist" aria-label="Sign in or create account">
+        <button class="seg-btn" role="tab" type="button" data-auth="login" aria-selected="true">Log in</button>
+        <button class="seg-btn" role="tab" type="button" data-auth="signup" aria-selected="false">Create account</button>
+      </div>
+      <p class="auth-pitch" id="auth-pitch" hidden>A free account gives you 5 generations a day for your first 5 days, then 2 a day, on all 6 tools.</p>
+      <label class="field">
+        <span class="field-label">Email</span>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input type="password" id="auth-password" placeholder="At least 8 characters" autocomplete="current-password" />
+      </label>
+      <label class="check" id="terms-field" hidden>
+        <input type="checkbox" id="terms-checkbox" />
+        <span>I agree to the <a href="https://x-trendyourself.com/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://x-trendyourself.com/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
+      </label>
+      <button class="btn btn-primary" id="auth-submit-btn" type="button">Log in</button>
+      <button class="link-btn" id="forgot-password-btn" type="button">Forgot password?</button>
+      <p class="status" id="auth-status" role="status"></p>
+      <p class="hint" id="auth-spam-note" hidden>Don't see it? Check your spam folder.</p>
+      <button class="link-btn" id="resend-verification-btn" type="button" hidden>Resend verification email</button>
+    </div>
+
+    <!-- Forgot password -->
+    <div id="forgot-section" hidden>
+      <button class="link-btn back-link" id="forgot-back-btn" type="button">Back to log in</button>
+      <p class="hint">Enter your email and we'll send you a reset link.</p>
+      <label class="field">
+        <span class="field-label">Email</span>
+        <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
+      </label>
+      <button class="btn btn-primary" id="forgot-submit-btn" type="button">Send reset link</button>
+      <p class="status" id="forgot-status" role="status"></p>
+    </div>
+
+    <!-- Signed in -->
+    <div id="account-section" hidden>
+      <div class="account-card">
+        <div class="avatar" id="account-avatar" aria-hidden="true"></div>
+        <div class="account-meta">
+          <span class="account-email" id="account-email"></span>
+          <span class="account-plan" id="account-plan"></span>
+        </div>
+      </div>
+
+      <h3 class="sheet-section-title">Your plan</h3>
+      <div id="plan-section-content" class="stack"></div>
+
+      <h3 class="sheet-section-title">Brand Voice</h3>
+      <div id="bv-locked" class="hint-card">Brand Voice Memory is part of the Bundle plan. It keeps your tone consistent across every caption and rewrite.</div>
+      <div id="bv-form" hidden>
+        <label class="field">
+          <span class="field-label">Your tone and style</span>
+          <textarea id="brand-voice-input" rows="3" placeholder="e.g. Warm and direct, short sentences, no jargon, a little playful"></textarea>
+        </label>
+        <button class="btn btn-secondary" id="save-brand-voice-btn" type="button">Save Brand Voice</button>
+        <p class="status" id="brand-voice-status" role="status"></p>
+      </div>
+
+      <button class="btn btn-ghost" id="logout-btn" type="button">Log out</button>
+    </div>
+
+    <a class="site-link" href="https://x-trendyourself.com" target="_blank" rel="noopener noreferrer">x-trendyourself.com</a>
+  </div>
+</div>
+
+<!-- ── Plans sheet ───────────────────────────────────────────────────────── -->
+<div class="sheet" id="sheet-plans" role="dialog" aria-modal="true" aria-labelledby="plans-sheet-title" hidden>
+  <div class="sheet-head">
+    <h2 id="plans-sheet-title">Choose a plan</h2>
+    <button class="icon-btn sheet-close" type="button" data-close-sheet aria-label="Close">&#10005;</button>
+  </div>
+  <div class="sheet-body stack">
+    <p class="hint">Monthly plans. Cancel anytime from Manage Subscription.</p>
+    <div class="plan-card">
+      <div class="plan-card-top"><span class="plan-name">Social Pro</span><span class="plan-price">$9.99<small>/mo</small></span></div>
+      <p class="plan-desc">Caption Generator, Platform Rewriter, Hashtag Suggester</p>
+      <button class="btn btn-secondary" type="button" data-product-type="subscription" data-product-id="social_pro">Choose Social Pro</button>
+    </div>
+    <div class="plan-card">
+      <div class="plan-card-top"><span class="plan-name">Business Pro</span><span class="plan-price">$19.99<small>/mo</small></span></div>
+      <p class="plan-desc">Review Responder, Email Tone Fixer, Proposal Generator</p>
+      <button class="btn btn-secondary" type="button" data-product-type="subscription" data-product-id="business_pro">Choose Business Pro</button>
+    </div>
+    <div class="plan-card plan-card-bundle">
+      <div class="plan-card-top"><span class="plan-name">Bundle</span><span class="plan-price">$29.99<small>/mo</small></span></div>
+      <p class="plan-desc">All 6 tools plus Brand Voice Memory</p>
+      <button class="btn btn-primary" type="button" data-product-type="subscription" data-product-id="bundle">Choose Bundle</button>
+    </div>
+    <p class="status error" id="plans-error" role="alert"></p>
+  </div>
+</div>
+
+<!-- ── Credits sheet ─────────────────────────────────────────────────────── -->
+<div class="sheet" id="sheet-credits" role="dialog" aria-modal="true" aria-labelledby="credits-sheet-title" hidden>
+  <div class="sheet-head">
+    <h2 id="credits-sheet-title">Buy credits</h2>
+    <button class="icon-btn sheet-close" type="button" data-close-sheet aria-label="Close">&#10005;</button>
+  </div>
+  <div class="sheet-body stack">
+    <p class="hint">Credits never expire and work on any of the 6 tools once your plan's generations are used.</p>
+    <div class="pack"><div><span class="pack-name">Starter</span><span class="pack-amount">15 credits</span></div><span class="pack-price">$2.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_starter">Buy</button></div>
+    <div class="pack"><div><span class="pack-name">Popular</span><span class="pack-amount">30 credits</span></div><span class="pack-price">$4.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_popular">Buy</button></div>
+    <div class="pack"><div><span class="pack-name">Power</span><span class="pack-amount">50 credits</span></div><span class="pack-price">$9.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_power">Buy</button></div>
+    <p class="status error" id="credits-error" role="alert"></p>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<script src="sidepanel.js"></script>
+</body>
+</html>

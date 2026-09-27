@@ -1,8 +1,18 @@
 'use strict';
 
-// Service worker — proxies all backend requests to avoid CORS issues
+// Service worker: opens the side panel and proxies all backend requests.
 
 const BACKEND = 'https://x-trend-backend.onrender.com';
+
+// Clicking the toolbar icon opens the X-Trend side panel, which stays open
+// beside the page while the user works in the tab.
+function enableSidePanel() {
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+    .catch(err => console.error('[X-Trend] could not enable side panel:', err));
+}
+chrome.runtime.onInstalled.addListener(enableSidePanel);
+chrome.runtime.onStartup.addListener(enableSidePanel);
+enableSidePanel();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
@@ -38,6 +48,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           error: err.message,
           limitReached: !!err.limitReached,
           featureGated: !!err.featureGated,
+        }));
+      return true;
+
+    case 'callGuest':
+      callGuest(request.payload)
+        .then(data => sendResponse({ success: true, data }))
+        .catch(err => sendResponse({
+          success: false,
+          error: err.message,
+          signupRequired: !!err.signupRequired,
         }));
       return true;
 
@@ -121,6 +141,7 @@ async function callGenerate(payload, token) {
   const data = await resp.json();
   if (!resp.ok) {
     if (resp.status === 401) throw new Error('Session expired. Please log in again.');
+    if (data.code === 'rate_limited') throw new Error(data.error);
     if (resp.status === 402 || resp.status === 429) {
       const err = new Error(data.error || 'Daily limit reached. Upgrade to continue.');
       err.limitReached = true;
@@ -132,6 +153,24 @@ async function callGenerate(payload, token) {
       throw err;
     }
     throw new Error(data.error || `Server error (${resp.status})`);
+  }
+  return data;
+}
+
+// Signed-out generation. The server enforces a hard daily ceiling; the side
+// panel tracks the visible allowance locally.
+async function callGuest(payload) {
+  const resp = await fetch(`${BACKEND}/api/generate/guest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await resp.json();
+  if (!resp.ok) {
+    const err = new Error(data.error || `Server error (${resp.status})`);
+    err.signupRequired = !!data.signup_required;
+    throw err;
   }
   return data;
 }
