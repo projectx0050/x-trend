@@ -1,0 +1,6 @@
+# Internal QA tool — must never be published on the public site.
+# Run it locally from C:\ClaudeCode\Xtrend (node qa-server.js).
+qa-agent.html
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

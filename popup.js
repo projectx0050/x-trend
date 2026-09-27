@@ -407,7 +407,7 @@ function applyFeatureGating(tier, credits) {
       gateEl.style.display = gated ? 'flex' : 'none';
       const tokenBtn = gateEl.querySelector('.feature-gate-token-btn');
       if (tokenBtn) {
-        tokenBtn.textContent = credits > 0 ? `Use a Token (${credits} left)` : 'Buy Credits';
+        tokenBtn.textContent = credits > 0 ? `Use a Credit (${credits} left)` : 'Buy Credits';
       }
     }
   });
@@ -474,8 +474,12 @@ function renderPlanSection(tier, credits) {
 
   content.innerHTML = html;
 
+  // Paid users switch plans in the billing portal; a new checkout would start a
+  // second subscription (the backend rejects it).
   content.querySelectorAll('.plan-upgrade-btn').forEach(btn => {
-    btn.addEventListener('click', () => openCheckout('subscription', btn.dataset.productId, null));
+    btn.addEventListener('click', () => (isPaid
+      ? openBillingPortal()
+      : openCheckout('subscription', btn.dataset.productId, null)));
   });
 
   const buyCreditsBtn = document.getElementById('plan-buy-credits-btn');
@@ -490,10 +494,17 @@ function renderPlanSection(tier, credits) {
 
   const manageSubBtn = document.getElementById('plan-manage-sub-btn');
   if (manageSubBtn) {
-    manageSubBtn.addEventListener('click', () => {
-      if (STRIPE_PORTAL_URL) chrome.tabs.create({ url: STRIPE_PORTAL_URL });
-    });
+    manageSubBtn.addEventListener('click', openBillingPortal);
   }
+}
+
+// Opens the user's own Stripe billing portal; falls back to Stripe's email-login
+// portal for accounts without a linked Stripe customer yet.
+function openBillingPortal() {
+  chrome.runtime.sendMessage({ action: 'openBillingPortal', token: jwtToken }, (response) => {
+    const url = (!chrome.runtime.lastError && response?.success && response.data?.url) || STRIPE_PORTAL_URL;
+    if (url) chrome.tabs.create({ url });
+  });
 }
 
 function updateHomeBrandVoiceStrip(tier) {
@@ -799,7 +810,6 @@ function updateUsageDisplay(status) {
   const used      = status.daily_used  ?? status.dailyUsed  ?? 0;
   const limit     = status.daily_limit ?? status.dailyLimit ?? 5;
   const credits   = status.credits || 0;
-  const days      = status.days_since_signup ?? status.daysSinceSignup ?? 1;
   const remaining = Math.max(0, limit - used);
   const paid      = ['social_pro', 'business_pro', 'bundle'].includes(tier);
 
@@ -817,14 +827,9 @@ function updateUsageDisplay(status) {
     return;
   }
 
-  // Free user
-  if (days <= 5) {
-    usageLine1.textContent = `Day ${days} of 5 free`;
-    usageLine2.textContent = `${remaining}/${limit} left today`;
-  } else {
-    usageLine1.textContent = `${remaining}/1 left today`;
-    usageLine2.textContent = 'Free tier';
-  }
+  // Free user: fixed daily allowance, all tools
+  usageLine1.textContent = `${remaining}/${limit} left today`;
+  usageLine2.textContent = 'Free plan';
   usageLine1.className = remaining === 0 ? 'usage-line-1 low' : 'usage-line-1';
 }
 
@@ -889,7 +894,7 @@ function openCheckout(product_type, product_id, errorEl) {
     { action: 'createCheckoutSession', payload: { product_type, product_id }, token: jwtToken },
     (response) => {
       if (chrome.runtime.lastError || !response || !response.success || !response.data?.url) {
-        const msg = 'Unable to start checkout. Please try again.';
+        const msg = response?.error || 'Unable to start checkout. Please try again.';
         if (errorEl) {
           errorEl.textContent = msg;
           errorEl.style.display = 'block';

@@ -71,6 +71,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .catch(err => sendResponse({ success: false, error: err.message }));
       return true;
 
+    case 'openBillingPortal':
+      postAuth('/payments/portal', null, request.token)
+        .then(data => sendResponse({ success: true, data }))
+        .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
+      return true;
+
     // Legacy — kept for backwards compatibility
     case 'getUsage':
       fetchUserStatus(request.token)
