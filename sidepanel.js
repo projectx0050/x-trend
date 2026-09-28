@@ -771,21 +771,20 @@ function openSheet(id) {
   (sheet.querySelector('input:not([type="checkbox"]):not([hidden]), textarea, .btn') || sheet.querySelector('button'))?.focus();
 }
 
-// Plans and credit packs share one sheet; jump to the section that was asked for.
+// Plans and credit packs share one sheet; a tab picks which one is shown.
 function openShop(section) {
+  selectShopTab(section);
   openSheet('sheet-plans');
-  showShopSection(section);
+  $(`shop-${section}`).querySelector('.btn')?.focus();
 }
 
-function showShopSection(section) {
-  const target = $(`shop-${section}`);
-  target.scrollIntoView({ block: 'start' });
-  target.querySelector('.btn')?.focus({ preventScroll: true });
-  markShopSection(section);
-}
-
-function markShopSection(section) {
-  document.querySelectorAll('[data-shop-jump]').forEach(b => b.setAttribute('aria-current', String(b.dataset.shopJump === section)));
+function selectShopTab(section) {
+  document.querySelectorAll('[data-shop-tab]').forEach(t => {
+    const on = t.dataset.shopTab === section;
+    t.setAttribute('aria-selected', String(on));
+    $(t.getAttribute('aria-controls')).hidden = !on;
+  });
+  $('sheet-plans').querySelector('.sheet-body').scrollTop = 0;
 }
 
 function closeSheet() {
@@ -841,14 +840,13 @@ function wire() {
   $('logout-btn').addEventListener('click', logout);
   $('save-brand-voice-btn').addEventListener('click', saveBrandVoice);
 
-  document.querySelectorAll('[data-shop-jump]').forEach(b => b.addEventListener('click', () => showShopSection(b.dataset.shopJump)));
-  // Keep the switcher honest while the user scrolls by hand.
-  const shopBody = $('sheet-plans').querySelector('.sheet-body');
-  shopBody.addEventListener('scroll', () => {
-    const atEnd = shopBody.scrollTop + shopBody.clientHeight >= shopBody.scrollHeight - 2;
-    const creditsTop = $('shop-credits').getBoundingClientRect().top - shopBody.getBoundingClientRect().top;
-    markShopSection(atEnd || creditsTop < 60 ? 'credits' : 'plans');
-  }, { passive: true });
+  document.querySelectorAll('[data-shop-tab]').forEach(t => t.addEventListener('click', () => selectShopTab(t.dataset.shopTab)));
+  $('sheet-plans').querySelector('[role="tablist"]').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const next = e.target.dataset.shopTab === 'plans' ? 'credits' : 'plans';
+    selectShopTab(next);
+    $(`shop-tab-${next}`).focus();
+  });
   $('sheet-plans').addEventListener('click', e => {
     const b = e.target.closest('[data-product-type]');
     if (b) openCheckout(b.dataset.productType, b.dataset.productId, b.dataset.productType === 'credits' ? 'credits-error' : 'plans-error');
