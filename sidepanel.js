@@ -418,11 +418,31 @@ function setMeter(remaining, max) {
   meter.setAttribute('aria-valuenow', String(remaining));
 }
 
+// Two compact shortcuts in the usage card, chosen by who is looking.
+function renderUsageActions() {
+  const paid = ['social_pro', 'business_pro', 'bundle'].includes(state.tier);
+  const actions = !state.token
+    ? [['Create account', () => openAccount('signup')], ['View plans', () => openSheet('sheet-plans')]]
+    : state.tier === 'bundle' ? [['Manage plan', openBillingPortal]]
+    : [['Buy credits', () => openSheet('sheet-credits')],
+       paid ? ['Manage plan', openBillingPortal] : ['Upgrade', () => openSheet('sheet-plans')]];
+  $('usage-actions').replaceChildren(...actions.map(([label, onClick], i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `usage-action${i === 0 ? ' is-lead' : ''}`;
+    b.textContent = label;
+    b.addEventListener('click', onClick);
+    return b;
+  }));
+}
+
 function renderUsage() {
   const title = $('usage-title');
   const sub = $('usage-sub');
   const chip = $('credits-chip');
   title.classList.remove('empty');
+  $('plan-tag').hidden = false;
+  renderUsageActions();
 
   if (!state.token) {
     const left = guestRemaining();
@@ -444,8 +464,9 @@ function renderUsage() {
   const s = state.status;
   $('plan-tag').textContent = PLAN_LABELS[state.tier] || state.tier;
   const credits = s?.credits || 0;
-  chip.hidden = !(credits > 0) || credits >= 999999;
-  chip.textContent = plural(credits, 'credit');
+  chip.hidden = !s || credits >= 999999;
+  chip.textContent = `Credits: ${credits}`;
+  chip.classList.toggle('is-zero', credits === 0);
 
   if (!s) { title.textContent = 'Loading your plan…'; sub.textContent = ''; setMeter(0, null); return; }
 
@@ -472,6 +493,7 @@ function renderUsage() {
   }
 
   title.textContent = `${PLAN_LABELS[state.tier]} plan`;
+  $('plan-tag').hidden = true; // title already names the plan
   sub.textContent = PLAN_INCLUDES[state.tier] || '';
   setMeter(0, null);
 }

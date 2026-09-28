@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "X-Trend",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Your AI writing workspace, always open beside your browser. Captions, rewrites, hashtags, review replies, emails and proposals.",
   "minimum_chrome_version": "116",
   "action": {
