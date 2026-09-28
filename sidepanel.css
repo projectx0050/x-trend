@@ -260,6 +260,15 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); box-sh
 .sheet-body > div { display: flex; flex-direction: column; gap: 12px; }
 .stack { display: flex; flex-direction: column; gap: 10px; }
 .sheet-section-title { font-size: 12.5px; font-weight: 700; color: var(--text-2); margin-top: 6px; }
+/* Plans & credits: quiet section jump, not a tab bar. */
+.shop-jump { display: flex; gap: 4px; padding: 2px 12px 6px; }
+.shop-jump button {
+  height: 26px; padding: 0 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; color: var(--text-3); white-space: nowrap;
+  transition: color 120ms ease, background 120ms ease;
+}
+.shop-jump button:hover { color: var(--text); }
+.shop-jump button[aria-current="true"] { color: var(--accent-text); background: var(--accent-soft); }
 
 .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: var(--radius); }
 .seg-btn { height: 32px; border-radius: var(--radius-sm); font-weight: 600; color: var(--text-2); }

@@ -125,45 +125,45 @@
   </div>
 </div>
 
-<!-- ── Plans sheet ───────────────────────────────────────────────────────── -->
+<!-- ── Plans & credits sheet ─────────────────────────────────────────────── -->
 <div class="sheet" id="sheet-plans" role="dialog" aria-modal="true" aria-labelledby="plans-sheet-title" hidden>
   <div class="sheet-head">
-    <h2 id="plans-sheet-title">Choose a plan</h2>
+    <h2 id="plans-sheet-title">Plans &amp; credits</h2>
     <button class="icon-btn sheet-close" type="button" data-close-sheet aria-label="Close">&#10005;</button>
   </div>
-  <div class="sheet-body stack">
-    <p class="hint">Monthly plans. Cancel anytime from Manage Subscription.</p>
-    <div class="plan-card">
-      <div class="plan-card-top"><span class="plan-name">Social Pro</span><span class="plan-price">$9.99<small>/mo</small></span></div>
-      <p class="plan-desc">Caption Generator, Platform Rewriter, Hashtag Suggester</p>
-      <button class="btn btn-secondary" type="button" data-product-type="subscription" data-product-id="social_pro">Choose Social Pro</button>
-    </div>
-    <div class="plan-card">
-      <div class="plan-card-top"><span class="plan-name">Business Pro</span><span class="plan-price">$19.99<small>/mo</small></span></div>
-      <p class="plan-desc">Review Responder, Email Tone Fixer, Proposal Generator</p>
-      <button class="btn btn-secondary" type="button" data-product-type="subscription" data-product-id="business_pro">Choose Business Pro</button>
-    </div>
-    <div class="plan-card plan-card-bundle">
-      <div class="plan-card-top"><span class="plan-name">Bundle</span><span class="plan-price">$29.99<small>/mo</small></span></div>
-      <p class="plan-desc">All 6 tools plus Brand Voice Memory</p>
-      <button class="btn btn-primary" type="button" data-product-type="subscription" data-product-id="bundle">Choose Bundle</button>
-    </div>
-    <p class="status error" id="plans-error" role="alert"></p>
-  </div>
-</div>
-
-<!-- ── Credits sheet ─────────────────────────────────────────────────────── -->
-<div class="sheet" id="sheet-credits" role="dialog" aria-modal="true" aria-labelledby="credits-sheet-title" hidden>
-  <div class="sheet-head">
-    <h2 id="credits-sheet-title">Buy credits</h2>
-    <button class="icon-btn sheet-close" type="button" data-close-sheet aria-label="Close">&#10005;</button>
-  </div>
-  <div class="sheet-body stack">
-    <p class="hint">Credits never expire and work on any of the 6 tools once your plan's generations are used.</p>
-    <div class="pack"><div><span class="pack-name">Starter</span><span class="pack-amount">15 credits</span></div><span class="pack-price">$2.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_starter">Buy</button></div>
-    <div class="pack"><div><span class="pack-name">Popular</span><span class="pack-amount">30 credits</span></div><span class="pack-price">$4.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_popular">Buy</button></div>
-    <div class="pack"><div><span class="pack-name">Power</span><span class="pack-amount">50 credits</span></div><span class="pack-price">$9.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_power">Buy</button></div>
-    <p class="status error" id="credits-error" role="alert"></p>
+  <nav class="shop-jump" aria-label="Jump to section">
+    <button type="button" data-shop-jump="plans" aria-controls="shop-plans">Monthly plans</button>
+    <button type="button" data-shop-jump="credits" aria-controls="shop-credits">Credit packs</button>
+  </nav>
+  <div class="sheet-body">
+    <section class="stack" id="shop-plans" aria-labelledby="shop-plans-title">
+      <h3 class="sheet-section-title" id="shop-plans-title">Monthly plans</h3>
+      <p class="hint">Cancel anytime from Manage Subscription.</p>
+      <div class="plan-card">
+        <div class="plan-card-top"><span class="plan-name">Social Pro</span><span class="plan-price">$9.99<small>/mo</small></span></div>
+        <p class="plan-desc">Caption Generator, Platform Rewriter, Hashtag Suggester</p>
+        <button class="btn btn-secondary" type="button" data-product-type="subscription" data-product-id="social_pro">Choose Social Pro</button>
+      </div>
+      <div class="plan-card">
+        <div class="plan-card-top"><span class="plan-name">Business Pro</span><span class="plan-price">$19.99<small>/mo</small></span></div>
+        <p class="plan-desc">Review Responder, Email Tone Fixer, Proposal Generator</p>
+        <button class="btn btn-secondary" type="button" data-product-type="subscription" data-product-id="business_pro">Choose Business Pro</button>
+      </div>
+      <div class="plan-card plan-card-bundle">
+        <div class="plan-card-top"><span class="plan-name">Bundle</span><span class="plan-price">$29.99<small>/mo</small></span></div>
+        <p class="plan-desc">All 6 tools plus Brand Voice Memory</p>
+        <button class="btn btn-primary" type="button" data-product-type="subscription" data-product-id="bundle">Choose Bundle</button>
+      </div>
+      <p class="status error" id="plans-error" role="alert"></p>
+    </section>
+    <section class="stack" id="shop-credits" aria-labelledby="shop-credits-title">
+      <h3 class="sheet-section-title" id="shop-credits-title">Credit packs</h3>
+      <p class="hint">Credits never expire and work on any of the 6 tools once your plan's generations are used.</p>
+      <div class="pack"><div><span class="pack-name">Starter</span><span class="pack-amount">15 credits</span></div><span class="pack-price">$2.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_starter">Buy</button></div>
+      <div class="pack"><div><span class="pack-name">Popular</span><span class="pack-amount">30 credits</span></div><span class="pack-price">$4.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_popular">Buy</button></div>
+      <div class="pack"><div><span class="pack-name">Power</span><span class="pack-amount">50 credits</span></div><span class="pack-price">$9.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_power">Buy</button></div>
+      <p class="status error" id="credits-error" role="alert"></p>
+    </section>
   </div>
 </div>
 

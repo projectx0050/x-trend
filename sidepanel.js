@@ -233,8 +233,8 @@ function showLimitNotice(type, message) {
     title: state.tier === 'free' ? "You've used today's free generations" : "You've used this month's generations",
     body: message || 'Use credits or upgrade to continue.',
     actions: [
-      { label: credits > 0 ? plural(credits, 'credit') + ' left' : 'Buy credits', primary: true, onClick: () => openSheet('sheet-credits') },
-      ...(state.tier === 'free' ? [{ label: 'See plans', onClick: () => openSheet('sheet-plans') }] : []),
+      { label: credits > 0 ? plural(credits, 'credit') + ' left' : 'Buy credits', primary: true, onClick: () => openShop('credits') },
+      ...(state.tier === 'free' ? [{ label: 'See plans', onClick: () => openShop('plans') }] : []),
     ],
   });
 }
@@ -266,7 +266,7 @@ function refreshGate(type) {
     actions: credits > 0
       ? [{ label: `Use credits (${credits} left)`, primary: true, onClick: () => { state.unlocked.add(type); refreshGate(type); } },
          { label: 'Change plan', onClick: openBillingPortal }]
-      : [{ label: 'Buy credits', primary: true, onClick: () => openSheet('sheet-credits') },
+      : [{ label: 'Buy credits', primary: true, onClick: () => openShop('credits') },
          { label: 'Change plan', onClick: openBillingPortal }],
   });
 }
@@ -422,10 +422,10 @@ function setMeter(remaining, max) {
 function renderUsageActions() {
   const paid = ['social_pro', 'business_pro', 'bundle'].includes(state.tier);
   const actions = !state.token
-    ? [['Create account', () => openAccount('signup')], ['View plans', () => openSheet('sheet-plans')]]
+    ? [['Create account', () => openAccount('signup')], ['Plans & credits', () => openShop('plans')]]
     : state.tier === 'bundle' ? [['Manage plan', openBillingPortal]]
-    : [['Buy credits', () => openSheet('sheet-credits')],
-       paid ? ['Manage plan', openBillingPortal] : ['Upgrade', () => openSheet('sheet-plans')]];
+    : [['Buy credits', () => openShop('credits')],
+       paid ? ['Manage plan', openBillingPortal] : ['Upgrade', () => openShop('plans')]];
   $('usage-actions').replaceChildren(...actions.map(([label, onClick], i) => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -555,9 +555,9 @@ function renderPlanSection() {
     add('Manage subscription', 'btn-secondary', openBillingPortal);
     if (state.tier !== 'bundle') add('Switch plan', 'btn-secondary', openBillingPortal);
   } else {
-    add('See plans', 'btn-primary', () => openSheet('sheet-plans'));
+    add('See plans', 'btn-primary', () => openShop('plans'));
   }
-  add('Buy credits', 'btn-secondary', () => openSheet('sheet-credits'));
+  add('Buy credits', 'btn-secondary', () => openShop('credits'));
 }
 
 function setAuthMode(mode) {
@@ -744,7 +744,7 @@ async function openCheckout(productType, productId, errorId) {
   setStatus(errorId, '');
   if (!state.token) {
     closeSheet();
-    openAccount('signup', 'Create a free account first, then choose your plan or credits.');
+    openAccount('signup', 'Create a free account or sign in to continue.');
     return;
   }
   const paid = ['social_pro', 'business_pro', 'bundle'].includes(state.tier);
@@ -769,6 +769,23 @@ function openSheet(id) {
   $('scrim').hidden = false;
   const sheet = $(id);
   (sheet.querySelector('input:not([type="checkbox"]):not([hidden]), textarea, .btn') || sheet.querySelector('button'))?.focus();
+}
+
+// Plans and credit packs share one sheet; jump to the section that was asked for.
+function openShop(section) {
+  openSheet('sheet-plans');
+  showShopSection(section);
+}
+
+function showShopSection(section) {
+  const target = $(`shop-${section}`);
+  target.scrollIntoView({ block: 'start' });
+  target.querySelector('.btn')?.focus({ preventScroll: true });
+  markShopSection(section);
+}
+
+function markShopSection(section) {
+  document.querySelectorAll('[data-shop-jump]').forEach(b => b.setAttribute('aria-current', String(b.dataset.shopJump === section)));
 }
 
 function closeSheet() {
@@ -824,13 +841,17 @@ function wire() {
   $('logout-btn').addEventListener('click', logout);
   $('save-brand-voice-btn').addEventListener('click', saveBrandVoice);
 
+  document.querySelectorAll('[data-shop-jump]').forEach(b => b.addEventListener('click', () => showShopSection(b.dataset.shopJump)));
+  // Keep the switcher honest while the user scrolls by hand.
+  const shopBody = $('sheet-plans').querySelector('.sheet-body');
+  shopBody.addEventListener('scroll', () => {
+    const atEnd = shopBody.scrollTop + shopBody.clientHeight >= shopBody.scrollHeight - 2;
+    const creditsTop = $('shop-credits').getBoundingClientRect().top - shopBody.getBoundingClientRect().top;
+    markShopSection(atEnd || creditsTop < 60 ? 'credits' : 'plans');
+  }, { passive: true });
   $('sheet-plans').addEventListener('click', e => {
     const b = e.target.closest('[data-product-type]');
-    if (b) openCheckout(b.dataset.productType, b.dataset.productId, 'plans-error');
-  });
-  $('sheet-credits').addEventListener('click', e => {
-    const b = e.target.closest('[data-product-type]');
-    if (b) openCheckout(b.dataset.productType, b.dataset.productId, 'credits-error');
+    if (b) openCheckout(b.dataset.productType, b.dataset.productId, b.dataset.productType === 'credits' ? 'credits-error' : 'plans-error');
   });
 }
 
