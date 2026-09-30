@@ -311,3 +311,77 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); box-sh
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation-duration: 1ms !important; }
 }
+
+/* ── Password show/hide ─────────────────────────────────────────────────── */
+.password-wrap { position: relative; }
+.password-wrap input { padding-right: 42px; }
+.pw-toggle {
+  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  display: grid; place-items: center; color: var(--text-3);
+  transition: color 180ms cubic-bezier(0.32, 0.72, 0, 1), background 180ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.pw-toggle:hover { color: var(--text); background: var(--surface-2); }
+.pw-icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pw-toggle .pw-hide,
+.pw-toggle[aria-pressed="true"] .pw-show { display: none; }
+.pw-toggle[aria-pressed="true"] .pw-hide { display: block; }
+
+/* ── Balance refresh (fallback after a purchase) ────────────────────────── */
+.usage-balance { display: inline-flex; align-items: center; gap: 2px; margin-left: auto; }
+.refresh-btn {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: grid; place-items: center; color: var(--text-3);
+}
+.refresh-btn:hover:not(:disabled) { color: var(--text); background: var(--surface-2); }
+.refresh-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.refresh-btn.is-spinning svg { animation: spin 700ms cubic-bezier(0.32, 0.72, 0, 1) infinite; }
+
+/* ── Business X-Trend: emerald accent ───────────────────────────────────────
+   Social keeps the violet creator energy. Business swaps only the accent tokens
+   for a deep emerald and adds one soft glow, so it reads as the same product in
+   a more trusted, professional register. White on --accent: 5.5:1. */
+body.suite-business {
+  --accent: #047857;
+  --accent-strong: #03664a;
+  --accent-text: #74dcb4;      /* 11:1 on --bg */
+  --accent-soft: rgba(16, 185, 129, 0.13);
+  --focus: #74dcb4;
+}
+body.light.suite-business {
+  --accent: #047857;           /* 5.5:1 white text, 5.5:1 on white */
+  --accent-strong: #03664a;
+  --accent-text: #03664a;      /* 6.9:1 on white */
+  --accent-soft: rgba(4, 120, 87, 0.09);
+  --focus: #03664a;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(120% 55% at 50% -12%, rgba(16, 185, 129, 0.16), transparent 62%),
+    radial-gradient(60% 40% at 105% 8%, rgba(52, 211, 153, 0.06), transparent 70%);
+  opacity: 0;
+  transition: opacity 600ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+body.light::before {
+  background:
+    radial-gradient(120% 55% at 50% -12%, rgba(4, 120, 87, 0.09), transparent 62%),
+    radial-gradient(60% 40% at 105% 8%, rgba(16, 185, 129, 0.05), transparent 70%);
+}
+body.suite-business::before { opacity: 1; }
+body.suite-business .usage { border-color: rgba(16, 185, 129, 0.22); }
+body.suite-business .suite-btn[aria-selected="true"] {
+  color: var(--accent-text);
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.35), 0 1px 10px rgba(16, 185, 129, 0.14);
+}
+body.light.suite-business .usage { border-color: rgba(4, 120, 87, 0.22); }
+body.light.suite-business .suite-btn[aria-selected="true"] {
+  box-shadow: inset 0 0 0 1px rgba(4, 120, 87, 0.30), 0 1px 8px rgba(4, 120, 87, 0.10);
+}
+.btn-primary, .meter-fill, .tool-tab, .avatar, .plan-tag {
+  transition: background-color 400ms cubic-bezier(0.32, 0.72, 0, 1), color 400ms cubic-bezier(0.32, 0.72, 0, 1), border-color 400ms cubic-bezier(0.32, 0.72, 0, 1), width 240ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before, .btn-primary, .meter-fill, .tool-tab, .avatar, .plan-tag, .pw-toggle { transition: none; }
+  .refresh-btn.is-spinning svg { animation: none; }
+}

@@ -5,11 +5,16 @@
 // Stripe's email-login portal: fallback for accounts without a linked customer.
 const STRIPE_PORTAL_URL = 'https://billing.stripe.com/p/login/3cleVd6gwfsl2WL9audZ600';
 
-// Signed-out allowance, tracked locally for UX (the server enforces a hard
-// ceiling separately): 5 to try X-Trend, then 1 per day.
-const GUEST_INITIAL = 5;
+// Signed-out allowance: 3 to try X-Trend, then 1 per day. The server enforces
+// the same rule; this local copy only drives the display.
+const GUEST_INITIAL = 3;
 const GUEST_DAILY = 1;
-const SIGNUP_PITCH = 'Create a free account to unlock 5 daily generations for your first 5 days.';
+const SIGNUP_PITCH = 'Create a free account to get 5 free generations.';
+
+// After opening Stripe, re-check the balance until the webhook lands.
+const CHECKOUT_POLL_MS = 5000;
+const CHECKOUT_POLL_MAX_MS = 3 * 60 * 1000;
+const FOCUS_REFRESH_MIN_MS = 3000;
 
 const PLAN_LABELS = { free: 'Free', social_pro: 'Social Pro', business_pro: 'Business Pro', bundle: 'Bundle' };
 const PLAN_INCLUDES = {
@@ -110,6 +115,8 @@ const state = {
   lastInput: {},          // per tool, for Regenerate
   authMode: 'login',
   sheetOpener: null,
+  checkoutWatch: null,    // { tabId, timer, started, credits, tier } while a Stripe tab is open
+  lastStatusAt: 0,
 };
 
 const $ = id => document.getElementById(id);
@@ -174,6 +181,7 @@ function readInput(tool) {
 
 function selectSuite(suite) {
   state.suite = suite;
+  document.body.classList.toggle('suite-business', suite === 'business');
   document.querySelectorAll('.suite-btn').forEach(b => b.setAttribute('aria-selected', String(b.dataset.suite === suite)));
   $('tool-tabs').innerHTML = TOOLS.filter(t => t.suite === suite).map(t =>
     `<button class="tool-tab" role="tab" type="button" data-tool="${t.type}" aria-selected="false">${t.tab}</button>`).join('');
@@ -230,7 +238,8 @@ function showLimitNotice(type, message) {
   const credits = state.status?.credits || 0;
   showNotice(type, {
     kind: 'is-upsell',
-    title: state.tier === 'free' ? "You've used today's free generations" : "You've used this month's generations",
+    title: state.tier !== 'free' ? "You've used this month's generations"
+      : state.status?.free_allowance_disabled ? "You're out of credits" : "You've used today's free generation",
     body: message || 'Use credits or upgrade to continue.',
     actions: [
       { label: credits > 0 ? plural(credits, 'credit') + ' left' : 'Buy credits', primary: true, onClick: () => openShop('credits') },
@@ -360,7 +369,11 @@ async function generate(type, regenerate = false) {
   if (res.success) {
     state.lastInput[type] = input;
     renderOutput(tool, res.data.result, input);
-    if (state.token) fetchStatus(); else await recordGuestUse();
+    if (state.token) fetchStatus();
+    else {
+      await recordGuestUse();
+      if (res.data.usage?.remaining === 0) await exhaustGuestToday(); // server count wins
+    }
     return;
   }
 
@@ -451,11 +464,11 @@ function renderUsage() {
     chip.hidden = true;
     if (left > 0) {
       title.textContent = initial ? `${plural(left, 'free generation')} left` : '1 free generation left today';
-      sub.textContent = initial ? 'Try any tool, no account needed' : 'Create a free account for 5 a day';
+      sub.textContent = initial ? 'Try any tool, no account needed.' : SIGNUP_PITCH;
     } else {
-      title.textContent = "You've used today's free generations";
+      title.textContent = "You've used today's free generation";
       title.classList.add('empty');
-      sub.textContent = 'Create a free account for 5 a day';
+      sub.textContent = SIGNUP_PITCH;
     }
     setMeter(left, initial ? GUEST_INITIAL : GUEST_DAILY);
     return;
@@ -464,6 +477,7 @@ function renderUsage() {
   const s = state.status;
   $('plan-tag').textContent = PLAN_LABELS[state.tier] || state.tier;
   const credits = s?.credits || 0;
+  $('refresh-balance').hidden = !s || (s.daily_limit ?? s.monthly_limit) >= 999999;
   chip.hidden = !s || credits >= 999999;
   chip.textContent = `Credits: ${credits}`;
   chip.classList.toggle('is-zero', credits === 0);
@@ -477,25 +491,48 @@ function renderUsage() {
     return;
   }
 
-  if (state.tier === 'free') {
-    const left = s.daily_remaining ?? 0;
-    if (left > 0) {
-      title.textContent = `${plural(left, 'free generation')} left today`;
-    } else {
-      title.textContent = "You've used today's free generations";
-      title.classList.add('empty');
-    }
-    if (left === 0) sub.textContent = credits > 0 ? 'Your credits cover extra generations' : 'Use credits or upgrade to continue';
-    else if (s.is_trial) sub.textContent = `5 a day for ${plural(s.intro_days_left, 'more day')}, then 2 a day`;
-    else sub.textContent = '2 free generations every day';
-    setMeter(left, s.daily_limit);
-    return;
-  }
+  if (state.tier === 'free') { renderFreeUsage(s, credits); return; }
 
   title.textContent = `${PLAN_LABELS[state.tier]} plan`;
   $('plan-tag').hidden = true; // title already names the plan
   sub.textContent = PLAN_INCLUDES[state.tier] || '';
   setMeter(0, null);
+}
+
+// Free account: intro (first 5), then 1 per day; after any purchase, credits only.
+function renderFreeUsage(s, credits) {
+  const title = $('usage-title');
+  const sub = $('usage-sub');
+  if (s.free_allowance_disabled) {
+    $('credits-chip').hidden = true; // the title shows the balance
+    setMeter(0, null);
+    if (credits > 0) {
+      title.textContent = `Credits: ${credits}`;
+      sub.textContent = 'Each generation uses 1 credit';
+    } else {
+      title.textContent = "You're out of credits";
+      title.classList.add('empty');
+      sub.textContent = 'Buy credits or upgrade to continue';
+    }
+    return;
+  }
+  const left = s.daily_remaining ?? 0;
+  setMeter(left, s.daily_limit);
+  if (s.free_phase === 'intro') {
+    title.textContent = left === s.daily_limit
+      ? `${plural(left, 'free generation')} available`
+      : `${plural(left, 'free generation')} left`;
+    sub.textContent = 'Then 1 free generation every day';
+    return;
+  }
+  if (left > 0) {
+    title.textContent = `${plural(left, 'free generation')} left today`;
+    sub.textContent = 'A new free generation every day';
+  } else {
+    title.textContent = "You've used today's free generation";
+    title.classList.add('empty');
+    sub.textContent = credits > 0 ? 'Your credits cover extra generations' : 'Use credits or upgrade to continue';
+  }
 }
 
 // ── Account, auth, plan ────────────────────────────────────────────────────
@@ -549,7 +586,9 @@ function renderPlanSection() {
   line.className = 'hint';
   line.textContent = isPaid
     ? `${PLAN_INCLUDES[state.tier]}.${credits > 0 && credits < 999999 ? ` You also have ${plural(credits, 'credit')}.` : ''}`
-    : `Free plan: 5 generations a day for your first 5 days, then 2 a day.${credits > 0 && credits < 999999 ? ` You also have ${plural(credits, 'credit')}.` : ''}`;
+    : state.status?.free_allowance_disabled
+      ? `Free plan with credits. You have ${plural(credits, 'credit')}.`
+      : `Free plan: 5 free generations to start, then 1 free generation a day.${credits > 0 && credits < 999999 ? ` You also have ${plural(credits, 'credit')}.` : ''}`;
   box.append(line);
   if (isPaid) {
     add('Manage subscription', 'btn-secondary', openBillingPortal);
@@ -570,6 +609,7 @@ function setAuthMode(mode) {
   $('auth-pitch').hidden = !signup;
   $('forgot-password-btn').hidden = signup;
   $('terms-checkbox').checked = false;
+  setPasswordVisible('auth-password', false);
   setStatus('auth-status', '');
   $('auth-spam-note').hidden = true;
   $('resend-verification-btn').hidden = true;
@@ -632,6 +672,7 @@ async function submitAuth() {
   state.unlocked.clear();
   await store.set({ jwtToken: state.token, userEmail: state.email, userTier: state.tier });
   $('auth-password').value = '';
+  setPasswordVisible('auth-password', false);
   onAuthChanged();
   closeSheet();
 }
@@ -676,11 +717,13 @@ async function logout() {
 }
 
 async function clearAuth() {
+  stopCheckoutWatch();
   Object.assign(state, { token: '', email: '', tier: 'free', status: null });
   state.unlocked.clear();
   await store.remove(['jwtToken', 'userEmail', 'userTier', 'cachedStatus']);
   $('auth-email').value = '';
   $('auth-password').value = '';
+  setPasswordVisible('auth-password', false);
   onAuthChanged();
 }
 
@@ -697,6 +740,7 @@ function onAuthChanged() {
 }
 
 async function fetchStatus() {
+  state.lastStatusAt = Date.now();
   const res = await send('getUserStatus', { token: state.token });
   if (!res.success) return;
   state.status = res.data;
@@ -754,12 +798,62 @@ async function openCheckout(productType, productId, errorId) {
     setStatus(errorId, res.error || 'Could not start checkout. Please try again.', false);
     return;
   }
-  chrome.tabs.create({ url: res.data.url });
+  const tab = await chrome.tabs.create({ url: res.data.url });
+  watchCheckout(tab?.id);
 }
 
 async function openBillingPortal() {
   const res = await send('openBillingPortal', { token: state.token });
-  chrome.tabs.create({ url: (res.success && res.data?.url) || STRIPE_PORTAL_URL });
+  const tab = await chrome.tabs.create({ url: (res.success && res.data?.url) || STRIPE_PORTAL_URL });
+  watchCheckout(tab?.id); // plan changes made in the portal show up too
+}
+
+// The Stripe webhook updates the account a few seconds after payment. Poll the
+// read-only status briefly and stop as soon as credits or plan change. The
+// backend stays the source of truth; nothing is added client-side.
+function watchCheckout(tabId) {
+  stopCheckoutWatch();
+  if (!state.token) return;
+  const watch = { tabId, started: Date.now(), credits: state.status?.credits, tier: state.tier };
+  watch.timer = setInterval(() => checkoutTick(watch), CHECKOUT_POLL_MS);
+  state.checkoutWatch = watch;
+}
+
+async function checkoutTick(watch) {
+  if (state.checkoutWatch !== watch || !state.token) return;
+  await fetchStatus();
+  const changed = state.status?.credits !== watch.credits || state.tier !== watch.tier;
+  if (changed || Date.now() - watch.started > CHECKOUT_POLL_MAX_MS) stopCheckoutWatch();
+}
+
+function stopCheckoutWatch() {
+  if (state.checkoutWatch) clearInterval(state.checkoutWatch.timer);
+  state.checkoutWatch = null;
+}
+
+// Coming back to the panel (e.g. from the Stripe tab) refreshes the balance.
+function refreshOnReturn() {
+  if (state.token && Date.now() - state.lastStatusAt > FOCUS_REFRESH_MIN_MS) fetchStatus();
+}
+
+async function refreshBalance() {
+  const btn = $('refresh-balance');
+  btn.disabled = true;
+  btn.classList.add('is-spinning');
+  await fetchStatus();
+  btn.disabled = false;
+  btn.classList.remove('is-spinning');
+}
+
+// ── Password visibility ────────────────────────────────────────────────────
+// Only the input type changes, so autofill and password managers keep working.
+function setPasswordVisible(inputId, visible) {
+  const input = $(inputId);
+  const btn = document.querySelector(`[data-pw-toggle="${inputId}"]`);
+  if (!input || !btn) return;
+  input.type = visible ? 'text' : 'password';
+  btn.setAttribute('aria-pressed', String(visible));
+  btn.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
 }
 
 // ── Sheets ─────────────────────────────────────────────────────────────────
@@ -825,6 +919,17 @@ function wire() {
 
   document.querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => setAuthMode(b.dataset.auth)));
   $('auth-submit-btn').addEventListener('click', submitAuth);
+  document.querySelectorAll('[data-pw-toggle]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.pwToggle;
+    setPasswordVisible(id, $(id).type === 'password');
+  }));
+  $('refresh-balance').addEventListener('click', refreshBalance);
+  window.addEventListener('focus', refreshOnReturn);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshOnReturn(); });
+  chrome.tabs.onRemoved.addListener(tabId => {
+    const watch = state.checkoutWatch;
+    if (watch && watch.tabId === tabId) checkoutTick(watch);
+  });
   $('auth-password').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
   $('resend-verification-btn').addEventListener('click', resendVerification);
   $('forgot-password-btn').addEventListener('click', () => {

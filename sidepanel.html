@@ -27,12 +27,17 @@
     <span class="usage-title" id="usage-title">Loading…</span>
     <span class="plan-tag" id="plan-tag">Guest</span>
   </div>
-  <div class="meter" id="usage-meter" role="progressbar" aria-label="Free generations left" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+  <div class="meter" id="usage-meter" role="progressbar" aria-label="Free generations left" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0">
     <div class="meter-fill" id="usage-meter-fill"></div>
   </div>
   <div class="usage-row usage-row-sub">
     <span class="usage-sub" id="usage-sub"></span>
-    <span class="credits-chip" id="credits-chip" hidden></span>
+    <span class="usage-balance">
+      <span class="credits-chip" id="credits-chip" hidden></span>
+      <button class="refresh-btn" id="refresh-balance" type="button" aria-label="Refresh balance" title="Refresh balance" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg>
+      </button>
+    </span>
   </div>
   <div class="usage-actions" id="usage-actions"></div>
 </section>
@@ -62,15 +67,21 @@
         <button class="seg-btn" role="tab" type="button" data-auth="login" aria-selected="true">Log in</button>
         <button class="seg-btn" role="tab" type="button" data-auth="signup" aria-selected="false">Create account</button>
       </div>
-      <p class="auth-pitch" id="auth-pitch" hidden>A free account gives you 5 generations a day for your first 5 days, then 2 a day, on all 6 tools.</p>
+      <p class="auth-pitch" id="auth-pitch" hidden>A free account gives you 5 free generations to start, then 1 free generation a day, on all 6 tools.</p>
       <label class="field">
         <span class="field-label">Email</span>
         <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
       </label>
-      <label class="field">
-        <span class="field-label">Password</span>
-        <input type="password" id="auth-password" placeholder="At least 8 characters" autocomplete="current-password" />
-      </label>
+      <div class="field">
+        <label class="field-label" for="auth-password">Password</label>
+        <div class="password-wrap">
+          <input type="password" id="auth-password" placeholder="At least 8 characters" autocomplete="current-password" />
+          <button class="pw-toggle" type="button" data-pw-toggle="auth-password" aria-controls="auth-password" aria-label="Show password" aria-pressed="false">
+            <svg class="pw-icon pw-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="pw-icon pw-hide" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.7 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.2 3.1M6.6 6.6A17.6 17.6 0 0 0 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m2 2 20 20"/></svg>
+          </button>
+        </div>
+      </div>
       <label class="check" id="terms-field" hidden>
         <input type="checkbox" id="terms-checkbox" />
         <span>I agree to the <a href="https://x-trendyourself.com/terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="https://x-trendyourself.com/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
