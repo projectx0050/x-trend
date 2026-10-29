@@ -385,3 +385,32 @@ body.light.suite-business .suite-btn[aria-selected="true"] {
   body::before, .btn-primary, .meter-fill, .tool-tab, .avatar, .plan-tag, .pw-toggle { transition: none; }
   .refresh-btn.is-spinning svg { animation: none; }
 }
+
+/* ── Occasion theme banner (admin-approved, 3 days; logo and layout unchanged) ── */
+.occasion-banner {
+  margin: 0 16px 8px; padding: 6px 10px; border-radius: var(--radius-sm);
+  background: var(--accent); color: var(--on-accent); font-size: 12.5px; font-weight: 600; text-align: center;
+}
+
+/* ── World Moments ──────────────────────────────────────────────────────── */
+.moments {
+  margin: 8px 16px 0; padding: 9px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.moments-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.moments-title { font-size: 12.5px; font-weight: 650; color: var(--text-2); margin: 0; }
+.moment { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.moment + .moment { border-top: 1px solid var(--border); }
+.moment-date {
+  flex: none; width: 42px; text-align: center; border-radius: var(--radius-sm);
+  background: var(--accent-soft); color: var(--accent-text); font-size: 10.5px; font-weight: 700; line-height: 1.25; padding: 4px 0;
+}
+.moment-date b { display: block; font-size: 15px; }
+.moment-main { flex: 1; min-width: 0; }
+.moment-name { font-weight: 600; font-size: 13px; text-decoration: none; }
+.moment-name:hover { text-decoration: underline; }
+.moment-blurb { display: block; color: var(--text-3); font-size: 12px; }
+.moment .btn-sm { flex: none; height: 28px; }
+.moments-upsell { margin: 4px 0 0; font-size: 12px; color: var(--text-3); }
+.moments-upsell .link-btn { font-size: 12px; padding: 0; }
+.moments-month { margin: 12px 0 2px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }

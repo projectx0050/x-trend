@@ -22,6 +22,9 @@
   </div>
 </header>
 
+<!-- Occasion theme banner: shown only while an admin-approved theme is live. -->
+<p class="occasion-banner" id="occasion-banner" hidden></p>
+
 <section class="usage" aria-live="polite">
   <div class="usage-row">
     <span class="usage-title" id="usage-title">Loading…</span>
@@ -40,6 +43,15 @@
     </span>
   </div>
   <div class="usage-actions" id="usage-actions"></div>
+</section>
+
+<section class="moments" id="moments" aria-labelledby="moments-title" hidden>
+  <div class="moments-head">
+    <h2 class="moments-title" id="moments-title"><span aria-hidden="true">&#127757;</span> World Moments</h2>
+    <button class="link-btn" id="moments-more" type="button" hidden>See calendar</button>
+  </div>
+  <div id="moments-featured"></div>
+  <p class="moments-upsell" id="moments-upsell" hidden>The full calendar and Write about it come with <button class="link-btn" type="button" id="moments-upgrade">Social Pro or Bundle</button>.</p>
 </section>
 
 <nav class="suite-switch" role="tablist" aria-label="Workspace">
@@ -150,15 +162,15 @@
     <section class="stack" id="shop-plans" role="tabpanel" aria-labelledby="shop-tab-plans">
       <p class="hint">Cancel anytime from Manage Subscription.</p>
       <div class="plan-card">
-        <div class="plan-card-top"><div><span class="plan-name">Social Pro</span><span class="plan-desc">Social content tools</span></div><span class="plan-price">$9.99<small>/mo</small></span></div>
+        <div class="plan-card-top"><div><span class="plan-name">Social Pro</span><span class="plan-desc">Social tools, 1,000 generations a month</span></div><span class="plan-price">$9.99<small>/mo</small></span></div>
         <button class="btn btn-secondary btn-sm" type="button" data-product-type="subscription" data-product-id="social_pro">Choose Social Pro</button>
       </div>
       <div class="plan-card">
-        <div class="plan-card-top"><div><span class="plan-name">Business Pro</span><span class="plan-desc">Business writing tools</span></div><span class="plan-price">$19.99<small>/mo</small></span></div>
+        <div class="plan-card-top"><div><span class="plan-name">Business Pro</span><span class="plan-desc">Business tools, 1,000 generations a month</span></div><span class="plan-price">$19.99<small>/mo</small></span></div>
         <button class="btn btn-secondary btn-sm" type="button" data-product-type="subscription" data-product-id="business_pro">Choose Business Pro</button>
       </div>
       <div class="plan-card plan-card-bundle">
-        <div class="plan-card-top"><div><span class="plan-name">Bundle</span><span class="plan-desc">All tools + Brand Voice</span></div><span class="plan-price">$29.99<small>/mo</small></span></div>
+        <div class="plan-card-top"><div><span class="plan-name">Bundle</span><span class="plan-desc">All 6 tools + Brand Voice, 1,000 a month</span></div><span class="plan-price">$29.99<small>/mo</small></span></div>
         <button class="btn btn-primary btn-sm" type="button" data-product-type="subscription" data-product-id="bundle">Choose Bundle</button>
       </div>
       <p class="status error" id="plans-error" role="alert"></p>
@@ -170,6 +182,18 @@
       <div class="pack"><div><span class="pack-name">Power</span><span class="pack-amount">50 credits</span></div><span class="pack-price">$9.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_power">Buy</button></div>
       <p class="status error" id="credits-error" role="alert"></p>
     </section>
+  </div>
+</div>
+
+<!-- ── World Moments calendar sheet (Social Pro, Bundle) ─────────────────── -->
+<div class="sheet" id="sheet-moments" role="dialog" aria-modal="true" aria-labelledby="moments-sheet-title" hidden>
+  <div class="sheet-head">
+    <h2 id="moments-sheet-title">World Moments</h2>
+    <button class="icon-btn sheet-close" type="button" data-close-sheet aria-label="Close">&#10005;</button>
+  </div>
+  <div class="sheet-body">
+    <p class="hint">Upcoming days the world is talking about. Tap a name to search it on Google, or Write about it to start a caption you can edit.</p>
+    <div id="moments-list"></div>
   </div>
 </div>
 
