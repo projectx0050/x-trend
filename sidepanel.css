@@ -105,7 +105,7 @@ body.light .icon-moon { display: none; }
 }
 .account-card .avatar { width: 38px; height: 38px; font-size: 16px; }
 
-/* ── Usage strip (identity motif: the violet meter) ─────────────────────── */
+/* ── Usage strip ─────────────────────── */
 .usage {
   margin: 0 16px; padding: 11px 12px 10px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
@@ -117,8 +117,6 @@ body.light .icon-moon { display: none; }
   font-size: 11.5px; font-weight: 600; color: var(--accent-text);
   background: var(--accent-soft); padding: 2px 8px; border-radius: 5px; white-space: nowrap;
 }
-.meter { height: 6px; background: var(--surface-2); border-radius: 3px; margin: 8px 0 7px; overflow: hidden; }
-.meter-fill { height: 100%; width: 0; background: var(--accent); border-radius: 3px; transition: width 240ms ease; }
 .usage-sub { color: var(--text-3); font-size: 12px; }
 .usage-row-sub { flex-wrap: wrap; row-gap: 2px; }
 .credits-chip { font-size: 12px; font-weight: 600; color: var(--success); white-space: nowrap; }
@@ -378,39 +376,10 @@ body.light.suite-business .usage { border-color: rgba(4, 120, 87, 0.22); }
 body.light.suite-business .suite-btn[aria-selected="true"] {
   box-shadow: inset 0 0 0 1px rgba(4, 120, 87, 0.30), 0 1px 8px rgba(4, 120, 87, 0.10);
 }
-.btn-primary, .meter-fill, .tool-tab, .avatar, .plan-tag {
+.btn-primary, .tool-tab, .avatar, .plan-tag {
   transition: background-color 400ms cubic-bezier(0.32, 0.72, 0, 1), color 400ms cubic-bezier(0.32, 0.72, 0, 1), border-color 400ms cubic-bezier(0.32, 0.72, 0, 1), width 240ms ease;
 }
 @media (prefers-reduced-motion: reduce) {
-  body::before, .btn-primary, .meter-fill, .tool-tab, .avatar, .plan-tag, .pw-toggle { transition: none; }
+  body::before, .btn-primary, .tool-tab, .avatar, .plan-tag, .pw-toggle { transition: none; }
   .refresh-btn.is-spinning svg { animation: none; }
 }
-
-/* ── Occasion theme banner (admin-approved, 3 days; logo and layout unchanged) ── */
-.occasion-banner {
-  margin: 0 16px 8px; padding: 6px 10px; border-radius: var(--radius-sm);
-  background: var(--accent); color: var(--on-accent); font-size: 12.5px; font-weight: 600; text-align: center;
-}
-
-/* ── World Moments ──────────────────────────────────────────────────────── */
-.moments {
-  margin: 8px 16px 0; padding: 9px 12px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-}
-.moments-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.moments-title { font-size: 12.5px; font-weight: 650; color: var(--text-2); margin: 0; }
-.moment { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-.moment + .moment { border-top: 1px solid var(--border); }
-.moment-date {
-  flex: none; width: 42px; text-align: center; border-radius: var(--radius-sm);
-  background: var(--accent-soft); color: var(--accent-text); font-size: 10.5px; font-weight: 700; line-height: 1.25; padding: 4px 0;
-}
-.moment-date b { display: block; font-size: 15px; }
-.moment-main { flex: 1; min-width: 0; }
-.moment-name { font-weight: 600; font-size: 13px; text-decoration: none; }
-.moment-name:hover { text-decoration: underline; }
-.moment-blurb { display: block; color: var(--text-3); font-size: 12px; }
-.moment .btn-sm { flex: none; height: 28px; }
-.moments-upsell { margin: 4px 0 0; font-size: 12px; color: var(--text-3); }
-.moments-upsell .link-btn { font-size: 12px; padding: 0; }
-.moments-month { margin: 12px 0 2px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); }

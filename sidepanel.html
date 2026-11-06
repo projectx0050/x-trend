@@ -22,16 +22,10 @@
   </div>
 </header>
 
-<!-- Occasion theme banner: shown only while an admin-approved theme is live. -->
-<p class="occasion-banner" id="occasion-banner" hidden></p>
-
 <section class="usage" aria-live="polite">
   <div class="usage-row">
     <span class="usage-title" id="usage-title">Loading…</span>
     <span class="plan-tag" id="plan-tag">Guest</span>
-  </div>
-  <div class="meter" id="usage-meter" role="progressbar" aria-label="Free generations left" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0">
-    <div class="meter-fill" id="usage-meter-fill"></div>
   </div>
   <div class="usage-row usage-row-sub">
     <span class="usage-sub" id="usage-sub"></span>
@@ -43,15 +37,6 @@
     </span>
   </div>
   <div class="usage-actions" id="usage-actions"></div>
-</section>
-
-<section class="moments" id="moments" aria-labelledby="moments-title" hidden>
-  <div class="moments-head">
-    <h2 class="moments-title" id="moments-title"><span aria-hidden="true">&#127757;</span> World Moments</h2>
-    <button class="link-btn" id="moments-more" type="button" hidden>See calendar</button>
-  </div>
-  <div id="moments-featured"></div>
-  <p class="moments-upsell" id="moments-upsell" hidden>The full calendar and Write about it come with <button class="link-btn" type="button" id="moments-upgrade">Social Pro or Bundle</button>.</p>
 </section>
 
 <nav class="suite-switch" role="tablist" aria-label="Workspace">
@@ -79,7 +64,7 @@
         <button class="seg-btn" role="tab" type="button" data-auth="login" aria-selected="true">Log in</button>
         <button class="seg-btn" role="tab" type="button" data-auth="signup" aria-selected="false">Create account</button>
       </div>
-      <p class="auth-pitch" id="auth-pitch" hidden>A free account gives you 5 free generations to start, then 1 free generation a day, on all 6 tools.</p>
+      <p class="auth-pitch" id="auth-pitch" hidden>A free account gives you all 6 tools.</p>
       <label class="field">
         <span class="field-label">Email</span>
         <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" spellcheck="false" />
@@ -129,6 +114,7 @@
 
       <h3 class="sheet-section-title">Your plan</h3>
       <div id="plan-section-content" class="stack"></div>
+      <p class="status" id="billing-status" role="status"></p>
 
       <h3 class="sheet-section-title">Brand Voice</h3>
       <div id="bv-locked" class="hint-card">Brand Voice Memory is part of the Bundle plan. It keeps your tone consistent across every caption and rewrite.</div>
@@ -162,38 +148,26 @@
     <section class="stack" id="shop-plans" role="tabpanel" aria-labelledby="shop-tab-plans">
       <p class="hint">Cancel anytime from Manage Subscription.</p>
       <div class="plan-card">
-        <div class="plan-card-top"><div><span class="plan-name">Social Pro</span><span class="plan-desc">Social tools, 1,000 generations a month</span></div><span class="plan-price">$9.99<small>/mo</small></span></div>
+        <div class="plan-card-top"><div><span class="plan-name">Social Pro</span><span class="plan-desc">Captions, rewrites and hashtags</span></div><span class="plan-price">$9.99<small>/mo</small></span></div>
         <button class="btn btn-secondary btn-sm" type="button" data-product-type="subscription" data-product-id="social_pro">Choose Social Pro</button>
       </div>
       <div class="plan-card">
-        <div class="plan-card-top"><div><span class="plan-name">Business Pro</span><span class="plan-desc">Business tools, 1,000 generations a month</span></div><span class="plan-price">$19.99<small>/mo</small></span></div>
+        <div class="plan-card-top"><div><span class="plan-name">Business Pro</span><span class="plan-desc">Review replies, emails and proposals</span></div><span class="plan-price">$19.99<small>/mo</small></span></div>
         <button class="btn btn-secondary btn-sm" type="button" data-product-type="subscription" data-product-id="business_pro">Choose Business Pro</button>
       </div>
       <div class="plan-card plan-card-bundle">
-        <div class="plan-card-top"><div><span class="plan-name">Bundle</span><span class="plan-desc">All 6 tools + Brand Voice, 1,000 a month</span></div><span class="plan-price">$29.99<small>/mo</small></span></div>
+        <div class="plan-card-top"><div><span class="plan-name">Bundle</span><span class="plan-desc">All 6 tools + Brand Voice</span></div><span class="plan-price">$29.99<small>/mo</small></span></div>
         <button class="btn btn-primary btn-sm" type="button" data-product-type="subscription" data-product-id="bundle">Choose Bundle</button>
       </div>
       <p class="status error" id="plans-error" role="alert"></p>
     </section>
     <section class="stack" id="shop-credits" role="tabpanel" aria-labelledby="shop-tab-credits" hidden>
-      <p class="hint">Credits never expire and work on any of the 6 tools once your plan's generations are used.</p>
+      <p class="hint">Credits never expire and work on any of the 6 tools.</p>
       <div class="pack"><div><span class="pack-name">Starter</span><span class="pack-amount">15 credits</span></div><span class="pack-price">$2.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_starter">Buy</button></div>
       <div class="pack"><div><span class="pack-name">Popular</span><span class="pack-amount">30 credits</span></div><span class="pack-price">$4.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_popular">Buy</button></div>
       <div class="pack"><div><span class="pack-name">Power</span><span class="pack-amount">50 credits</span></div><span class="pack-price">$9.99</span><button class="btn btn-secondary btn-sm" type="button" data-product-type="credits" data-product-id="credits_power">Buy</button></div>
       <p class="status error" id="credits-error" role="alert"></p>
     </section>
-  </div>
-</div>
-
-<!-- ── World Moments calendar sheet (Social Pro, Bundle) ─────────────────── -->
-<div class="sheet" id="sheet-moments" role="dialog" aria-modal="true" aria-labelledby="moments-sheet-title" hidden>
-  <div class="sheet-head">
-    <h2 id="moments-sheet-title">World Moments</h2>
-    <button class="icon-btn sheet-close" type="button" data-close-sheet aria-label="Close">&#10005;</button>
-  </div>
-  <div class="sheet-body">
-    <p class="hint">Upcoming days the world is talking about. Tap a name to search it on Google, or Write about it to start a caption you can edit.</p>
-    <div id="moments-list"></div>
   </div>
 </div>
 

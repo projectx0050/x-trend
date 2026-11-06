@@ -94,20 +94,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     case 'openBillingPortal':
       postAuth('/payments/portal', null, request.token)
         .then(data => sendResponse({ success: true, data }))
-        .catch(err => sendResponse({ success: false, error: err.message, code: err.code }));
-      return true;
-
-    // Occasion theme and World Moments: read-only content, failures mean "none".
-    case 'getTheme':
-      getJson('/api/theme')
-        .then(data => sendResponse({ success: true, data }))
-        .catch(err => sendResponse({ success: false, error: err.message }));
-      return true;
-
-    case 'getWorldMoments':
-      getJson(request.token ? '/api/world-moments' : '/api/world-moments/teaser', request.token)
-        .then(data => sendResponse({ success: true, data }))
-        .catch(err => sendResponse({ success: false, error: err.message, status: err.status || 0 }));
+        .catch(err => sendResponse({ success: false, error: err.message, code: err.code, status: err.status || 0 }));
       return true;
 
     // Legacy — kept for backwards compatibility
@@ -217,17 +204,6 @@ async function fetchUserStatus(token) {
 
   const data = await resp.json();
   if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
-  return data;
-}
-
-async function getJson(path, token) {
-  const resp = await fetch(`${BACKEND}${path}`, token ? { headers: { 'Authorization': `Bearer ${token}` } } : undefined);
-  const data = await resp.json().catch(() => ({}));
-  if (!resp.ok) {
-    const err = new Error(data.error || `Error ${resp.status}`);
-    err.status = resp.status;
-    throw err;
-  }
   return data;
 }
 

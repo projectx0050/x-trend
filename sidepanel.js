@@ -2,26 +2,20 @@
 
 // X-Trend side panel. All network calls go through background.js messages.
 
-// Stripe's email-login portal: fallback for accounts without a linked customer.
-const STRIPE_PORTAL_URL = 'https://billing.stripe.com/p/login/3cleVd6gwfsl2WL9audZ600';
-
-// Signed-out allowance: 3 to try X-Trend, then 1 per day. The server enforces
-// the same rule; this local copy only drives the display.
+// Signed-out allowance: the server enforces the same rule; this local copy only
+// decides when to ask for sign-up. Never shown to the user.
 const GUEST_INITIAL = 3;
 const GUEST_DAILY = 1;
-const SIGNUP_PITCH = 'Create a free account to get 5 free generations.';
+const SIGNUP_PITCH = 'Create a free account to keep writing.';
 
 // After opening Stripe, re-check the balance until the webhook lands.
 const CHECKOUT_POLL_MS = 5000;
 const CHECKOUT_POLL_MAX_MS = 3 * 60 * 1000;
 const FOCUS_REFRESH_MIN_MS = 3000;
-
-// Display fallback only; the server's monthly_limit is the source of truth.
-const PAID_MONTHLY_GENERATIONS = 1000;
-// Occasion theme is re-checked while the panel stays open, so it ends on time.
-const THEME_REFRESH_MS = 5 * 60 * 1000;
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
-const MOMENT_TEASER_COUNT = 2;
+const BILLING_ERROR = "We couldn't open billing right now. Please try again in a moment.";
+// Parser and network failures from fetch are not written for customers.
+const RAW_ERROR = /Unexpected token|not valid JSON|Failed to fetch|NetworkError/i;
+const CONNECTION_ERROR = "We couldn't reach X-Trend just now. Please try again in a moment.";
 
 const PLAN_LABELS = { free: 'Free', social_pro: 'Social Pro', business_pro: 'Business Pro', bundle: 'Bundle' };
 const PLAN_INCLUDES = {
@@ -124,12 +118,10 @@ const state = {
   sheetOpener: null,
   checkoutWatch: null,    // { tabId, timer, started, credits, tier } while a Stripe tab is open
   lastStatusAt: 0,
-  moments: null,          // /api/world-moments response
 };
 
 const $ = id => document.getElementById(id);
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-const num = n => Number(n).toLocaleString('en-US');
 const today = () => new Date().toISOString().slice(0, 10); // UTC day
 
 function send(action, extra = {}) {
@@ -139,6 +131,7 @@ function send(action, extra = {}) {
         resolve({ success: false, error: 'X-Trend could not reach its background service. Please try again.' });
         return;
       }
+      if (RAW_ERROR.test(response?.error || '')) { resolve({ ...response, error: CONNECTION_ERROR }); return; }
       resolve(response || { success: false, error: 'No response. Please try again.' });
     });
   });
@@ -243,13 +236,13 @@ function showSignupNotice(type) {
   });
 }
 
-function showLimitNotice(type, message) {
+function showLimitNotice(type) {
   const credits = state.status?.credits || 0;
   showNotice(type, {
     kind: 'is-upsell',
     title: state.tier !== 'free' ? "You've used this month's generations"
       : state.status?.free_allowance_disabled ? "You're out of credits" : "You've used today's free generation",
-    body: message || 'Use credits or upgrade to continue.',
+    body: state.tier !== 'free' ? 'Use credits to keep writing, or wait for your plan to renew.' : 'Use credits or upgrade to continue.',
     actions: [
       { label: credits > 0 ? plural(credits, 'credit') + ' left' : 'Buy credits', primary: true, onClick: () => openShop('credits') },
       ...(state.tier === 'free' ? [{ label: 'See plans', onClick: () => openShop('plans') }] : []),
@@ -393,7 +386,7 @@ async function generate(type, regenerate = false) {
     await clearAuth();
     openAccount('login', 'Your session expired. Please log in again.');
   } else if (res.limitReached) {
-    showLimitNotice(type, res.error);
+    showLimitNotice(type);
     fetchStatus();
   } else if (res.featureGated) {
     state.unlocked.delete(type);
@@ -431,15 +424,6 @@ async function exhaustGuestToday() {
 }
 
 // ── Usage strip ────────────────────────────────────────────────────────────
-function setMeter(remaining, max) {
-  const meter = $('usage-meter');
-  meter.hidden = max == null;
-  if (max == null) return;
-  $('usage-meter-fill').style.width = `${max ? Math.round((remaining / max) * 100) : 0}%`;
-  meter.setAttribute('aria-valuemax', String(max));
-  meter.setAttribute('aria-valuenow', String(remaining));
-}
-
 // Two compact shortcuts in the usage card, chosen by who is looking.
 function renderUsageActions() {
   const paid = ['social_pro', 'business_pro', 'bundle'].includes(state.tier);
@@ -463,68 +447,32 @@ function renderUsage() {
   const sub = $('usage-sub');
   const chip = $('credits-chip');
   title.classList.remove('empty');
-  $('plan-tag').hidden = false;
   renderUsageActions();
 
   if (!state.token) {
-    const left = guestRemaining();
-    const initial = state.guest.total < GUEST_INITIAL;
+    $('plan-tag').hidden = false;
     $('plan-tag').textContent = 'Guest';
     chip.hidden = true;
-    if (left > 0) {
-      title.textContent = initial ? `${plural(left, 'free generation')} left` : '1 free generation left today';
-      sub.textContent = initial ? 'Try any tool, no account needed.' : SIGNUP_PITCH;
-    } else {
-      title.textContent = "You've used today's free generation";
-      title.classList.add('empty');
-      sub.textContent = SIGNUP_PITCH;
-    }
-    setMeter(left, initial ? GUEST_INITIAL : GUEST_DAILY);
+    title.textContent = 'Try X-Trend free';
+    sub.textContent = guestRemaining() > 0 ? 'No account needed.' : SIGNUP_PITCH;
     return;
   }
 
+  $('plan-tag').hidden = true; // the title names the plan
   const s = state.status;
-  $('plan-tag').textContent = PLAN_LABELS[state.tier] || state.tier;
   const credits = s?.credits || 0;
-  $('refresh-balance').hidden = !s || (s.daily_limit ?? s.monthly_limit) >= 999999;
-  chip.hidden = !s || credits >= 999999;
+  const owner = (s?.daily_limit ?? s?.monthly_limit) >= 999999;
+  $('refresh-balance').hidden = !s || owner;
+  chip.hidden = !s || owner;
   chip.textContent = `Credits: ${credits}`;
   chip.classList.toggle('is-zero', credits === 0);
 
-  if (!s) { title.textContent = 'Loading your plan…'; sub.textContent = ''; setMeter(0, null); return; }
+  if (!s) { title.textContent = 'Loading your plan…'; sub.textContent = ''; return; }
 
-  if ((s.daily_limit ?? s.monthly_limit) >= 999999) {
-    title.textContent = 'Unlimited access';
-    sub.textContent = 'All 6 tools';
-    setMeter(0, null);
-    return;
-  }
-
-  if (state.tier === 'free') { renderFreeUsage(s, credits); return; }
-
-  title.textContent = `${PLAN_LABELS[state.tier]} plan`;
-  $('plan-tag').hidden = true; // title already names the plan
-  const limit = s.monthly_limit;
-  if (!(limit > 0)) { sub.textContent = PLAN_INCLUDES[state.tier] || ''; setMeter(0, null); return; }
-  const left = Math.max(0, s.monthly_remaining ?? 0);
-  $('usage-meter').setAttribute('aria-label', 'Monthly generations left');
-  setMeter(left, limit);
-  if (left > 0) {
-    sub.textContent = `${num(left)} of ${num(limit)} generations left this month`;
-  } else {
-    title.textContent = "You've used this month's generations";
-    title.classList.add('empty');
-    sub.textContent = credits > 0 ? 'Your credits cover extra generations' : 'Use credits or wait for your monthly reset';
-  }
-}
-
-// Free account: intro (first 5), then 1 per day; after any purchase, credits only.
-function renderFreeUsage(s, credits) {
-  const title = $('usage-title');
-  const sub = $('usage-sub');
-  if (s.free_allowance_disabled) {
-    $('credits-chip').hidden = true; // the title shows the balance
-    setMeter(0, null);
+  title.textContent = `${PLAN_LABELS[state.tier] || state.tier} plan`;
+  sub.textContent = PLAN_INCLUDES[state.tier] || 'All 6 tools';
+  if (s.free_allowance_disabled && state.tier === 'free' && !owner) {
+    chip.hidden = true; // the title shows the balance
     if (credits > 0) {
       title.textContent = `Credits: ${credits}`;
       sub.textContent = 'Each generation uses 1 credit';
@@ -533,25 +481,6 @@ function renderFreeUsage(s, credits) {
       title.classList.add('empty');
       sub.textContent = 'Buy credits or upgrade to continue';
     }
-    return;
-  }
-  const left = s.daily_remaining ?? 0;
-  $('usage-meter').setAttribute('aria-label', 'Free generations left');
-  setMeter(left, s.daily_limit);
-  if (s.free_phase === 'intro') {
-    title.textContent = left === s.daily_limit
-      ? `${plural(left, 'free generation')} available`
-      : `${plural(left, 'free generation')} left`;
-    sub.textContent = 'Then 1 free generation every day';
-    return;
-  }
-  if (left > 0) {
-    title.textContent = `${plural(left, 'free generation')} left today`;
-    sub.textContent = 'A new free generation every day';
-  } else {
-    title.textContent = "You've used today's free generation";
-    title.classList.add('empty');
-    sub.textContent = credits > 0 ? 'Your credits cover extra generations' : 'Use credits or upgrade to continue';
   }
 }
 
@@ -605,10 +534,10 @@ function renderPlanSection() {
   const line = document.createElement('p');
   line.className = 'hint';
   line.textContent = isPaid
-    ? `${PLAN_INCLUDES[state.tier]}, ${num(state.status?.monthly_limit || PAID_MONTHLY_GENERATIONS)} generations a month.${credits > 0 && credits < 999999 ? ` You also have ${plural(credits, 'credit')}.` : ''}`
+    ? `${PLAN_INCLUDES[state.tier]}.${credits > 0 && credits < 999999 ? ` You also have ${plural(credits, 'credit')}.` : ''}`
     : state.status?.free_allowance_disabled
       ? `Free plan with credits. You have ${plural(credits, 'credit')}.`
-      : `Free plan: 5 free generations to start, then 1 free generation a day.${credits > 0 && credits < 999999 ? ` You also have ${plural(credits, 'credit')}.` : ''}`;
+      : `Free plan, all 6 tools.${credits > 0 && credits < 999999 ? ` You also have ${plural(credits, 'credit')}.` : ''}`;
   box.append(line);
   if (isPaid) {
     add('Manage subscription', 'btn-secondary', openBillingPortal);
@@ -757,7 +686,6 @@ function onAuthChanged() {
     refreshGate(t.type);
   });
   if (state.token) fetchStatus();
-  loadMoments();
 }
 
 async function fetchStatus() {
@@ -767,7 +695,6 @@ async function fetchStatus() {
   state.status = res.data;
   const tierChanged = res.data.tier && res.data.tier !== state.tier;
   if (tierChanged) state.tier = res.data.tier;
-  if (tierChanged) loadMoments();
   await store.set({ cachedStatus: res.data, userTier: state.tier });
   renderUsage();
   renderAccountSheet();
@@ -824,10 +751,25 @@ async function openCheckout(productType, productId, errorId) {
   watchCheckout(tab?.id);
 }
 
+// Opens only the session URL the backend creates for this account's Stripe customer.
 async function openBillingPortal() {
+  if (state.portalOpening) return; // the backend can take a while to wake
+  state.portalOpening = true;
+  setStatus('billing-status', '');
   const res = await send('openBillingPortal', { token: state.token });
-  const tab = await chrome.tabs.create({ url: (res.success && res.data?.url) || STRIPE_PORTAL_URL });
-  watchCheckout(tab?.id); // plan changes made in the portal show up too
+  state.portalOpening = false;
+  if (res.success && res.data?.url) {
+    const tab = await chrome.tabs.create({ url: res.data.url });
+    watchCheckout(tab?.id); // plan changes made in the portal show up too
+    return;
+  }
+  if (res.status === 401) {
+    await clearAuth();
+    openAccount('login', 'Your session expired. Please log in again.');
+    return;
+  }
+  openAccount();
+  setStatus('billing-status', res.code ? res.error : BILLING_ERROR, false); // coded errors are written for customers
 }
 
 // The Stripe webhook updates the account a few seconds after payment. Poll the
@@ -904,134 +846,11 @@ function selectShopTab(section) {
 }
 
 function closeSheet() {
+  setStatus('billing-status', '');
   document.querySelectorAll('.sheet').forEach(s => { s.hidden = true; });
   $('scrim').hidden = true;
   state.sheetOpener?.focus?.();
   state.sheetOpener = null;
-}
-
-// ── World Moments ──────────────────────────────────────────────────────────
-// The backend decides what each plan sees: Social Pro and Bundle get the full
-// calendar and Write about it; Free, Business Pro and guests get one teaser.
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const isSearchUrl = u => typeof u === 'string' && u.startsWith('https://www.google.com/search?q=');
-
-async function loadMoments() {
-  const token = state.token;
-  const res = await send('getWorldMoments', { token });
-  if (token !== state.token) return; // account changed meanwhile
-  state.moments = res.success && Array.isArray(res.data?.moments) ? res.data : null;
-  renderMoments();
-}
-
-function momentRow(m, canWrite) {
-  const row = document.createElement('div');
-  row.className = 'moment';
-  const [, mm, dd] = m.date.split('-');
-  const date = document.createElement('span');
-  date.className = 'moment-date';
-  const day = document.createElement('b');
-  day.textContent = String(Number(dd));
-  date.append(MONTHS[Number(mm) - 1] || '', day);
-  const main = document.createElement('span');
-  main.className = 'moment-main';
-  const name = document.createElement(isSearchUrl(m.search_url) ? 'a' : 'span');
-  name.className = 'moment-name';
-  name.textContent = m.name;
-  if (name.tagName === 'A') {
-    name.href = m.search_url;
-    name.target = '_blank';
-    name.rel = 'noopener noreferrer';
-    name.title = `Search Google for ${m.name}`;
-  }
-  const blurb = document.createElement('span');
-  blurb.className = 'moment-blurb';
-  blurb.textContent = m.blurb || '';
-  main.append(name, blurb);
-  row.append(date, main);
-  if (canWrite) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'btn btn-secondary btn-sm';
-    b.textContent = 'Write about it';
-    b.setAttribute('aria-label', `Write about ${m.name}`);
-    b.addEventListener('click', () => writeAboutMoment(m));
-    row.append(b);
-  }
-  return row;
-}
-
-function renderMoments() {
-  const data = state.moments;
-  const box = $('moments');
-  box.hidden = !data || !data.moments.length;
-  if (box.hidden) return;
-  const canWrite = data.can_write === true;
-  $('moments-featured').replaceChildren(...data.moments.slice(0, canWrite ? MOMENT_TEASER_COUNT : 1).map(m => momentRow(m, canWrite)));
-  $('moments-more').hidden = !data.full;
-  $('moments-upsell').hidden = !!data.full;
-}
-
-function openMomentsCalendar() {
-  const data = state.moments;
-  if (!data?.full) return;
-  const list = [];
-  let month = '';
-  for (const m of data.moments) {
-    const key = m.date.slice(0, 7);
-    if (key !== month) {
-      month = key;
-      const h = document.createElement('h3');
-      h.className = 'moments-month';
-      h.textContent = `${MONTHS[Number(key.slice(5)) - 1]} ${key.slice(0, 4)}`;
-      list.push(h);
-    }
-    list.push(momentRow(m, data.can_write === true));
-  }
-  $('moments-list').replaceChildren(...list);
-  openSheet('sheet-moments');
-}
-
-// Opens the Caption Generator with an editable starting point. Never generates.
-function writeAboutMoment(m) {
-  closeSheet();
-  selectSuite('social');
-  selectTool('caption');
-  const [y, mm, dd] = m.date.split('-');
-  const field = $('caption-description');
-  field.value = `A post for ${m.name} (${Number(dd)} ${MONTHS[Number(mm) - 1]} ${y}): `;
-  field.focus();
-  field.setSelectionRange(field.value.length, field.value.length);
-  $(`tool-caption`).scrollIntoView({ block: 'nearest' });
-}
-
-// ── Occasion theme ─────────────────────────────────────────────────────────
-// Shown only while an admin-approved theme is live (the backend decides); any
-// error, or anything unexpected in the answer, means the normal look.
-async function loadOccasionTheme() {
-  const res = await send('getTheme');
-  const t = res.success ? res.data?.theme : null;
-  const day = today();
-  const live = t && HEX_COLOR.test(t.visual?.accent ?? '') && t.start_date <= day && t.end_date >= day;
-  applyOccasionTheme(live ? t : null);
-}
-
-function applyOccasionTheme(t) {
-  const body = document.body.style;
-  const banner = $('occasion-banner');
-  if (!t) {
-    ['--accent', '--accent-strong', '--accent-soft'].forEach(v => body.removeProperty(v));
-    banner.hidden = true;
-    banner.textContent = '';
-    return;
-  }
-  const a = t.visual.accent;
-  const [r, g, b] = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16));
-  body.setProperty('--accent', a);
-  body.setProperty('--accent-strong', a);
-  body.setProperty('--accent-soft', `rgba(${r}, ${g}, ${b}, 0.16)`);
-  banner.textContent = `${String(t.visual.emoji || '').slice(0, 16)} ${String(t.visual.banner || '').slice(0, 60)}`.trim();
-  banner.hidden = !banner.textContent;
 }
 
 // ── Theme ──────────────────────────────────────────────────────────────────
@@ -1089,8 +908,6 @@ function wire() {
   $('forgot-back-btn').addEventListener('click', () => { $('forgot-section').hidden = true; $('auth-section').hidden = false; });
   $('forgot-submit-btn').addEventListener('click', submitForgot);
   $('logout-btn').addEventListener('click', logout);
-  $('moments-more').addEventListener('click', openMomentsCalendar);
-  $('moments-upgrade').addEventListener('click', () => openShop('plans'));
   $('save-brand-voice-btn').addEventListener('click', saveBrandVoice);
 
   document.querySelectorAll('[data-shop-tab]').forEach(t => t.addEventListener('click', () => selectShopTab(t.dataset.shopTab)));
@@ -1133,9 +950,6 @@ async function init() {
   TOOLS.forEach(t => { const v = $(`voice-${t.type}`); if (v) v.hidden = !(state.tier === 'bundle' && state.brandVoice); });
 
   if (state.token) verifySession();
-  loadMoments();
-  loadOccasionTheme();
-  setInterval(loadOccasionTheme, THEME_REFRESH_MS);
 }
 
 init();
